@@ -17,11 +17,11 @@ public class SongListAdapter extends BaseAdapter {
     private Activity activity;
     private ArrayList<Song> songs;
 
-    public SongListAdapter(@NonNull Activity activity) {
+    public SongListAdapter(@NonNull Activity activity, @NonNull ArrayList<Song> songs) {
         super();
 
         this.activity = activity;
-        this.songs = new ArrayList<>();
+        this.songs = songs;
     }
 
     @Override
