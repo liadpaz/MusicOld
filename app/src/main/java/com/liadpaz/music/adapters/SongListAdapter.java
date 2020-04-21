@@ -54,15 +54,10 @@ public class SongListAdapter extends BaseAdapter {
 
         Song song = songs.get(position);
 // TODO: add cover image
-//        binding.ivSongCover.setImageBitmap(song.getCover());
+        binding.ivSongCover.setImageDrawable(song.getCover());
         binding.tvSongName.setText(song.getSongName());
         binding.tvSongArtist.setText(song.getArtists().get(0));
 
         return convertView;
-    }
-
-    public void addSong(Song song) {
-        this.songs.add(song);
-        notifyDataSetChanged();
     }
 }
