@@ -1,15 +1,15 @@
 package com.liadpaz.music.utils;
 
-import android.graphics.drawable.Drawable;
+import android.graphics.Bitmap;
 
 import java.util.ArrayList;
 
 public class Song {
     private String songName;
     private ArrayList<String> artists;
-    private Drawable cover;
+    private Bitmap cover;
 
-    public Song(String songName, ArrayList<String> artists, Drawable cover) {
+    public Song(String songName, ArrayList<String> artists, Bitmap cover) {
         this.songName = songName;
         this.artists = artists;
         this.cover = cover;
@@ -23,7 +23,7 @@ public class Song {
         return artists;
     }
 
-    public Drawable getCover() {
+    public Bitmap getCover() {
         return cover;
     }
 }
