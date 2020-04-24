@@ -10,18 +10,22 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.liadpaz.music.databinding.ItemSongBinding;
 import com.liadpaz.music.utils.Song;
+import com.liadpaz.music.utils.Utilities;
 
-import java.util.ArrayList;
+import java.util.TreeSet;
 
 public class SongListAdapter extends BaseAdapter {
-    private Activity activity;
-    private ArrayList<Song> songs;
 
-    public SongListAdapter(@NonNull Activity activity, @NonNull ArrayList<Song> songs) {
+    private static final String TAG = "SONGS_LIST_ADAPTER";
+
+    private Activity activity;
+    private TreeSet<Song> songs;
+
+    public SongListAdapter(@NonNull Activity activity) {
         super();
 
         this.activity = activity;
-        this.songs = songs;
+        this.songs = new TreeSet<>((o1, o2) -> o1.getSongName().compareTo(o2.getSongName()));
     }
 
     @Override
@@ -31,7 +35,7 @@ public class SongListAdapter extends BaseAdapter {
 
     @Override
     public Object getItem(int position) {
-        return songs.get(position);
+        return songs.toArray()[position];
     }
 
     @Override
@@ -50,14 +54,15 @@ public class SongListAdapter extends BaseAdapter {
             binding = (ItemSongBinding)convertView.getTag();
         }
 
+        binding.getRoot().setClickable(true);
+
         convertView.setLayoutParams(new ConstraintLayout.LayoutParams(parent.getWidth(), convertView.getHeight()));
 
-        Song song = songs.get(position);
-// TODO: add cover image
+        Song song = (Song)getItem(position);
+
         binding.ivSongCover.setImageBitmap(song.getCover());
         binding.tvSongName.setText(song.getSongName());
-        binding.tvSongArtist.setText(song.getArtists().get(0));
-
+        binding.tvSongArtist.setText(Utilities.joinArtists(song.getArtists()));
         binding.btnMore.setOnClickListener(v -> activity.openContextMenu(v));
 
         return convertView;
@@ -65,11 +70,6 @@ public class SongListAdapter extends BaseAdapter {
 
     public void addSong(Song song) {
         this.songs.add(song);
-        notifyDataSetChanged();
-    }
-
-    public void sort() {
-        songs.sort((o1, o2) -> o1.getSongName().compareTo(o2.getSongName()));
         notifyDataSetChanged();
     }
 }

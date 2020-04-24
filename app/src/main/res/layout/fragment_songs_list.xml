@@ -7,7 +7,7 @@
     android:id="@+id/frameLayout">
 
     <ListView
-        android:id="@+id/lv_songs"
+        android:id="@+id/lvSongs"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 </FrameLayout>

@@ -17,6 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.liadpaz.music.MainActivity;
 import com.liadpaz.music.R;
 import com.liadpaz.music.adapters.SongListAdapter;
 import com.liadpaz.music.databinding.FragmentSongsListBinding;
@@ -25,6 +26,7 @@ import com.liadpaz.music.utils.Song;
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,8 +38,6 @@ import java.util.regex.Pattern;
 public class SongsListFragment extends Fragment {
 
     private static final String TAG = "SONGSLIST_FRAGMENT";
-
-    private ArrayList<Song> songs = new ArrayList<>();
 
     private FragmentSongsListBinding binding;
 
@@ -51,10 +51,7 @@ public class SongsListFragment extends Fragment {
      */
     @SuppressWarnings("unused")
     private static SongsListFragment newInstance() {
-        SongsListFragment fragment = new SongsListFragment();
-        Bundle args = new Bundle();
-        fragment.setArguments(args);
-        return fragment;
+        return new SongsListFragment();
     }
 
     @Override
@@ -65,14 +62,17 @@ public class SongsListFragment extends Fragment {
     @SuppressWarnings("ConstantConditions")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        ListView lv_songs;
-        (lv_songs = binding.lvSongs).setAdapter(new SongListAdapter(getActivity(), songs));
-        registerForContextMenu(lv_songs);
-        new LoadSongs(this, (SongListAdapter)lv_songs.getAdapter()).execute();
-        //        lv_songs.setOnItemClickListener((parent, view1, position, id) -> {
-        //            // TODO: play song
-        //            Log.d(TAG, "onActivityCreated: ON ITEM CLICK");
-        //        });
+        ListView lvSongs;
+        (lvSongs = binding.lvSongs).setAdapter(new SongListAdapter(getActivity()));
+        lvSongs.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+        registerForContextMenu(lvSongs);
+
+        new LoadSongs(this, (SongListAdapter)lvSongs.getAdapter()).execute();
+
+        lvSongs.setOnItemClickListener((parent, view1, position, id) -> {
+            // TODO: play song
+            Log.d(TAG, "onActivityCreated: ON ITEM CLICK");
+        });
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -87,6 +87,8 @@ public class SongsListFragment extends Fragment {
         private WeakReference<SongsListFragment> songsListFragmentWeakReference;
         private WeakReference<SongListAdapter> adapterWeakReference;
 
+        private int count = 0;
+
         LoadSongs(SongsListFragment songsListFragment, SongListAdapter adapter) {
             super();
             this.songsListFragmentWeakReference = new WeakReference<>(songsListFragment);
@@ -97,52 +99,78 @@ public class SongsListFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... voids) {
             File rootFolder = new File("/storage/self/primary/music");
-            Log.d(TAG, "loadSongs: Before iterating files");
-            MediaMetadataRetriever metadataRetriever = new MediaMetadataRetriever();
 
+            Bitmap placeholder = BitmapFactory.decodeResource(songsListFragmentWeakReference.get().getResources(), R.drawable.ic_audiotrack_black_24dp);
+
+            ArrayList<Thread> tasks = new ArrayList<>();
+
+            Date start = new Date();
             for (File file : rootFolder.listFiles()) {
-                try {
-                    if (file.getName().endsWith(".mp3") || file.getName().endsWith(".wav") || file.getName().endsWith(".m4a") || file.getName().endsWith(".mwa") || file.getName().endsWith(".flac")) {
-                        metadataRetriever.setDataSource(file.getPath());
-                        String songName = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-                        String artistsJoin = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+                Thread task = new Thread(() -> {
+                    MediaMetadataRetriever metadataRetriever = new MediaMetadataRetriever();
+                    try {
+                        if (file.getName().endsWith(".mp3") || file.getName().endsWith(".wav") || file.getName().endsWith(".m4a") || file.getName().endsWith(".mwa") || file.getName().endsWith(".flac")) {
+                            metadataRetriever.setDataSource(file.getPath());
+                            String songName = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+                            String artistsJoin = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
 
-                        ArrayList<String> artists = new ArrayList<>();
+                            ArrayList<String> artists = new ArrayList<>();
 
-                        Matcher matcher = Pattern.compile("([^ &,]([^,&])*[^ ,&]+)").matcher(artistsJoin);
-                        while (matcher.find()) {
-                            artists.add(matcher.group());
-                        }
-
-
-                        Bitmap cover = null;
-                        try {
-                            byte[] data = metadataRetriever.getEmbeddedPicture();
-                            cover = BitmapFactory.decodeByteArray(data, 0, data.length);
-                        } catch (Exception ignored) {
-                            cover = BitmapFactory.decodeResource(songsListFragmentWeakReference.get().getResources(), R.drawable.ic_launcher_foreground);
-                        } finally {
-                            if (cover == null) {
-                                cover = BitmapFactory.decodeResource(songsListFragmentWeakReference.get().getResources(), R.drawable.ic_launcher_foreground);
+                            Matcher matcher = Pattern.compile("([^ &,]([^,&])*[^ ,&]+)").matcher(artistsJoin);
+                            while (matcher.find()) {
+                                artists.add(matcher.group());
                             }
 
-                            Song song = new Song(songName, artists, cover);
-                            Log.d(TAG, "loadSongs: Add Song");
-                            songsListFragmentWeakReference.get().getActivity().runOnUiThread(() -> {
-                                adapterWeakReference.get().addSong(song);
-                                adapterWeakReference.get().sort();
-                            });
+                            Bitmap cover = null;
+                            try {
+                                byte[] data = metadataRetriever.getEmbeddedPicture();
+                                cover = BitmapFactory.decodeByteArray(data, 0, data.length);
+                            } catch (Exception ignored) {
+                                cover = placeholder;
+                            } finally {
+                                if (cover == null) {
+                                    cover = placeholder;
+                                }
+
+                                Song song = new Song(songName, artists, cover);
+                                songsListFragmentWeakReference.get().getActivity().runOnUiThread(() -> adapterWeakReference.get().addSong(song));
+                            }
                         }
+                    } catch (Exception ignored) {
+                        Log.d(TAG, "failed");
+                    } finally {
+                        metadataRetriever.release();
                     }
-                } catch (Exception ignored) {
-                    Log.d(TAG, "failed");
-                }
+                });
+                tasks.add(task);
+                task.start();
             }
-            metadataRetriever.release();
+            Log.d(TAG, "doInBackground: Time Taken: " + (new Date().getTime() - start.getTime()));
+
+            tasks.forEach(thread -> {
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            count = tasks.size();
 
             songsListFragmentWeakReference.get().getActivity().runOnUiThread(() -> Toast.makeText(songsListFragmentWeakReference.get().getContext(), "Finished Loading Songs", Toast.LENGTH_LONG).show());
-
             return null;
+        }
+
+        @SuppressWarnings("ConstantConditions")
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            try {
+                Log.d(TAG, "onPostExecute: " + count);
+                ((MainActivity)songsListFragmentWeakReference.get().getActivity()).getSupportActionBar().setTitle("Songs Count: " + count);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }

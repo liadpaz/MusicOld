@@ -6,9 +6,9 @@
     android:layout_height="match_parent">
 
     <ImageView
-        android:id="@+id/iv_song_cover"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
+        android:id="@+id/ivSongCover"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
@@ -18,35 +18,37 @@
         tools:ignore="ContentDescription" />
 
     <TextView
-        android:id="@+id/tv_song_name"
+        android:id="@+id/tvSongName"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:lines="1"
         android:textSize="16sp"
-        app:layout_constraintBottom_toTopOf="@+id/tv_song_artist"
-        app:layout_constraintEnd_toStartOf="@+id/btn_more"
-        app:layout_constraintStart_toEndOf="@+id/iv_song_cover"
-        app:layout_constraintTop_toTopOf="@+id/iv_song_cover"
+        app:layout_constraintBottom_toTopOf="@+id/tvSongArtist"
+        app:layout_constraintEnd_toStartOf="@+id/btnMore"
+        app:layout_constraintStart_toEndOf="@+id/ivSongCover"
+        app:layout_constraintTop_toTopOf="@+id/ivSongCover"
         app:layout_constraintVertical_bias="0.0" />
 
     <TextView
-        android:id="@+id/tv_song_artist"
+        android:id="@+id/tvSongArtist"
         android:layout_width="0dp"
-        android:layout_height="16dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="@+id/iv_song_cover"
-        app:layout_constraintEnd_toStartOf="@+id/btn_more"
-        app:layout_constraintStart_toEndOf="@+id/iv_song_cover"
-        app:layout_constraintTop_toTopOf="@+id/iv_song_cover"
+        app:layout_constraintBottom_toBottomOf="@+id/ivSongCover"
+        app:layout_constraintEnd_toStartOf="@+id/btnMore"
+        app:layout_constraintStart_toEndOf="@+id/ivSongCover"
+        app:layout_constraintTop_toTopOf="@+id/ivSongCover"
         app:layout_constraintVertical_bias="1.0" />
 
     <Button
-        android:id="@+id/btn_more"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:id="@+id/btnMore"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_marginEnd="16dp"
         android:background="@drawable/ic_more_vert_24px"
         app:layout_constraintBottom_toBottomOf="parent"
