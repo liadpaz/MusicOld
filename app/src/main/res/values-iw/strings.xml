@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Music</string>
+    <string name="app_name">מוזיקה</string>
     <string name="menu_add_queue">הוסף לתור</string>
+    <string name="tab_songs">שירים</string>
+    <string name="menu_settings">הגדרות</string>
+    <string name="menu_pick_folder">בחר תיקיה</string>
+    <string name="menu_about">אודות</string>
+    <string name="tab_artists">אמנים</string>
 </resources>
