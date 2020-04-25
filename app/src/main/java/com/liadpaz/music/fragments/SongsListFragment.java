@@ -1,7 +1,5 @@
 package com.liadpaz.music.fragments;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -26,34 +24,19 @@ import com.liadpaz.music.utils.Utilities;
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
-/**
- * A simple {@link Fragment} subclass. Use the {@link SongsListFragment#newInstance} factory method
- * to create an instance of this fragment.
- */
 public class SongsListFragment extends Fragment {
 
-    private static final String TAG = "SONGSLIST_FRAGMENT";
+    private static final String TAG = "SONGS_LIST_FRAGMENT";
 
     private FragmentSongsListBinding binding;
 
     public SongsListFragment() { }
 
-    /**
-     * Use this factory method to create a new instance of this fragment using the provided
-     * parameters.
-     *
-     * @return A new instance of fragment SongsListFragment.
-     */
-    @SuppressWarnings("unused")
-    private static SongsListFragment newInstance() {
+    public static SongsListFragment newInstance() {
         return new SongsListFragment();
     }
 
@@ -70,7 +53,7 @@ public class SongsListFragment extends Fragment {
         lvSongs.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
         registerForContextMenu(lvSongs);
 
-        new LoadSongs(this, (SongListAdapter)lvSongs.getAdapter()).execute();
+        new LoadSongsTask(this, (SongListAdapter)lvSongs.getAdapter()).execute();
 
         lvSongs.setOnItemClickListener((parent, view1, position, id) -> {
             // TODO: play song
@@ -85,12 +68,12 @@ public class SongsListFragment extends Fragment {
         getActivity().getMenuInflater().inflate(R.menu.menu_song, menu);
     }
 
-    static class LoadSongs extends AsyncTask<Void, Void, Void> {
+    static class LoadSongsTask extends AsyncTask<Void, Void, Void> {
 
         private WeakReference<SongsListFragment> songsListFragmentWeakReference;
         private WeakReference<SongListAdapter> adapterWeakReference;
 
-        LoadSongs(SongsListFragment songsListFragment, SongListAdapter adapter) {
+        LoadSongsTask(SongsListFragment songsListFragment, SongListAdapter adapter) {
             super();
             this.songsListFragmentWeakReference = new WeakReference<>(songsListFragment);
             this.adapterWeakReference = new WeakReference<>(adapter);
@@ -99,15 +82,9 @@ public class SongsListFragment extends Fragment {
         @SuppressWarnings("ConstantConditions")
         @Override
         protected Void doInBackground(Void... voids) {
-            final Bitmap placeholder = BitmapFactory.decodeResource(songsListFragmentWeakReference.get().getResources(), R.drawable.ic_audiotrack_black_24dp);
-
-            CompletionService<Object> completionService = new ExecutorCompletionService<>(Executors.newCachedThreadPool());
-
-            Date start = new Date();
 
             for (File file : Utilities.listFiles(LocalFiles.getPath())) {
-                Log.d(TAG, "doInBackground: " + file.getPath());
-                completionService.submit(() -> {
+                new FutureTask<>(() -> {
                     MediaMetadataRetriever metadataRetriever = new MediaMetadataRetriever();
                     metadataRetriever.setDataSource(file.getPath());
                     String songName = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
@@ -120,31 +97,18 @@ public class SongsListFragment extends Fragment {
                         artists.add(matcher.group());
                     }
 
-                    Bitmap cover = null;
-                    try {
-                        byte[] data = metadataRetriever.getEmbeddedPicture();
-                        cover = BitmapFactory.decodeByteArray(data, 0, data.length);
-                    } catch (Exception ignored) {
-                        cover = placeholder;
-                    } finally {
-                        if (cover == null) {
-                            cover = placeholder;
-                        }
+                    byte[] data = null;
 
-                        Song song = new Song(songName, artists, cover);
+                    try {
+                        data = metadataRetriever.getEmbeddedPicture();
+                    } catch (Exception ignored) {
+                    } finally {
+                        Song song = new Song(songName, artists, data);
                         songsListFragmentWeakReference.get().getActivity().runOnUiThread(() -> adapterWeakReference.get().addSong(song));
                     }
                     metadataRetriever.release();
-                }, null);
+                }, null).run();
             }
-
-            try {
-                completionService.take().get();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            Log.d(TAG, "doInBackground: Time Taken: " + (new Date().getTime() - start.getTime()));
             return null;
         }
     }

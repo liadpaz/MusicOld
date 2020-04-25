@@ -1,6 +1,8 @@
 package com.liadpaz.music.adapters;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -8,14 +10,17 @@ import android.widget.BaseAdapter;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import com.liadpaz.music.R;
 import com.liadpaz.music.databinding.ItemSongBinding;
 import com.liadpaz.music.utils.Song;
 import com.liadpaz.music.utils.Utilities;
 
 import java.util.TreeSet;
+import java.util.concurrent.FutureTask;
 
 public class SongListAdapter extends BaseAdapter {
 
+    @SuppressWarnings("unused")
     private static final String TAG = "SONGS_LIST_ADAPTER";
 
     private Activity activity;
@@ -60,7 +65,15 @@ public class SongListAdapter extends BaseAdapter {
 
         Song song = (Song)getItem(position);
 
-        binding.ivSongCover.setImageBitmap(song.getCover());
+        new FutureTask<>(() -> {
+            byte[] data = song.getCover();
+            if (data != null) {
+                Bitmap cover = BitmapFactory.decodeByteArray(data, 0, data.length);
+                binding.ivSongCover.setImageBitmap(cover);
+            } else {
+                binding.ivSongCover.setImageResource(R.drawable.ic_audiotrack_black_24dp);
+            }
+        }, null).run();
         binding.tvSongName.setText(song.getSongName());
         binding.tvSongArtist.setText(Utilities.joinArtists(song.getArtists()));
         binding.btnMore.setOnClickListener(v -> activity.openContextMenu(v));
@@ -68,8 +81,8 @@ public class SongListAdapter extends BaseAdapter {
         return convertView;
     }
 
-    public void addSong(Song song) {
+    public void addSong(final Song song) {
         this.songs.add(song);
-        notifyDataSetChanged();
+        notifyDataSetInvalidated();
     }
 }

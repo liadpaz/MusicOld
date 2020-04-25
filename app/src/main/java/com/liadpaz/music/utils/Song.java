@@ -1,29 +1,33 @@
 package com.liadpaz.music.utils;
 
-import android.graphics.Bitmap;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 
 public class Song {
     private String songName;
     private ArrayList<String> artists;
-    private Bitmap cover;
+    private byte[] cover;
 
-    public Song(String songName, ArrayList<String> artists, Bitmap cover) {
+    public Song(@NonNull String songName, @NonNull ArrayList<String> artists, @Nullable byte[] cover) {
         this.songName = songName;
         this.artists = artists;
         this.cover = cover;
     }
 
+    @NonNull
     public String getSongName() {
         return songName;
     }
 
+    @NonNull
     public ArrayList<String> getArtists() {
         return artists;
     }
 
-    public Bitmap getCover() {
+    @Nullable
+    public byte[] getCover() {
         return cover;
     }
 }
