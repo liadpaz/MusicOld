@@ -118,9 +118,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void recreate() {
-        overridePendingTransition(0,0);
+        overridePendingTransition(0, 0);
         finish();
-        overridePendingTransition(0,0);
+        overridePendingTransition(0, 0);
         startActivity(getIntent());
     }
 }

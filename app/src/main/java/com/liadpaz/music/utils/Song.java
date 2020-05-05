@@ -9,25 +9,24 @@ public class Song {
     private String songName;
     private ArrayList<String> artists;
     private byte[] cover;
+    private String path;
 
-    public Song(@NonNull String songName, @NonNull ArrayList<String> artists, @Nullable byte[] cover) {
+    public Song(@NonNull String songName, @NonNull ArrayList<String> artists, @Nullable byte[] cover, @NonNull String path) {
         this.songName = songName;
         this.artists = artists;
         this.cover = cover;
+        this.path = path;
     }
 
     @NonNull
-    public String getSongName() {
-        return songName;
-    }
+    public String getPath() { return path; }
 
     @NonNull
-    public ArrayList<String> getArtists() {
-        return artists;
-    }
+    public String getSongName() { return songName; }
+
+    @NonNull
+    public ArrayList<String> getArtists() { return artists; }
 
     @Nullable
-    public byte[] getCover() {
-        return cover;
-    }
+    public byte[] getCover() { return cover; }
 }

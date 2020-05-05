@@ -3,12 +3,12 @@ package com.liadpaz.music.adapters;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
 import androidx.annotation.NonNull;
-import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.liadpaz.music.R;
 import com.liadpaz.music.databinding.ItemSongBinding;
@@ -59,24 +59,24 @@ public class SongListAdapter extends BaseAdapter {
             binding = (ItemSongBinding)convertView.getTag();
         }
 
-        binding.getRoot().setClickable(true);
-
-        convertView.setLayoutParams(new ConstraintLayout.LayoutParams(parent.getWidth(), convertView.getHeight()));
-
         Song song = (Song)getItem(position);
 
-        new FutureTask<>(() -> {
-            byte[] data = song.getCover();
-            if (data != null) {
+        byte[] data = song.getCover();
+        if (data != null) {
+            new FutureTask<>(() -> {
                 Bitmap cover = BitmapFactory.decodeByteArray(data, 0, data.length);
                 binding.ivSongCover.setImageBitmap(cover);
-            } else {
-                binding.ivSongCover.setImageResource(R.drawable.ic_audiotrack_black_24dp);
-            }
-        }, null).run();
+            }, null).run();
+        } else {
+            binding.ivSongCover.setImageResource(R.drawable.ic_audiotrack_black_24dp);
+        }
         binding.tvSongName.setText(song.getSongName());
         binding.tvSongArtist.setText(Utilities.joinArtists(song.getArtists()));
-        binding.btnMore.setOnClickListener(v -> activity.openContextMenu(v));
+        activity.registerForContextMenu(binding.btnMore);
+        binding.btnMore.setOnClickListener(v -> {
+            Log.d(TAG, "getView: context menu open");
+            activity.openContextMenu(v);
+        });
 
         return convertView;
     }
@@ -84,5 +84,9 @@ public class SongListAdapter extends BaseAdapter {
     public void addSong(final Song song) {
         this.songs.add(song);
         notifyDataSetInvalidated();
+    }
+
+    public Song[] getSongs() {
+        return songs.toArray(new Song[]{});
     }
 }

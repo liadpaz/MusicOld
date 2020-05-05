@@ -3,36 +3,51 @@ package com.liadpaz.music.service;
 import android.app.Service;
 import android.content.Intent;
 import android.media.MediaPlayer;
+import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.liadpaz.music.utils.Song;
+
 public final class MusicPlayerService extends Service {
 
-    MediaPlayer player;
+    private static final String TAG = "MUSIC_SERVICE";
+
+    private MusicPlayerBinder binder;
+
+    private MediaPlayer player;
+
+    private Song[] queue;
+    private int currentSong = -1;
 
     public MusicPlayerService() {
-        super();
-
         player = new MediaPlayer();
+        player.setOnCompletionListener(mp -> {
+            if (!mp.isLooping()) {
+                playNext();
+            }
+        });
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
+        binder = new MusicPlayerBinder();
+        Log.d(TAG, "onCreate: create");
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 
-    @Override
-    public void onDestroy() {
-        if (player != null) {
-            player.release();
-        }
-        super.onDestroy();
+    public void startQueue(Song[] queue, int start) {
+        Log.d(TAG, "startQueue: " + start);
+        this.queue = queue;
+        this.currentSong = start;
+        setAudio(queue[start].getPath());
     }
 
     /**
@@ -40,11 +55,13 @@ public final class MusicPlayerService extends Service {
      *
      * @param pathToFile The file to play audio from
      */
-    public void setAudio(String pathToFile) {
+    private void setAudio(String pathToFile) {
         try {
+            Log.d(TAG, "setAudio: " + pathToFile);
+            player.reset();
             player.setDataSource(pathToFile);
-        } catch (Exception e) {
-            e.printStackTrace();
+            player.prepare();
+        } catch (Exception ignored) {
         }
     }
 
@@ -65,15 +82,68 @@ public final class MusicPlayerService extends Service {
     }
 
     /**
+     * This function returns the current millis of the played song
+     *
+     * @return current millis of the played song
+     */
+    public long getTime() {
+        try {
+            return player.getCurrentPosition();
+        } catch (Exception ignored) {
+            return 0;
+        }
+    }
+
+    public void resetSong() {
+        player.seekTo(0);
+    }
+
+    /**
      * This function stops the player from playing audio
      */
-    public void stop() {
-        player.start();
+    public void pause() {
+        player.pause();
+    }
+
+    /**
+     * This function checks if music is playing
+     *
+     * @return true if the player plays music, otherwise false
+     */
+    public boolean isPlaying() {
+        return player.isPlaying();
+    }
+
+    public void playNext() {
+        if (currentSong++ == queue.length) {
+            currentSong = 0;
+        }
+        setAudio(queue[currentSong].getPath());
+        start();
+    }
+
+    public void setOnNextSongListener(OnComleteListener callback) {
+        player.setOnCompletionListener(mp -> {
+            if (!mp.isLooping()) {
+                playNext();
+                callback.onComplete(queue[currentSong]);
+            }
+        });
     }
 
     @Nullable
     @Override
-    public IBinder onBind(@Nullable Intent intent) {
-        return null;
+    public IBinder onBind(Intent intent) {
+        return binder;
+    }
+
+    public class MusicPlayerBinder extends Binder {
+        public MusicPlayerService getService() {
+            return MusicPlayerService.this;
+        }
+    }
+
+    public interface OnComleteListener {
+        void onComplete(Song nextSong);
     }
 }
