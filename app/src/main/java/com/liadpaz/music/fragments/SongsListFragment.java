@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -56,8 +57,9 @@ public class SongsListFragment extends Fragment {
         new LoadSongsTask(this, (SongListAdapter)lvSongs.getAdapter()).execute();
 
         lvSongs.setOnItemClickListener((parent, view1, position, id) -> {
-            // TODO: play song
-            Log.d(TAG, "onActivityCreated: ON ITEM CLICK");
+            String name = ((Song)lvSongs.getAdapter().getItem(position)).getSongName();
+            Toast.makeText(getContext(), name, Toast.LENGTH_LONG).show();
+            Log.d(TAG, "onViewCreated: " + name);
         });
     }
 
@@ -82,19 +84,24 @@ public class SongsListFragment extends Fragment {
         @SuppressWarnings("ConstantConditions")
         @Override
         protected Void doInBackground(Void... voids) {
-
+            final String songUntitled = songsListFragmentWeakReference.get().getString(R.string.song_no_name);
             for (File file : Utilities.listFiles(LocalFiles.getPath())) {
                 new FutureTask<>(() -> {
                     MediaMetadataRetriever metadataRetriever = new MediaMetadataRetriever();
                     metadataRetriever.setDataSource(file.getPath());
                     String songName = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+                    if (songName == null || songName.isEmpty()) {
+                        songName = file.getName();
+                    }
                     String artistsJoin = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-
                     ArrayList<String> artists = new ArrayList<>();
-
-                    Matcher matcher = Pattern.compile("([^ &,]([^,&])*[^ ,&]+)").matcher(artistsJoin);
-                    while (matcher.find()) {
-                        artists.add(matcher.group());
+                    if (artistsJoin != null && !artistsJoin.isEmpty()) {
+                        Matcher matcher = Pattern.compile("([^ &,]([^,&])*[^ ,&]+)").matcher(artistsJoin);
+                        while (matcher.find()) {
+                            artists.add(matcher.group());
+                        }
+                    } else {
+                        artists.add(songUntitled);
                     }
 
                     byte[] data = null;

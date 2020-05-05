@@ -1,13 +1,11 @@
 package com.liadpaz.music.utils;
 
 import android.net.Uri;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class Utilities {
 
@@ -27,7 +25,6 @@ public class Utilities {
     @NonNull
     public static ArrayList<File> listFiles(String path) {
         ArrayList<File> files = new ArrayList<>();
-        Log.d(TAG, "listFiles: " + path);
         try {
             for (File file : new File(path).listFiles()) {
                 if (!file.isDirectory()) {
@@ -47,15 +44,12 @@ public class Utilities {
 
     @SuppressWarnings("ConstantConditions")
     public static String getPathFromUri(@NonNull Uri uri) {
-        Log.d(TAG, "getPathFromUri: " + uri.getPath());
         String[] path = uri.getPath().split(":")[0].split("/");
-        Log.d(TAG, "getPathFromUri: " + Arrays.toString(path));
         StringBuilder builder = new StringBuilder("/storage/self/primary");
         for (int i = 3; i < path.length; i++) {
             builder.append("/").append(path[i]);
         }
         builder.append("/").append(uri.getPath().split(":")[1].split("/")[0]);
-        Log.d(TAG, "getPathFromUri: " + builder.toString());
         return builder.toString();
     }
 }

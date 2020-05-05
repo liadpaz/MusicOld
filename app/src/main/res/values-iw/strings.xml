@@ -7,4 +7,5 @@
     <string name="menu_pick_folder">בחר תיקיה</string>
     <string name="menu_about">אודות</string>
     <string name="tab_artists">אמנים</string>
+    <string name="song_no_name">&lt;אין שם&gt;</string>
 </resources>
