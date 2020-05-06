@@ -7,4 +7,5 @@
     <string name="menu_about">About</string>
     <string name="tab_artists">Artists</string>
     <string name="song_no_name">&lt;Untitled&gt;</string>
+    <string name="notification_name">Music</string>
 </resources>

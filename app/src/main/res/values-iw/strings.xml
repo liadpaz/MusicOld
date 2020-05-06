@@ -8,4 +8,5 @@
     <string name="menu_about">אודות</string>
     <string name="tab_artists">אמנים</string>
     <string name="song_no_name">&lt;אין שם&gt;</string>
+    <string name="notification_name">מוזיקה</string>
 </resources>

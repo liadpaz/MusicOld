@@ -22,6 +22,7 @@ import com.liadpaz.music.fragments.SongsListFragment;
 import com.liadpaz.music.utils.LocalFiles;
 import com.liadpaz.music.utils.Utilities;
 
+import java.io.File;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -40,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         setSupportActionBar(binding.toolBarMain);
 
-        new LocalFiles(getSharedPreferences("Music.Data", 0));
+        new LocalFiles(getSharedPreferences("Music.Data", 0), new File(getFilesDir(), "Songs.txt"));
 
         if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_PERMISSION);
@@ -111,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
             String path = Utilities.getPathFromUri(DocumentsContract.buildDocumentUriUsingTree(data.getData(), DocumentsContract.getTreeDocumentId(data.getData())));
             if (!LocalFiles.getPath().equals(path)) {
                 LocalFiles.setPath(path);
+                LocalFiles.resetSongs();
                 recreate();
             }
         }

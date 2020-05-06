@@ -1,16 +1,15 @@
 package com.liadpaz.music.fragments;
 
+import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,19 +23,16 @@ import androidx.fragment.app.Fragment;
 import com.liadpaz.music.R;
 import com.liadpaz.music.adapters.SongListAdapter;
 import com.liadpaz.music.databinding.FragmentSongsListBinding;
+import com.liadpaz.music.notification.MusicNotification;
 import com.liadpaz.music.service.MusicPlayerService;
 import com.liadpaz.music.utils.LocalFiles;
 import com.liadpaz.music.utils.Song;
 import com.liadpaz.music.utils.Utilities;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.concurrent.CompletionService;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,30 +41,47 @@ public class SongsListFragment extends Fragment {
     @SuppressWarnings("unused")
     private static final String TAG = "SONGS_LIST_FRAGMENT";
 
+    private static MusicPlayerService musicPlayerService;
     private boolean isLooping = false;
 
-    private ListView lvSongs;
+    private MusicNotification musicNotification;
 
-    private MusicPlayerService musicPlayerService;
+    private ListView lvSongs;
     private FragmentSongsListBinding binding;
     // service connection to the music player service
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @SuppressWarnings("ConstantConditions")
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            musicPlayerService = ((MusicPlayerService.MusicPlayerBinder)service).getService();
-
-            musicPlayerService.setOnNextSongListener(nextSong -> {
-                if (nextSong.getCover() == null) {
-                    binding.ivCurrentTrack.setImageDrawable(getContext().getDrawable(R.drawable.ic_audiotrack_black_24dp));
-                } else {
-                    new Thread(() -> {
-                        byte[] data = nextSong.getCover();
-                        Bitmap cover = BitmapFactory.decodeByteArray(data, 0, data.length);
-                        getActivity().runOnUiThread(() -> binding.ivCurrentTrack.setImageBitmap(cover));
-                    }).start();
+            if (musicPlayerService == null) {
+                musicPlayerService = ((MusicPlayerService.MusicPlayerBinder)service).getService();
+                startNotification();
+            }
+            if (musicPlayerService.getSource() != null) {
+                if (musicPlayerService.isPlaying()) {
+                    binding.btnPlay.setBackground(getContext().getDrawable(R.drawable.pause));
                 }
-            });
+                if (musicPlayerService.isLooping()) {
+                    binding.btnLoop.setBackground(getContext().getDrawable(R.drawable.repeat_one));
+                }
+                new Thread(() -> {
+                    Bitmap cover = musicPlayerService.getCurrentSong().getCover();
+                    if (cover != null) {
+                        getActivity().runOnUiThread(() -> binding.ivCurrentTrack.setImageBitmap(cover));
+                    } else {
+                        getActivity().runOnUiThread(() -> binding.ivCurrentTrack.setImageResource(R.drawable.ic_audiotrack_black_24dp));
+                    }
+                }).start();
+            }
+
+            musicPlayerService.setOnNextSongListener(nextSong -> new Thread(() -> {
+                Bitmap cover = nextSong.getCover();
+                if (cover != null) {
+                    getActivity().runOnUiThread(() -> binding.ivCurrentTrack.setImageBitmap(cover));
+                } else {
+                    getActivity().runOnUiThread(() -> binding.ivCurrentTrack.setImageResource(R.drawable.ic_audiotrack_black_24dp));
+                }
+            }).start());
         }
 
         @Override
@@ -93,9 +106,9 @@ public class SongsListFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         (lvSongs = binding.lvSongs).setAdapter(new SongListAdapter(getActivity()));
-        binding.btnPrev.setOnClickListener(v -> musicPlayerService.resetSong());
+        binding.btnPrev.setOnClickListener(v -> musicPlayerService.playPrev());
         binding.btnPlay.setOnClickListener(v -> {
-            if( musicPlayerService.hasQueue()) {
+            if (musicPlayerService.hasQueue()) {
                 if (musicPlayerService.isPlaying()) {
                     musicPlayerService.pause();
                     v.setBackground(getContext().getDrawable(R.drawable.play));
@@ -105,6 +118,8 @@ public class SongsListFragment extends Fragment {
                 }
             } else {
                 musicPlayerService.startQueue(getSongs(), 0);
+                musicPlayerService.start();
+                binding.ivCurrentTrack.setImageBitmap(musicPlayerService.getCurrentSong().getCover());
                 v.setBackground(getContext().getDrawable(R.drawable.pause));
             }
         });
@@ -121,11 +136,6 @@ public class SongsListFragment extends Fragment {
 
         getContext().bindService(new Intent(getContext(), MusicPlayerService.class), serviceConnection, Context.BIND_AUTO_CREATE);
 
-        ArrayList<Song> songs = LocalFiles.getSongs();
-        if (songs != null) {
-            ((SongListAdapter)lvSongs.getAdapter()).setSource(songs);
-        }
-
         new LoadSongsTask(this, (SongListAdapter)lvSongs.getAdapter()).execute();
 
         lvSongs.setOnItemClickListener((parent, view1, position, id) -> {
@@ -133,16 +143,17 @@ public class SongsListFragment extends Fragment {
             musicPlayerService.startQueue(getSongs(), position);
             musicPlayerService.start();
             binding.btnPlay.setBackground(getContext().getDrawable(R.drawable.pause));
-            if (song.getCover() == null) {
-                binding.ivCurrentTrack.setImageDrawable(getContext().getDrawable(R.drawable.ic_audiotrack_black_24dp));
-            } else {
-                new Thread(() -> {
-                    byte[] data = song.getCover();
-                    Bitmap cover = BitmapFactory.decodeByteArray(data, 0, data.length);
+            new Thread(() -> {
+                Bitmap cover = song.getCover();
+                if (cover != null) {
                     getActivity().runOnUiThread(() -> binding.ivCurrentTrack.setImageBitmap(cover));
-                }).start();
-            }
+                } else {
+                    getActivity().runOnUiThread(() -> binding.ivCurrentTrack.setImageResource(R.drawable.ic_audiotrack_black_24dp));
+                }
+            }).start();
         });
+
+        musicNotification = new MusicNotification(getContext(), getContext().getSystemService(NotificationManager.class));
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -156,10 +167,9 @@ public class SongsListFragment extends Fragment {
         return ((SongListAdapter)lvSongs.getAdapter()).getSongs();
     }
 
-    //    private void startNotification() {
-    //        Notification.Builder builder = new Notification.Builder(getContext(), "1")
-    //                .setCont
-    //    }
+    private void startNotification() {
+        musicNotification.sendNotification();
+    }
 
 
     @SuppressWarnings("ConstantConditions")
@@ -169,10 +179,12 @@ public class SongsListFragment extends Fragment {
         super.onDestroy();
     }
 
-    static class LoadSongsTask extends AsyncTask<String, Void, Void> {
+    static class LoadSongsTask extends AsyncTask<Void, Void, Void> {
 
         private WeakReference<SongsListFragment> songsListFragmentWeakReference;
         private WeakReference<SongListAdapter> adapterWeakReference;
+
+        private CopyOnWriteArrayList<Song> songs;
 
         LoadSongsTask(SongsListFragment songsListFragment, SongListAdapter adapter) {
             super();
@@ -180,19 +192,16 @@ public class SongsListFragment extends Fragment {
             this.adapterWeakReference = new WeakReference<>(adapter);
         }
 
-        @SuppressWarnings("ConstantConditions")
         @Override
-        protected Void doInBackground(String... strings) {
+        protected Void doInBackground(Void... voids) {
             final String songUntitled = songsListFragmentWeakReference.get().getString(R.string.song_no_name);
 
-            int tasks = 0;
-            CompletionService<Void> completionService = new ExecutorCompletionService<>(Executors.newCachedThreadPool());
+            ArrayList<Thread> threads = new ArrayList<>();
 
-            CopyOnWriteArrayList<Song> songs = new CopyOnWriteArrayList<>();
+            songs = new CopyOnWriteArrayList<>();
 
             for (File file : Utilities.listFiles(LocalFiles.getPath())) {
-                tasks++;
-                completionService.submit(() -> {
+                Thread thread = new Thread(() -> {
                     MediaMetadataRetriever metadataRetriever = new MediaMetadataRetriever();
                     metadataRetriever.setDataSource(file.getPath());
                     String songName = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
@@ -210,41 +219,29 @@ public class SongsListFragment extends Fragment {
                         artists.add(songUntitled);
                     }
 
-                    byte[] data = null;
+                    songs.add(new Song(songName, artists, file.getPath()));
 
-                    try {
-                        data = metadataRetriever.getEmbeddedPicture();
-                        ByteArrayOutputStream os = new ByteArrayOutputStream();
-                        BitmapFactory.decodeByteArray(data, 0, data.length).compress(Bitmap.CompressFormat.JPEG, 10, os);
-                        data = os.toByteArray();
-                    } catch (Exception ignored) {
-                    } finally {
-                        songs.add(new Song(songName, artists, data, file.getPath()));
-                    }
                     metadataRetriever.release();
-                }, null);
+                });
+                thread.start();
+                threads.add(thread);
             }
 
-            LocalFiles.setSongs(songs);
-
-            int received = 0;
-            while (received < tasks) {
+            for (Thread thread : threads) {
                 try {
-                    completionService.take().get();
-                } catch (Exception ignored) {
-                } finally {
-                    received++;
+                    thread.join();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
 
-            Log.d(TAG, "doInBackground: " + songs.size());
-
-            try {
-                songsListFragmentWeakReference.get().getActivity().runOnUiThread(() -> adapterWeakReference.get().setSource(songs));
-            } catch (Exception e) {
-                Log.d(TAG, "doInBackground: " + e.toString());
-            }
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            adapterWeakReference.get().setSource(songs);
         }
     }
 }

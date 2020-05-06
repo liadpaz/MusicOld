@@ -7,9 +7,12 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.liadpaz.music.utils.Song;
+
+import java.util.concurrent.TimeUnit;
 
 public final class MusicPlayerService extends Service {
 
@@ -21,16 +24,14 @@ public final class MusicPlayerService extends Service {
 
     private MediaPlayer player;
 
+    private Song source = null;
+
     private Song[] queue;
     private int currentSong = -1;
 
     public MusicPlayerService() {
         player = new MediaPlayer();
-        player.setOnCompletionListener(mp -> {
-            if (!mp.isLooping()) {
-                playNext();
-            }
-        });
+        setOnNextSongListener(null);
     }
 
     @Override
@@ -44,11 +45,13 @@ public final class MusicPlayerService extends Service {
         return START_STICKY;
     }
 
-    public void startQueue(Song[] queue, int start) {
+
+
+    public void startQueue(@NonNull Song[] queue, int start) {
         Log.d(TAG, "startQueue: " + start);
         this.queue = queue;
         this.currentSong = start;
-        setAudio(queue[start].getPath());
+        setAudio((source = queue[start]).getPath());
     }
 
     /**
@@ -81,12 +84,20 @@ public final class MusicPlayerService extends Service {
         player.setLooping(looping);
     }
 
+    public boolean isLooping() {
+        return player.isLooping();
+    }
+
+    public Song getSource() {
+        return source;
+    }
+
     /**
      * This function returns the current millis of the played song
      *
      * @return current millis of the played song
      */
-    public long getTime() {
+    private long getTime() {
         try {
             return player.getCurrentPosition();
         } catch (Exception ignored) {
@@ -94,7 +105,7 @@ public final class MusicPlayerService extends Service {
         }
     }
 
-    public void resetSong() {
+    private void resetSong() {
         player.seekTo(0);
     }
 
@@ -115,7 +126,18 @@ public final class MusicPlayerService extends Service {
     }
 
     public void playPrev() {
-
+        if (getTime() < TimeUnit.SECONDS.toMillis(2)) {
+            if (--currentSong == -1) {
+                currentSong = queue.length - 1;
+            }
+            setAudio((source = queue[currentSong]).getPath());
+            if (callback != null) {
+                callback.onComplete(queue[currentSong]);
+            }
+            start();
+        } else {
+            resetSong();
+        }
     }
 
     public void playNext() {
@@ -123,8 +145,12 @@ public final class MusicPlayerService extends Service {
             currentSong = 0;
         }
         callback.onComplete(queue[currentSong]);
-        setAudio(queue[currentSong].getPath());
+        setAudio((source = queue[currentSong]).getPath());
         start();
+    }
+
+    public Song getCurrentSong() {
+        return queue[currentSong];
     }
 
     public boolean hasQueue() {
@@ -136,7 +162,9 @@ public final class MusicPlayerService extends Service {
         player.setOnCompletionListener(mp -> {
             if (!mp.isLooping()) {
                 playNext();
-                callback.onComplete(queue[currentSong]);
+                if (callback != null) {
+                    callback.onComplete(queue[currentSong]);
+                }
             }
         });
     }

@@ -2,7 +2,6 @@ package com.liadpaz.music.adapters;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,7 +16,6 @@ import com.liadpaz.music.utils.Utilities;
 
 import java.util.List;
 import java.util.TreeSet;
-import java.util.concurrent.FutureTask;
 
 public class SongListAdapter extends BaseAdapter {
 
@@ -62,15 +60,14 @@ public class SongListAdapter extends BaseAdapter {
 
         Song song = (Song)getItem(position);
 
-        byte[] data = song.getCover();
-        if (data != null) {
-            new FutureTask<>(() -> {
-                Bitmap cover = BitmapFactory.decodeByteArray(data, 0, data.length);
-                binding.ivSongCover.setImageBitmap(cover);
-            }, null).run();
-        } else {
-            binding.ivSongCover.setImageResource(R.drawable.ic_audiotrack_black_24dp);
-        }
+        new Thread(() -> {
+            Bitmap cover = song.getCover();
+            if (cover != null) {
+                activity.runOnUiThread(() -> binding.ivSongCover.setImageBitmap(cover));
+            } else {
+                activity.runOnUiThread(() -> binding.ivSongCover.setImageResource(R.drawable.ic_audiotrack_black_24dp));
+            }
+        }).start();
         binding.tvSongName.setText(song.getSongName());
         binding.tvSongArtist.setText(Utilities.joinArtists(song.getArtists()));
         activity.registerForContextMenu(binding.btnMore);
