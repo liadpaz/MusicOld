@@ -9,6 +9,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class LocalFiles {
 
@@ -52,7 +53,7 @@ public class LocalFiles {
      *
      * @param songs ArrayList of the songs
      */
-    public static void setSongs(@NonNull ArrayList<Song> songs) {
+    public static void setSongs(@NonNull List<Song> songs) {
         musicSharedPreferences.edit().putString(Constants.SHARED_PREFERENCES_SONGS, new Gson().toJson(songs)).apply();
     }
 }

@@ -15,6 +15,7 @@ import com.liadpaz.music.databinding.ItemSongBinding;
 import com.liadpaz.music.utils.Song;
 import com.liadpaz.music.utils.Utilities;
 
+import java.util.List;
 import java.util.TreeSet;
 import java.util.concurrent.FutureTask;
 
@@ -81,9 +82,9 @@ public class SongListAdapter extends BaseAdapter {
         return convertView;
     }
 
-    public void addSong(final Song song) {
-        this.songs.add(song);
-        notifyDataSetInvalidated();
+    public void setSource(List<Song> sourceSongs) {
+        this.songs.addAll(sourceSongs);
+        notifyDataSetChanged();
     }
 
     public Song[] getSongs() {

@@ -17,6 +17,8 @@ public final class MusicPlayerService extends Service {
 
     private MusicPlayerBinder binder;
 
+    private OnCompleteListener callback;
+
     private MediaPlayer player;
 
     private Song[] queue;
@@ -35,7 +37,6 @@ public final class MusicPlayerService extends Service {
     public void onCreate() {
         super.onCreate();
         binder = new MusicPlayerBinder();
-        Log.d(TAG, "onCreate: create");
     }
 
     @Override
@@ -57,7 +58,6 @@ public final class MusicPlayerService extends Service {
      */
     private void setAudio(String pathToFile) {
         try {
-            Log.d(TAG, "setAudio: " + pathToFile);
             player.reset();
             player.setDataSource(pathToFile);
             player.prepare();
@@ -114,15 +114,25 @@ public final class MusicPlayerService extends Service {
         return player.isPlaying();
     }
 
+    public void playPrev() {
+
+    }
+
     public void playNext() {
-        if (currentSong++ == queue.length) {
+        if (++currentSong == queue.length) {
             currentSong = 0;
         }
+        callback.onComplete(queue[currentSong]);
         setAudio(queue[currentSong].getPath());
         start();
     }
 
-    public void setOnNextSongListener(OnComleteListener callback) {
+    public boolean hasQueue() {
+        return queue != null;
+    }
+
+    public void setOnNextSongListener(final OnCompleteListener callback) {
+        this.callback = callback;
         player.setOnCompletionListener(mp -> {
             if (!mp.isLooping()) {
                 playNext();
@@ -137,13 +147,13 @@ public final class MusicPlayerService extends Service {
         return binder;
     }
 
+    public interface OnCompleteListener {
+        void onComplete(Song nextSong);
+    }
+
     public class MusicPlayerBinder extends Binder {
         public MusicPlayerService getService() {
             return MusicPlayerService.this;
         }
-    }
-
-    public interface OnComleteListener {
-        void onComplete(Song nextSong);
     }
 }
