@@ -74,14 +74,20 @@ public class SongsListFragment extends Fragment {
                 }).start();
             }
 
-            musicPlayerService.setOnNextSongListener(nextSong -> new Thread(() -> {
+            musicPlayerService.setListeners(() -> {
+                if (!musicPlayerService.hasQueue()) {
+                    musicPlayerService.startQueue(getSongs(), 0);
+                    binding.ivCurrentTrack.setImageBitmap(musicPlayerService.getCurrentSong().getCover());
+                }
+                binding.btnPlay.setBackground(getContext().getDrawable(R.drawable.pause));
+            }, nextSong -> new Thread(() -> {
                 Bitmap cover = nextSong.getCover();
                 if (cover != null) {
                     getActivity().runOnUiThread(() -> binding.ivCurrentTrack.setImageBitmap(cover));
                 } else {
                     getActivity().runOnUiThread(() -> binding.ivCurrentTrack.setImageResource(R.drawable.ic_audiotrack_black_24dp));
                 }
-            }).start());
+            }).start(), () -> binding.btnPlay.setBackground(getContext().getDrawable(R.drawable.play)));
         }
 
         @Override
@@ -107,22 +113,7 @@ public class SongsListFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         (lvSongs = binding.lvSongs).setAdapter(new SongListAdapter(getActivity()));
         binding.btnPrev.setOnClickListener(v -> musicPlayerService.playPrev());
-        binding.btnPlay.setOnClickListener(v -> {
-            if (musicPlayerService.hasQueue()) {
-                if (musicPlayerService.isPlaying()) {
-                    musicPlayerService.pause();
-                    v.setBackground(getContext().getDrawable(R.drawable.play));
-                } else {
-                    musicPlayerService.start();
-                    v.setBackground(getContext().getDrawable(R.drawable.pause));
-                }
-            } else {
-                musicPlayerService.startQueue(getSongs(), 0);
-                musicPlayerService.start();
-                binding.ivCurrentTrack.setImageBitmap(musicPlayerService.getCurrentSong().getCover());
-                v.setBackground(getContext().getDrawable(R.drawable.pause));
-            }
-        });
+        binding.btnPlay.setOnClickListener(v -> musicPlayerService.startPause());
         binding.btnNext.setOnClickListener(v -> musicPlayerService.playNext());
         binding.btnLoop.setOnClickListener(v -> {
             if (isLooping) {
@@ -138,20 +129,7 @@ public class SongsListFragment extends Fragment {
 
         new LoadSongsTask(this, (SongListAdapter)lvSongs.getAdapter()).execute();
 
-        lvSongs.setOnItemClickListener((parent, view1, position, id) -> {
-            Song song = ((Song)lvSongs.getAdapter().getItem(position));
-            musicPlayerService.startQueue(getSongs(), position);
-            musicPlayerService.start();
-            binding.btnPlay.setBackground(getContext().getDrawable(R.drawable.pause));
-            new Thread(() -> {
-                Bitmap cover = song.getCover();
-                if (cover != null) {
-                    getActivity().runOnUiThread(() -> binding.ivCurrentTrack.setImageBitmap(cover));
-                } else {
-                    getActivity().runOnUiThread(() -> binding.ivCurrentTrack.setImageResource(R.drawable.ic_audiotrack_black_24dp));
-                }
-            }).start();
-        });
+        lvSongs.setOnItemClickListener((parent, view1, position, id) -> musicPlayerService.startQueue(getSongs(), position));
 
         musicNotification = new MusicNotification(getContext(), getContext().getSystemService(NotificationManager.class));
     }

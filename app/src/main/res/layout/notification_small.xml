@@ -47,4 +47,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@+id/btnSmallPlay" />
+
+    <TextView
+        android:id="@+id/svSmallSongName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:singleLine="true"
+        app:layout_constraintBottom_toTopOf="@+id/btnSmallPlay"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/ivSmallPreview"
+        app:layout_constraintTop_toTopOf="@+id/ivSmallPreview" />
 </androidx.constraintlayout.widget.ConstraintLayout>

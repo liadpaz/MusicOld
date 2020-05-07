@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,7 +19,9 @@ public final class MusicPlayerService extends Service {
 
     private MusicPlayerBinder binder;
 
-    private OnCompleteListener callback;
+    private OnSongStart onStartCallback;
+    private OnSongPause onPauseCallback;
+    private OnSongChange onChangeCallback;
 
     private MediaPlayer player;
 
@@ -31,7 +32,7 @@ public final class MusicPlayerService extends Service {
 
     public MusicPlayerService() {
         player = new MediaPlayer();
-        setOnNextSongListener(null);
+        setListeners(null, null, null);
     }
 
     @Override
@@ -46,12 +47,11 @@ public final class MusicPlayerService extends Service {
     }
 
 
-
     public void startQueue(@NonNull Song[] queue, int start) {
-        Log.d(TAG, "startQueue: " + start);
         this.queue = queue;
         this.currentSong = start;
         setAudio((source = queue[start]).getPath());
+        start();
     }
 
     /**
@@ -63,6 +63,9 @@ public final class MusicPlayerService extends Service {
         try {
             player.reset();
             player.setDataSource(pathToFile);
+            if (onChangeCallback != null) {
+                onChangeCallback.onChange(source);
+            }
             player.prepare();
         } catch (Exception ignored) {
         }
@@ -71,8 +74,15 @@ public final class MusicPlayerService extends Service {
     /**
      * This function starts the audio
      */
-    public void start() {
+    private void start() {
+        if (onStartCallback != null) {
+            onStartCallback.onStart();
+        }
         player.start();
+    }
+
+    public boolean isLooping() {
+        return player.isLooping();
     }
 
     /**
@@ -82,10 +92,6 @@ public final class MusicPlayerService extends Service {
      */
     public void setLooping(boolean looping) {
         player.setLooping(looping);
-    }
-
-    public boolean isLooping() {
-        return player.isLooping();
     }
 
     public Song getSource() {
@@ -112,8 +118,11 @@ public final class MusicPlayerService extends Service {
     /**
      * This function stops the player from playing audio
      */
-    public void pause() {
+    private void pause() {
         player.pause();
+        if (onPauseCallback != null) {
+            onPauseCallback.onPause();
+        }
     }
 
     /**
@@ -131,8 +140,8 @@ public final class MusicPlayerService extends Service {
                 currentSong = queue.length - 1;
             }
             setAudio((source = queue[currentSong]).getPath());
-            if (callback != null) {
-                callback.onComplete(queue[currentSong]);
+            if (onChangeCallback != null) {
+                onChangeCallback.onChange(queue[currentSong]);
             }
             start();
         } else {
@@ -140,11 +149,18 @@ public final class MusicPlayerService extends Service {
         }
     }
 
+    public void startPause() {
+        if (isPlaying()) {
+            pause();
+        } else {
+            start();
+        }
+    }
+
     public void playNext() {
         if (++currentSong == queue.length) {
             currentSong = 0;
         }
-        callback.onComplete(queue[currentSong]);
         setAudio((source = queue[currentSong]).getPath());
         start();
     }
@@ -157,13 +173,26 @@ public final class MusicPlayerService extends Service {
         return queue != null;
     }
 
-    public void setOnNextSongListener(final OnCompleteListener callback) {
-        this.callback = callback;
+    /**
+     * This function sets the listeners for the service
+     *
+     * @param onStartCallback The on song start callback, if null will not set
+     * @param onChangeCallback The on song change callback, if null will not set
+     * @param onPauseCallback The on song pause callback, if null will not set
+     */
+    public void setListeners(@Nullable final OnSongStart onStartCallback, @Nullable final OnSongChange onChangeCallback, @Nullable final OnSongPause onPauseCallback) {
+        if (onStartCallback != null) {
+            this.onStartCallback = onStartCallback;
+        }
+        if (onPauseCallback != null) {
+            this.onPauseCallback = onPauseCallback;
+        }
+        this.onChangeCallback = onChangeCallback;
         player.setOnCompletionListener(mp -> {
             if (!mp.isLooping()) {
                 playNext();
-                if (callback != null) {
-                    callback.onComplete(queue[currentSong]);
+                if (onChangeCallback != null) {
+                    (this.onChangeCallback = onChangeCallback).onChange(queue[currentSong]);
                 }
             }
         });
@@ -175,8 +204,16 @@ public final class MusicPlayerService extends Service {
         return binder;
     }
 
-    public interface OnCompleteListener {
-        void onComplete(Song nextSong);
+    public interface OnSongChange {
+        void onChange(Song nextSong);
+    }
+
+    public interface OnSongPause {
+        void onPause();
+    }
+
+    public interface OnSongStart {
+        void onStart();
     }
 
     public class MusicPlayerBinder extends Binder {
