@@ -46,5 +46,5 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.android.material:material:1.1.0'
     implementation 'com.google.code.gson:gson:2.8.6'
-
+    implementation 'androidx.palette:palette:1.0.0'
 }

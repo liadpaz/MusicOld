@@ -2,6 +2,7 @@ package com.liadpaz.music.service;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
@@ -9,15 +10,19 @@ import android.os.IBinder;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.liadpaz.music.ActionReceiver;
 import com.liadpaz.music.utils.Song;
 
 import java.util.concurrent.TimeUnit;
 
 public final class MusicPlayerService extends Service {
 
+    @SuppressWarnings("unused")
     private static final String TAG = "MUSIC_SERVICE";
 
     private MusicPlayerBinder binder;
+
+    public static MusicPlayerService instance;
 
     private OnSongStart onStartCallback;
     private OnSongPause onPauseCallback;
@@ -31,6 +36,7 @@ public final class MusicPlayerService extends Service {
     private int currentSong = -1;
 
     public MusicPlayerService() {
+        instance = this;
         player = new MediaPlayer();
         setListeners(null, null, null);
     }
@@ -39,13 +45,13 @@ public final class MusicPlayerService extends Service {
     public void onCreate() {
         super.onCreate();
         binder = new MusicPlayerBinder();
+        getApplicationContext().registerReceiver(new ActionReceiver(), new IntentFilter());
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         return START_STICKY;
     }
-
 
     public void startQueue(@NonNull Song[] queue, int start) {
         this.queue = queue;
@@ -76,7 +82,7 @@ public final class MusicPlayerService extends Service {
      */
     private void start() {
         if (onStartCallback != null) {
-            onStartCallback.onStart();
+            onStartCallback.onStart(source);
         }
         player.start();
     }
@@ -121,7 +127,7 @@ public final class MusicPlayerService extends Service {
     private void pause() {
         player.pause();
         if (onPauseCallback != null) {
-            onPauseCallback.onPause();
+            onPauseCallback.onPause(source);
         }
     }
 
@@ -157,6 +163,9 @@ public final class MusicPlayerService extends Service {
         }
     }
 
+    /**
+     * This function plays the next song in queue, if the current song is the last in the queue then the first one will start
+     */
     public void playNext() {
         if (++currentSong == queue.length) {
             currentSong = 0;
@@ -165,10 +174,7 @@ public final class MusicPlayerService extends Service {
         start();
     }
 
-    public Song getCurrentSong() {
-        return queue[currentSong];
-    }
-
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean hasQueue() {
         return queue != null;
     }
@@ -187,12 +193,14 @@ public final class MusicPlayerService extends Service {
         if (onPauseCallback != null) {
             this.onPauseCallback = onPauseCallback;
         }
-        this.onChangeCallback = onChangeCallback;
+        if (onChangeCallback != null) {
+            this.onChangeCallback = onChangeCallback;
+        }
         player.setOnCompletionListener(mp -> {
             if (!mp.isLooping()) {
                 playNext();
-                if (onChangeCallback != null) {
-                    (this.onChangeCallback = onChangeCallback).onChange(queue[currentSong]);
+                if (this.onChangeCallback != null) {
+                    this.onChangeCallback.onChange(queue[currentSong]);
                 }
             }
         });
@@ -209,11 +217,11 @@ public final class MusicPlayerService extends Service {
     }
 
     public interface OnSongPause {
-        void onPause();
+        void onPause(Song song);
     }
 
     public interface OnSongStart {
-        void onStart();
+        void onStart(Song song);
     }
 
     public class MusicPlayerBinder extends Binder {
