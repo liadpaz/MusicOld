@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">מוזיקה</string>
     <string name="menu_add_queue">הוסף לתור</string>
     <string name="tab_songs">שירים</string>
     <string name="menu_settings">הגדרות</string>
     <string name="menu_pick_folder">בחר תיקיה</string>
     <string name="menu_about">אודות</string>
     <string name="tab_artists">אמנים</string>
-    <string name="song_no_name">&lt;אין שם&gt;</string>
+    <string name="song_no_name">אין שם</string>
     <string name="notification_name">מוזיקה</string>
+    <string name="song_no_artist">אין אמן</string>
+    <string name="tab_albums">אלבומים</string>
+    <string name="song_no_album">בלי אלבום</string>
 </resources>
