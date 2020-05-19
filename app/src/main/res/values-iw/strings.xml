@@ -11,4 +11,9 @@
     <string name="song_no_artist">אין אמן</string>
     <string name="tab_albums">אלבומים</string>
     <string name="song_no_album">בלי אלבום</string>
+    <string name="tab_playlists">פלייליסטים</string>
+    <string name="menu_queue_remove_from">הסר מהתור</string>
+    <string name="menu_queue_add_to_playlist">הוסף לפלייליסט</string>
+    <string name="queue_removed">הוסר מהתור</string>
+    <string name="menu_play_next">נגן הבא בתור</string>
 </resources>

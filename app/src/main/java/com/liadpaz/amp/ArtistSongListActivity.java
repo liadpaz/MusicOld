@@ -8,15 +8,15 @@ import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.bumptech.glide.Glide;
 import com.liadpaz.amp.adapters.SongsListAdapter;
 import com.liadpaz.amp.databinding.ActivityArtistSongListBinding;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
-import com.liadpaz.amp.utils.Song;
-import com.liadpaz.amp.utils.Utilities;
-
-import java.util.ArrayList;
+import com.liadpaz.amp.utils.QueueUtil;
 
 public class ArtistSongListActivity extends AppCompatActivity {
 
@@ -30,21 +30,19 @@ public class ArtistSongListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityArtistSongListBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        setSupportActionBar(binding.toolbarArtist);
 
         String artist = getIntent().getStringExtra(Constants.ARTIST);
 
-        ArrayList<Song> songs = LocalFiles.getSongsByArtist(artist);
-        SongsListAdapter adapter = new SongsListAdapter(this, songs);
+        SongsListAdapter adapter = new SongsListAdapter(this, (v, position) -> {
+
+        });
+        adapter.submitList(LocalFiles.getSongsByArtist(artist));
 
         binding.tvArtistTitle.setText(artist);
-        binding.lvArtistSongs.setAdapter(adapter);
-
-        binding.lvArtistSongs.setOnItemClickListener((parent, view1, position, id) -> {
-            LocalFiles.setQueue(songs);
-            Bundle bundle = new Bundle();
-            bundle.putInt(Constants.ACTION_QUEUE_POSITION, position);
-            MainActivity.getController().sendCommand(Constants.ACTION_SET_QUEUE, bundle, null);
-        });
+        binding.rvArtistSongs.setLayoutManager(new LinearLayoutManager(this));
+        binding.rvArtistSongs.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
+        binding.rvArtistSongs.setAdapter(adapter);
 
         (controller = MainActivity.getController()).registerCallback(callback = new MediaControllerCompat.Callback() {
             @Override
@@ -57,8 +55,10 @@ public class ArtistSongListActivity extends AppCompatActivity {
         binding.btnPlay.setOnClickListener(v -> {
             MediaControllerCompat controller = MainActivity.getController();
             if (controller.getPlaybackState().getState() == PlaybackStateCompat.STATE_NONE) {
-                LocalFiles.setQueue(LocalFiles.listSongs(this));
-                controller.sendCommand(Constants.ACTION_SET_QUEUE, null, null);
+                QueueUtil.queue.postValue(LocalFiles.listSongs(this));
+                Bundle bundle = new Bundle();
+                bundle.putInt(Constants.ACTION_QUEUE_POSITION, 0);
+                controller.sendCommand(Constants.ACTION_QUEUE_POSITION, bundle, null);
             } else if (controller.getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING) {
                 controller.getTransportControls().pause();
             } else {
@@ -88,18 +88,11 @@ public class ArtistSongListActivity extends AppCompatActivity {
         }
     }
 
-    @SuppressWarnings("ConstantConditions")
     private void setMetadata(MediaMetadataCompat metadata) {
         if (metadata != null) {
             MediaDescriptionCompat description = metadata.getDescription();
-            Utilities.isUriExists(this, description.getIconUri()).thenApply(cover -> {
-                if (cover != null) {
-                    binding.ivCurrentTrack.setImageBitmap(cover);
-                } else {
-                    binding.ivCurrentTrack.setImageResource(R.drawable.song);
-                }
-                return null;
-            });
+
+            Glide.with(this).load(description.getIconUri()).placeholder(R.drawable.song).into(binding.ivCurrentTrack);
             binding.tvSongName.setText(description.getTitle());
             binding.tvSongArtist.setText(description.getSubtitle());
         }

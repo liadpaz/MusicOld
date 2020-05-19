@@ -35,11 +35,12 @@
         android:lines="1"
         android:textSize="24sp" />
 
-    <ListView
-        android:id="@+id/lvSongs"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSongs"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:scrollbars="vertical" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayoutSongInfo"

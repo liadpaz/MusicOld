@@ -5,8 +5,10 @@
     android:layout_height="match_parent"
     tools:context=".fragments.SongsListFragment">
 
-    <ListView
-        android:id="@+id/lvSongs"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSongs"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:scrollbarSize="10dp"
+        android:scrollbars="vertical" />
 </LinearLayout>

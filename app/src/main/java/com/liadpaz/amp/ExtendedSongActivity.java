@@ -14,29 +14,31 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.liadpaz.amp.databinding.ActivityExtendedSongBinding;
+import com.liadpaz.amp.fragments.CurrentQueueFragment;
 import com.liadpaz.amp.fragments.ExtendedSongFragment;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
-import com.liadpaz.amp.utils.MinutesSeconds;
+import com.liadpaz.amp.utils.QueueUtil;
+import com.liadpaz.amp.utils.Utilities;
 
 import java.lang.ref.WeakReference;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class ExtendedSongActivity extends AppCompatActivity {
 
     private static final String TAG = "EXTENDED_SONG_ACTIVITY";
 
-    @SuppressWarnings("FieldCanBeLocal")
-    private Timer timer;
     private Handler handler;
+    private Runnable runnable;
+    private boolean shouldSeek = false;
 
     private MediaControllerCompat controller;
-
     private MediaControllerCompat.Callback callback;
 
     private ActivityExtendedSongBinding binding;
 
+    private boolean isShowingQueue = false;
+
+    @SuppressWarnings("ConstantConditions")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,9 +66,11 @@ public class ExtendedSongActivity extends AppCompatActivity {
 
         binding.btnSkipPrev.setOnClickListener(v -> controller.getTransportControls().skipToPrevious());
         binding.btnPlayPause.setOnClickListener(v -> {
-            if (controller.getPlaybackState().getState() == PlaybackStateCompat.STATE_NONE) {
-                LocalFiles.setQueue(LocalFiles.listSongs(this));
-                controller.sendCommand(Constants.ACTION_SET_QUEUE, null, null);
+            if (QueueUtil.queue.getValue().size() == 0) {
+                QueueUtil.queue.setValue(LocalFiles.listSongs(this));
+                Bundle bundle = new Bundle();
+                bundle.putInt(Constants.ACTION_QUEUE_POSITION, 0);
+                controller.sendCommand(Constants.ACTION_QUEUE_POSITION, bundle, null);
             } else if (controller.getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING) {
                 controller.getTransportControls().pause();
             } else {
@@ -79,22 +83,36 @@ public class ExtendedSongActivity extends AppCompatActivity {
         binding.sbSongProgress.setMax(1000);
         binding.sbSongProgress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser) {
-                    Bundle bundle = new Bundle();
-                    bundle.putInt(Constants.ACTION_SEEK_TO, progress);
-                    controller.sendCommand(Constants.ACTION_SEEK_TO, bundle, null);
-                }
-            }
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {}
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {}
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {}
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                Bundle bundle = new Bundle();
+                bundle.putInt(Constants.ACTION_SEEK_TO, seekBar.getProgress());
+                controller.sendCommand(Constants.ACTION_SEEK_TO, bundle, null);
+            }
         });
 
+        binding.btnQueue.setOnClickListener(v -> {
+            getSupportFragmentManager().beginTransaction().replace(R.id.layoutExtended, isShowingQueue ? ExtendedSongFragment.newInstance() : CurrentQueueFragment.newInstance()).commit();
+            v.setBackgroundResource(isShowingQueue ? R.drawable.queue_music_not_shown : R.drawable.queue_music_shown);
+            isShowingQueue = !isShowingQueue;
+        });
+        binding.tvTimeElapsed.setText(Utilities.formatTime(0));
+        binding.tvTotalTime.setText(Utilities.formatTime(0));
+
         getSupportFragmentManager().beginTransaction().replace(R.id.layoutExtended, ExtendedSongFragment.newInstance()).commit();
+    }
+
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        if (shouldSeek) {
+            handler.post(runnable);
+        }
     }
 
     private void setPlayback(PlaybackStateCompat state) {
@@ -103,25 +121,11 @@ public class ExtendedSongActivity extends AppCompatActivity {
         } else {
             if (state.getState() == PlaybackStateCompat.STATE_PLAYING) {
                 binding.btnPlayPause.setBackgroundResource(R.drawable.pause);
-
-                timer = new Timer();
-                timer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        handler.post(() -> controller.sendCommand(Constants.ACTION_GET_POSITION, null, new ResultReceiver(new Handler()) {
-                            @Override
-                            protected void onReceiveResult(int resultCode, Bundle resultData) {
-                                Message message = new Message();
-                                message.arg1 = resultData.getInt(Constants.ACTION_GET_POSITION);
-                                message.arg2 = resultData.getInt(Constants.EXTRA_TOTAL_TIME);
-                                handler.dispatchMessage(message);
-                            }
-                        }));
-                    }
-                }, 0, 500);
+                updateSeekBar();
+                shouldSeek = true;
             } else {
-                timer = new Timer();
                 binding.btnPlayPause.setBackgroundResource(R.drawable.play);
+                shouldSeek = false;
             }
         }
     }
@@ -134,11 +138,35 @@ public class ExtendedSongActivity extends AppCompatActivity {
             MediaDescriptionCompat description = metadata.getDescription();
             binding.tvCurrentSongName.setText(description.getTitle());
             binding.tvCurrentSongArtist.setText(description.getSubtitle());
-            binding.tvTotalTime.setText(MinutesSeconds.format(metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)));
+            binding.tvTimeElapsed.setText(Utilities.formatTime(0));
+            binding.tvTotalTime.setText(Utilities.formatTime(metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)));
         }
     }
 
     private void setRepeat(int repeatMode) { binding.btnRepeat.setBackgroundResource(repeatMode == PlaybackStateCompat.REPEAT_MODE_ONE ? R.drawable.repeat_one : R.drawable.repeat); }
+
+    private void updateSeekBar() {
+        handler.postDelayed(runnable = () -> {
+            controller.sendCommand(Constants.ACTION_GET_POSITION, null, new ResultReceiver(new Handler()) {
+                @Override
+                protected void onReceiveResult(int resultCode, Bundle resultData) {
+                    Message message = new Message();
+                    message.arg1 = resultData.getInt(Constants.ACTION_GET_POSITION);
+                    message.arg2 = resultData.getInt(Constants.EXTRA_TOTAL_TIME);
+                    handler.dispatchMessage(message);
+                }
+            });
+            if (controller.getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING) {
+                updateSeekBar();
+            }
+        }, 500);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        handler.removeCallbacks(runnable);
+    }
 
     @Override
     protected void onDestroy() {
@@ -154,27 +182,19 @@ public class ExtendedSongActivity extends AppCompatActivity {
         overridePendingTransition(R.anim.slide_down_reverse, R.anim.slide_up_reverse);
     }
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        overridePendingTransition(R.anim.slide_down_reverse, R.anim.slide_up_reverse);
-    }
-
     private static class SeekBarHandler extends Handler {
         private WeakReference<ActivityExtendedSongBinding> bindingWeakReference;
 
         SeekBarHandler(ActivityExtendedSongBinding binding) {
-            super();
-
             bindingWeakReference = new WeakReference<>(binding);
         }
 
         public void handleMessage(@NonNull Message msg) {
             SeekBar seekBar = bindingWeakReference.get().sbSongProgress;
-            long current = msg.arg1;
+            int current = msg.arg1;
             double total = msg.arg2;
             int seek = (int)(current / total * 1000);
-            bindingWeakReference.get().tvTimeElapsed.setText(MinutesSeconds.format(current));
+            bindingWeakReference.get().tvTimeElapsed.setText(Utilities.formatTime(current));
             seekBar.setProgress(seek);
         }
     }

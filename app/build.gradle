@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId 'com.liadpaz.amp'
-        minSdkVersion 21
+        minSdkVersion 26
         targetSdkVersion 29
         versionCode versionMajor * 1000 + versionMinor * 100 + versionPatch
         versionName "${versionMajor}.${versionMinor}.${versionPatch}"
@@ -46,6 +46,8 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.android.material:material:1.1.0'
     implementation 'com.google.code.gson:gson:2.8.6'
-    implementation 'androidx.palette:palette:1.0.0'
     implementation 'androidx.preference:preference:1.1.1'
+    implementation 'com.github.bumptech.glide:glide:4.11.0'
+
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
 }

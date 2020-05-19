@@ -39,7 +39,7 @@ public class AlbumListFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         ArrayList<Album> albums = new ArrayList<>();
         LocalFiles.getAlbums().forEach((albumName, albumSongs) -> albums.add(new Album(albumName, albumSongs.get(0).getSongArtists().get(0), albumSongs)));
-        albums.sort((album1, album2) -> album1.name.compareTo(album2.name));
+        albums.sort((album1, album2) -> album1.name.toLowerCase().compareTo(album2.name.toLowerCase()));
 
         AlbumsListAdapter adapter = new AlbumsListAdapter(getContext(), albums);
         binding.lvAlbums.setAdapter(adapter);

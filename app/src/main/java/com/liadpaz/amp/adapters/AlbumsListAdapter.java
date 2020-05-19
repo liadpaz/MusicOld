@@ -1,7 +1,6 @@
 package com.liadpaz.amp.adapters;
 
 import android.content.Context;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +9,7 @@ import android.widget.ArrayAdapter;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.bumptech.glide.Glide;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.ItemAlbumBinding;
 import com.liadpaz.amp.utils.Album;
@@ -38,10 +38,7 @@ public class AlbumsListAdapter extends ArrayAdapter<Album> {
 
         Album album = getItem(position);
 
-        Uri cover;
-        if ((cover = Utilities.getCover(album.songs.get(0))) != null) {
-            binding.ivAlbumCover.setImageURI(cover);
-        }
+        Glide.with(getContext()).load(Utilities.getCoverUri(album.songs.get(0))).into(binding.ivAlbumCover);
         binding.tvAlbumName.setText(album.name);
         binding.tvAlbumArtist.setText(album.artist);
 

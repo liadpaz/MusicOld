@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentExtendedBinding;
@@ -48,11 +49,7 @@ public class ExtendedSongFragment extends Fragment {
     private void setMetadata(MediaMetadataCompat metadata) {
         if (metadata != null) {
             MediaDescriptionCompat description = metadata.getDescription();
-            if (description.getIconUri() != null) {
-                binding.ivSongCover.setImageURI(description.getIconUri());
-            } else {
-                binding.ivSongCover.setImageResource(R.drawable.song);
-            }
+            Glide.with(this).load(description.getIconUri()).placeholder(R.drawable.song).into(binding.ivSongCover);
         }
     }
 

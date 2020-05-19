@@ -8,14 +8,15 @@
     android:foreground="?android:attr/selectableItemBackground">
 
     <Button
-        android:id="@+id/btnMore"
+        android:id="@+id/btnDrag"
         android:layout_width="32dp"
         android:layout_height="32dp"
-        android:layout_marginEnd="8dp"
-        android:background="@drawable/more"
-        android:foreground="?android:attr/selectableItemBackground"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/drag"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
@@ -25,14 +26,14 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
-        android:background="@drawable/song"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/btnDrag"
         app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/song"
         tools:ignore="ContentDescription" />
 
     <TextView
-        android:id="@+id/tvSongName"
+        android:id="@+id/tvSongTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -51,9 +52,20 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:ellipsize="end"
+        android:lines="1"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="@+id/ivSongCover"
         app:layout_constraintEnd_toStartOf="@+id/btnMore"
         app:layout_constraintStart_toEndOf="@+id/ivSongCover" />
 
+    <Button
+        android:id="@+id/btnMore"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/more"
+        android:foreground="?android:attr/selectableItemBackground"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

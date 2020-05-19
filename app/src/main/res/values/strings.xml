@@ -11,4 +11,9 @@
     <string name="tab_albums">Albums</string>
     <string name="song_no_album">No Album</string>
     <string name="song_no_name">Untitled</string>
+    <string name="tab_playlists">Playlists</string>
+    <string name="menu_queue_remove_from">Remove From Queue</string>
+    <string name="menu_queue_add_to_playlist">Add To Playlist</string>
+    <string name="queue_removed">removed from the queue</string>
+    <string name="menu_play_next">Play Next</string>
 </resources>

@@ -8,13 +8,16 @@ import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.bumptech.glide.Glide;
 import com.liadpaz.amp.adapters.SongsListAdapter;
 import com.liadpaz.amp.databinding.ActivityAlbumSongListBinding;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.utils.Song;
-import com.liadpaz.amp.utils.Utilities;
+import com.liadpaz.amp.utils.QueueUtil;
 
 import java.util.ArrayList;
 
@@ -36,18 +39,16 @@ public class AlbumSongListActivity extends AppCompatActivity {
         String album = getIntent().getStringExtra(Constants.ALBUM);
 
         ArrayList<Song> songs = LocalFiles.getSongsByAlbum(album);
-        SongsListAdapter adapter = new SongsListAdapter(this, songs);
+        SongsListAdapter adapter = new SongsListAdapter(this, (v, position) -> {
+
+        });
+        adapter.submitList(songs);
 
         binding.tvAlbumName.setText(songs.get(0).getAlbum());
         binding.tvAlbumArtist.setText(songs.get(0).getSongArtists().get(0));
-        binding.lvSongs.setAdapter(adapter);
-
-        binding.lvSongs.setOnItemClickListener((parent, view1, position, id) -> {
-            LocalFiles.setQueue(songs);
-            Bundle bundle = new Bundle();
-            bundle.putInt(Constants.ACTION_QUEUE_POSITION, position);
-            MainActivity.getController().sendCommand(Constants.ACTION_SET_QUEUE, bundle, null);
-        });
+        binding.rvSongs.setLayoutManager(new LinearLayoutManager(this));
+        binding.rvSongs.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
+        binding.rvSongs.setAdapter(adapter);
 
         (controller = MainActivity.getController()).registerCallback(callback = new MediaControllerCompat.Callback() {
             @Override
@@ -60,8 +61,10 @@ public class AlbumSongListActivity extends AppCompatActivity {
         binding.btnPlay.setOnClickListener(v -> {
             MediaControllerCompat controller = MainActivity.getController();
             if (controller.getPlaybackState().getState() == PlaybackStateCompat.STATE_NONE) {
-                LocalFiles.setQueue(LocalFiles.listSongs(this));
-                controller.sendCommand(Constants.ACTION_SET_QUEUE, null, null);
+                QueueUtil.queue.postValue(LocalFiles.listSongs(this));
+                Bundle bundle = new Bundle();
+                bundle.putInt(Constants.ACTION_QUEUE_POSITION, 0);
+                controller.sendCommand(Constants.ACTION_QUEUE_POSITION, bundle, null);
             } else if (controller.getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING) {
                 controller.getTransportControls().pause();
             } else {
@@ -94,18 +97,10 @@ public class AlbumSongListActivity extends AppCompatActivity {
         }
     }
 
-    @SuppressWarnings("ConstantConditions")
     private void setMetadata(MediaMetadataCompat metadata) {
         if (metadata != null) {
             MediaDescriptionCompat description = metadata.getDescription();
-            Utilities.isUriExists(this, description.getIconUri()).thenApply(cover -> {
-                if (cover != null) {
-                    binding.ivCurrentTrack.setImageBitmap(cover);
-                } else {
-                    binding.ivCurrentTrack.setImageResource(R.drawable.song);
-                }
-                return null;
-            });
+            Glide.with(this).load(description.getIconUri()).placeholder(R.drawable.song).into(binding.ivCurrentTrack);
             binding.tvSongName.setText(description.getTitle());
             binding.tvSongArtist.setText(description.getSubtitle());
         }

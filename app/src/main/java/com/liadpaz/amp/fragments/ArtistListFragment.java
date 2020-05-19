@@ -44,7 +44,7 @@ public class ArtistListFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         ArrayList<Artist> artists = new ArrayList<>();
         LocalFiles.getArtists().forEach((artistName, artistSongs) -> artists.add(new Artist(artistName, artistSongs)));
-        artists.sort((artist1, artist2) -> artist1.name.compareTo(artist2.name));
+        artists.sort((artist1, artist2) -> artist1.name.toLowerCase().compareTo(artist2.name.toLowerCase()));
         ArtistsListAdapter adapter = new ArtistsListAdapter(getContext(), artists);
 
         binding.lvArtists.setAdapter(adapter);

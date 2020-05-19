@@ -1,6 +1,5 @@
 package com.liadpaz.amp.utils;
 
-import android.graphics.Bitmap;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -33,8 +32,6 @@ public class Song implements Parcelable {
     private ArrayList<String> songArtists;
     private String album;
     private String albumId;
-    private Bitmap cover;
-    private boolean hadTried = false;
 
     Song(long songId, String songTitle, ArrayList<String> songArtists, String album, String albumId) {
         this.songId = songId;
@@ -56,22 +53,13 @@ public class Song implements Parcelable {
 
     String getAlbumId() {return albumId;}
 
-    boolean HadTried() {
-        return hadTried;
-    }
-
-    Bitmap getCover() {
-        return cover;
-    }
-
-    void setCover(Bitmap cover) {
-        hadTried = true;
-        this.cover = cover;
-    }
-
     @Override
     public boolean equals(@Nullable Object obj) {
-        return super.equals(obj);
+        if (!(obj instanceof Song)) {
+            return false;
+        }
+        Song other = (Song)obj;
+        return album.equals(other.album) && albumId.equals(other.albumId) && songArtists.equals(other.songArtists) && songId == other.songId && songTitle.equals(other.songTitle);
     }
 
     @Override

@@ -21,16 +21,19 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.liadpaz.amp.adapters.ViewPagerAdapter;
 import com.liadpaz.amp.databinding.ActivityMainBinding;
 import com.liadpaz.amp.fragments.AlbumsFragment;
 import com.liadpaz.amp.fragments.ArtistsFragment;
+import com.liadpaz.amp.fragments.PlaylistsFragment;
 import com.liadpaz.amp.fragments.SongsListFragment;
 import com.liadpaz.amp.notification.MediaNotification;
 import com.liadpaz.amp.service.MediaPlayerService;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
+import com.liadpaz.amp.utils.QueueUtil;
 import com.liadpaz.amp.utils.Utilities;
 
 import java.util.ArrayList;
@@ -99,7 +102,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startService() {
-        mediaBrowser.connect();
+        if (!mediaBrowser.isConnected()) {
+            mediaBrowser.connect();
+        }
+        startForegroundService(new Intent(this, MediaPlayerService.class));
     }
 
     @Override
@@ -137,17 +143,20 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressWarnings("ConstantConditions")
     private void setView() {
         ViewPager2 viewPager = binding.viewPagerMain;
 
         viewPager.setAdapter(new ViewPagerAdapter(this, new ArrayList<Class>() {{
             add(SongsListFragment.class);
+            add(PlaylistsFragment.class);
             add(ArtistsFragment.class);
             add(AlbumsFragment.class);
         }}));
 
         ArrayList<String> tabsTitle = new ArrayList<String>() {{
             add(getString(R.string.tab_songs));
+            add(getString(R.string.tab_playlists));
             add(getString(R.string.tab_artists));
             add(getString(R.string.tab_albums));
         }};
@@ -156,9 +165,11 @@ public class MainActivity extends AppCompatActivity {
 
         binding.btnPlay.setOnClickListener(v -> {
             MediaControllerCompat controller = MediaControllerCompat.getMediaController(this);
-            if (controller.getPlaybackState().getState() == PlaybackStateCompat.STATE_NONE) {
-                LocalFiles.setQueue(LocalFiles.listSongs(this));
-                controller.sendCommand(Constants.ACTION_SET_QUEUE, null, null);
+            if (QueueUtil.queue.getValue().size() == 0) {
+                QueueUtil.queue.setValue(LocalFiles.listSongs(this));
+                Bundle bundle = new Bundle();
+                bundle.putInt(Constants.ACTION_QUEUE_POSITION, 0);
+                controller.sendCommand(Constants.ACTION_QUEUE_POSITION, bundle, null);
             } else if (controller.getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING) {
                 controller.getTransportControls().pause();
             } else {
@@ -204,20 +215,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @SuppressWarnings("ConstantConditions")
     private void setMetadata(MediaMetadataCompat metadata) {
         if (metadata != null) {
-            MediaDescriptionCompat description = metadata.getDescription();
-            Utilities.isUriExists(this, description.getIconUri()).thenApply(cover -> {
-                if (cover != null) {
-                    binding.ivCurrentTrack.setImageBitmap(cover);
-                } else {
-                    binding.ivCurrentTrack.setImageResource(R.drawable.song);
-                }
-                return null;
-            });
-            binding.tvSongName.setText(description.getTitle());
-            binding.tvSongArtist.setText(description.getSubtitle());
+            try {
+                MediaDescriptionCompat description = metadata.getDescription();
+
+                Glide.with(this).load(description.getIconUri()).placeholder(R.drawable.song).into(binding.ivCurrentTrack);
+                binding.tvSongName.setText(description.getTitle());
+                binding.tvSongArtist.setText(description.getSubtitle());
+            } catch (Exception ignored) {
+            }
         }
     }
 }

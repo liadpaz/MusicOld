@@ -47,6 +47,7 @@
             android:layout_height="32dp"
             android:layout_marginEnd="16dp"
             android:background="@drawable/play"
+            android:foreground="?android:attr/selectableItemBackground"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

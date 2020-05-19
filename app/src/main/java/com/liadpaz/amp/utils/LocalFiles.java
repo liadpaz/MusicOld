@@ -23,7 +23,6 @@ public class LocalFiles {
     private static final String[] PROJECTION = {Media.TITLE, Media._ID, Media.ARTIST, Media.ALBUM, Media.ALBUM_ID};
 
     private static ArrayList<Song> allSongs;
-    private static ArrayList<Song> queue;
 
     private static SharedPreferences musicSharedPreferences;
     private static HashMap<String, ArrayList<Song>> artists = new HashMap<>();
@@ -49,9 +48,7 @@ public class LocalFiles {
      * @param path The path of the songs folder
      */
     public static void setPath(@NonNull String path) {
-        musicSharedPreferences.edit()
-                              .putString(Constants.SHARED_PREFERENCES_PATH, path)
-                              .apply();
+        musicSharedPreferences.edit().putString(Constants.SHARED_PREFERENCES_PATH, path).apply();
     }
 
     @NonNull
@@ -87,8 +84,7 @@ public class LocalFiles {
 
                     ArrayList<String> artists = new ArrayList<>();
                     if (artist != null && !artist.isEmpty()) {
-                        Matcher matcher = Pattern.compile("([^ &,]([^,&])*[^ ,&]+)")
-                                                 .matcher(artist);
+                        Matcher matcher = Pattern.compile("([^ &,]([^,&])*[^ ,&]+)").matcher(artist);
                         while (matcher.find()) {
                             artists.add(matcher.group());
                         }
@@ -107,10 +103,6 @@ public class LocalFiles {
         return songs;
     }
 
-    public static ArrayList<Song> getQueue() { return queue; }
-
-    public static void setQueue(@NonNull ArrayList<Song> queue) { LocalFiles.queue = queue; }
-
     @SuppressWarnings("ConstantConditions")
     private static void setArtists() {
         if (artists.size() != 0) {
@@ -119,8 +111,7 @@ public class LocalFiles {
         for (Song song : allSongs) {
             for (String artist : song.getSongArtists()) {
                 if (artists.containsKey(artist)) {
-                    artists.get(artist)
-                           .add(song);
+                    artists.get(artist).add(song);
                 } else {
                     artists.put(artist, new ArrayList<Song>() {{
                         add(song);
@@ -140,8 +131,7 @@ public class LocalFiles {
         }
         for (Song song : allSongs) {
             if (albums.containsKey(song.getAlbum())) {
-                albums.get(song.getAlbum())
-                      .add(song);
+                albums.get(song.getAlbum()).add(song);
             } else {
                 albums.put(song.getAlbum(), new ArrayList<Song>() {{
                     add(song);
@@ -155,15 +145,13 @@ public class LocalFiles {
 
     public static ArrayList<Song> getSongsByArtist(String artist) {
         return allSongs.stream()
-                       .filter(song -> song.getSongArtists()
-                                           .contains(artist))
+                       .filter(song -> song.getSongArtists().contains(artist))
                        .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public static ArrayList<Song> getSongsByAlbum(String album) {
         return allSongs.stream()
-                       .filter(song -> song.getAlbum()
-                                           .equals(album))
+                       .filter(song -> song.getAlbum().equals(album))
                        .collect(Collectors.toCollection(ArrayList::new));
     }
 }
