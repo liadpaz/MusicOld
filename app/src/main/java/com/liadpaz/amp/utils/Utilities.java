@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class Utilities {
-    @SuppressWarnings("usused")
+    @SuppressWarnings("unused")
     private static final String TAG = "UTILITIES";
 
     private static final Uri albumsUri = Uri.parse("content://media/external/audio/albumart");
@@ -32,13 +32,8 @@ public class Utilities {
     @SuppressWarnings("ConstantConditions")
     @NonNull
     public static String getPathFromUri(@NonNull Uri uri) {
-        String[] path = uri.getPath().split(":")[0].split("/");
-        StringBuilder builder = new StringBuilder();
-        for (int i = 3; i < path.length; i++) {
-            builder.append("/").append(path[i]);
-        }
-        builder.append("/").append(uri.getPath().split(":")[1].split("/")[0]);
-        return builder.toString();
+        String[] path = uri.getPath().split(":");
+        return path.length == 1 ? "" : path[1];
     }
 
     @NonNull

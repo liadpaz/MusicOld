@@ -8,6 +8,7 @@ import android.provider.MediaStore.Audio.Media;
 
 import androidx.annotation.NonNull;
 
+import com.google.gson.Gson;
 import com.liadpaz.amp.R;
 
 import java.util.ArrayList;
@@ -25,11 +26,19 @@ public class LocalFiles {
     private static ArrayList<Song> allSongs;
 
     private static SharedPreferences musicSharedPreferences;
+    private static SharedPreferences playlistsSharedPreferences;
     private static HashMap<String, ArrayList<Song>> artists = new HashMap<>();
     private static HashMap<String, ArrayList<Song>> albums = new HashMap<>();
 
-    public LocalFiles(SharedPreferences musicSharedPreferences) {
+    public LocalFiles(@NonNull SharedPreferences musicSharedPreferences, @NonNull SharedPreferences playlistsSharedPreferences) {
         LocalFiles.musicSharedPreferences = musicSharedPreferences;
+        LocalFiles.playlistsSharedPreferences = playlistsSharedPreferences;
+
+        QueueUtil.queue.observeForever(songs -> {
+            String songsIds = new Gson().toJson((Object)songs.stream().map(Song::getSongId).collect(Collectors.toCollection(ArrayList::new)));
+            musicSharedPreferences.edit().putString(Constants.SHARED_PREFERENCES_QUEUE, songsIds).apply();
+        });
+        QueueUtil.queuePosition.observeForever(queuePosition -> musicSharedPreferences.edit().putInt(Constants.SHARED_PREFERENCES_QUEUE, queuePosition).apply());
     }
 
     /**
@@ -59,7 +68,7 @@ public class LocalFiles {
         ArrayList<Song> songs = new ArrayList<>();
         //retrieve song info
         ContentResolver musicResolver = context.getContentResolver();
-        try (Cursor musicCursor = musicResolver.query(Media.EXTERNAL_CONTENT_URI, PROJECTION, Media.DATA + " like ? ", new String[]{"%" + getPath() + "%"}, Media.TITLE)) {
+        try (Cursor musicCursor = musicResolver.query(Media.EXTERNAL_CONTENT_URI.buildUpon().appendPath("").build(), PROJECTION, "_data like ?", new String[]{"%" + getPath() + "%"}, Media.TITLE)) {
             //iterate over results if valid
             if (musicCursor != null && musicCursor.moveToFirst()) {
                 //get columns
@@ -93,7 +102,6 @@ public class LocalFiles {
                     }
 
                     songs.add(new Song(id, title, artists, album, albumId));
-
                 } while (musicCursor.moveToNext());
             }
         }
@@ -108,7 +116,7 @@ public class LocalFiles {
         if (artists.size() != 0) {
             artists.clear();
         }
-        for (Song song : allSongs) {
+        for (final Song song : allSongs) {
             for (String artist : song.getSongArtists()) {
                 if (artists.containsKey(artist)) {
                     artists.get(artist).add(song);
@@ -129,7 +137,7 @@ public class LocalFiles {
         if (albums.size() != 0) {
             albums.clear();
         }
-        for (Song song : allSongs) {
+        for (final Song song : allSongs) {
             if (albums.containsKey(song.getAlbum())) {
                 albums.get(song.getAlbum()).add(song);
             } else {
@@ -143,15 +151,21 @@ public class LocalFiles {
     @NonNull
     public static HashMap<String, ArrayList<Song>> getAlbums() { return albums; }
 
-    public static ArrayList<Song> getSongsByArtist(String artist) {
-        return allSongs.stream()
-                       .filter(song -> song.getSongArtists().contains(artist))
-                       .collect(Collectors.toCollection(ArrayList::new));
+    @NonNull
+    public static ArrayList<Song> getSongsByArtist(@NonNull String artist) {
+        return allSongs.stream().filter(song -> song.getSongArtists().contains(artist)).collect(Collectors.toCollection(ArrayList::new));
     }
 
-    public static ArrayList<Song> getSongsByAlbum(String album) {
-        return allSongs.stream()
-                       .filter(song -> song.getAlbum().equals(album))
-                       .collect(Collectors.toCollection(ArrayList::new));
+    @NonNull
+    public static ArrayList<Song> getSongsByAlbum(@NonNull String album) {
+        return allSongs.stream().filter(song -> song.getAlbum().equals(album)).collect(Collectors.toCollection(ArrayList::new));
     }
+
+    //    @NonNull
+    //    public ArrayList<Song> getQueueFromLocal(@NonNull Context context) {
+    //        ArrayList<Long> songsIdsList = new Gson().fromJson(musicSharedPreferences.getString(Constants.SHARED_PREFERENCES_QUEUE, "[]"), new TypeToken<ArrayList<Long>>() {}.getType());
+    //        for (long id : songsIdsList) {
+    //         if ()
+    //        }
+    //    }
 }

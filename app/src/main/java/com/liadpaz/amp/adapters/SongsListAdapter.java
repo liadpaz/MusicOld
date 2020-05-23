@@ -60,6 +60,7 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
             QueueUtil.queue.setValue(new ArrayList<>(getCurrentList()));
             Bundle bundle = new Bundle();
             bundle.putInt(Constants.ACTION_QUEUE_POSITION, position);
+            QueueUtil.queuePosition.setValue(position);
             MainActivity.getController().sendCommand(Constants.ACTION_QUEUE_POSITION, bundle, null);
         });
     }
@@ -67,7 +68,7 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
     static class SongViewHolder extends RecyclerView.ViewHolder {
         private ItemSongBinding binding;
 
-        SongViewHolder(@NonNull ItemSongBinding binding, OnItemClickPopUpListener onItemClickPopUpListener) {
+        SongViewHolder(@NonNull ItemSongBinding binding, @NonNull OnItemClickPopUpListener onItemClickPopUpListener) {
             super(binding.getRoot());
             this.binding = binding;
 

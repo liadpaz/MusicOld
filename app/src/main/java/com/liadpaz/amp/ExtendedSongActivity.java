@@ -24,7 +24,6 @@ import com.liadpaz.amp.utils.Utilities;
 import java.lang.ref.WeakReference;
 
 public class ExtendedSongActivity extends AppCompatActivity {
-
     private static final String TAG = "EXTENDED_SONG_ACTIVITY";
 
     private Handler handler;
@@ -33,6 +32,8 @@ public class ExtendedSongActivity extends AppCompatActivity {
 
     private MediaControllerCompat controller;
     private MediaControllerCompat.Callback callback;
+
+    private long duration = 0;
 
     private ActivityExtendedSongBinding binding;
 
@@ -90,9 +91,7 @@ public class ExtendedSongActivity extends AppCompatActivity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                Bundle bundle = new Bundle();
-                bundle.putInt(Constants.ACTION_SEEK_TO, seekBar.getProgress());
-                controller.sendCommand(Constants.ACTION_SEEK_TO, bundle, null);
+                controller.getTransportControls().seekTo((int)((double)seekBar.getProgress() * duration / 1000));
             }
         });
 
@@ -104,12 +103,15 @@ public class ExtendedSongActivity extends AppCompatActivity {
         binding.tvTimeElapsed.setText(Utilities.formatTime(0));
         binding.tvTotalTime.setText(Utilities.formatTime(0));
 
+        setMetadata(controller.getMetadata());
+        setPlayback(controller.getPlaybackState());
+
         getSupportFragmentManager().beginTransaction().replace(R.id.layoutExtended, ExtendedSongFragment.newInstance()).commit();
     }
 
     @Override
-    protected void onPostResume() {
-        super.onPostResume();
+    protected void onResume() {
+        super.onResume();
         if (shouldSeek) {
             handler.post(runnable);
         }
@@ -139,7 +141,7 @@ public class ExtendedSongActivity extends AppCompatActivity {
             binding.tvCurrentSongName.setText(description.getTitle());
             binding.tvCurrentSongArtist.setText(description.getSubtitle());
             binding.tvTimeElapsed.setText(Utilities.formatTime(0));
-            binding.tvTotalTime.setText(Utilities.formatTime(metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)));
+            binding.tvTotalTime.setText(Utilities.formatTime(duration = metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)));
         }
     }
 

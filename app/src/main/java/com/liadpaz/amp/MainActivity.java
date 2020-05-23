@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.RemoteException;
-import android.provider.DocumentsContract;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
@@ -92,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
 
         new MediaNotification(this);
 
-        new LocalFiles(getSharedPreferences("Music.Data", 0));
+        new LocalFiles(getSharedPreferences("Music.Data", 0), getSharedPreferences("Music.Playlists", 0));
 
         if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_PERMISSION);
@@ -105,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
         if (!mediaBrowser.isConnected()) {
             mediaBrowser.connect();
         }
-        startForegroundService(new Intent(this, MediaPlayerService.class));
+        ContextCompat.startForegroundService(this ,new Intent(this, MediaPlayerService.class));
     }
 
     @Override
@@ -118,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menuItemSelectFolder: {
-                startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQUEST_PICK_FOLDER);
+                startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION), REQUEST_PICK_FOLDER);
                 return true;
             }
 
@@ -187,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && requestCode == REQUEST_PICK_FOLDER) {
-            String path = Utilities.getPathFromUri(DocumentsContract.buildDocumentUriUsingTree(data.getData(), DocumentsContract.getTreeDocumentId(data.getData())));
+            String path = Utilities.getPathFromUri(data.getData());
             if (!LocalFiles.getPath().equals(path)) {
                 LocalFiles.setPath(path);
                 recreate();

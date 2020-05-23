@@ -8,6 +8,7 @@ import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -22,12 +23,14 @@ import com.liadpaz.amp.utils.QueueUtil;
 import java.util.ArrayList;
 
 public class AlbumSongListActivity extends AppCompatActivity {
+    private SongsListAdapter adapter;
 
     private MediaControllerCompat controller;
     private MediaControllerCompat.Callback callback;
 
     private ActivityAlbumSongListBinding binding;
 
+    @SuppressWarnings("ConstantConditions")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,8 +42,29 @@ public class AlbumSongListActivity extends AppCompatActivity {
         String album = getIntent().getStringExtra(Constants.ALBUM);
 
         ArrayList<Song> songs = LocalFiles.getSongsByAlbum(album);
-        SongsListAdapter adapter = new SongsListAdapter(this, (v, position) -> {
+        adapter = new SongsListAdapter(this, (v, position) -> {
+            PopupMenu popupMenu = new PopupMenu(this, v);
+            popupMenu.inflate(R.menu.menu_song);
+            popupMenu.setOnMenuItemClickListener(item -> {
+                switch (item.getItemId()) {
+                    case R.id.menuPlayNext: {
+                        QueueUtil.addToNext(adapter.getCurrentList().get(position));
+                        break;
+                    }
 
+                    case R.id.menuAddQueue: {
+                        QueueUtil.addToEnd(adapter.getCurrentList().get(position));
+                        break;
+                    }
+
+                    case R.id.menuQueueAddPlaylist: {
+                        // TODO: add to playlist
+                        break;
+                    }
+                }
+                return true;
+            });
+            popupMenu.show();
         });
         adapter.submitList(songs);
 

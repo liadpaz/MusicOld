@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder> {
-
     private static final String TAG = "QUEUE_ADAPTER";
 
     private OnStartDragListener onStartDragListener;
@@ -110,6 +109,7 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
 
             itemView.setOnClickListener(v -> {
                 int position = getAdapterPosition();
+                QueueUtil.queuePosition.setValue(position);
                 Bundle bundle = new Bundle();
                 bundle.putInt(Constants.ACTION_QUEUE_POSITION, position);
                 MainActivity.getController().sendCommand(Constants.ACTION_QUEUE_POSITION, bundle, null);

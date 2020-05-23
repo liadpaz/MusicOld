@@ -80,6 +80,8 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
         mediaPlayer.setOnCompletionListener(mp -> {
             if (!mediaPlayer.isLooping()) {
                 mediaSession.getController().getTransportControls().skipToNext();
+            } else {
+                sendPlaybackState();
             }
         });
 
@@ -105,8 +107,10 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
             public void onCommand(String command, Bundle extras, ResultReceiver cb) {
                 switch (command) {
                     case Constants.ACTION_QUEUE_POSITION: {
-                        setSource(queue.get(queuePosition = extras.getInt(Constants.ACTION_QUEUE_POSITION)));
-                        onPlay();
+                        if (queue.size() > 0) {
+                            setSource(queue.get(queuePosition = extras.getInt(Constants.ACTION_QUEUE_POSITION)));
+                            onPlay();
+                        }
                         break;
                     }
 
@@ -118,11 +122,6 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
                             cb.send(1, bundle);
                         } catch (Exception ignored) {
                         }
-                        break;
-                    }
-
-                    case Constants.ACTION_SEEK_TO: {
-                        onSeekTo((int)((double)extras.getInt(Constants.ACTION_SEEK_TO) * mediaPlayer.getDuration() / 1000));
                         break;
                     }
                 }
@@ -196,7 +195,11 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
                         } else {
                             setQueuePosition(queuePosition);
                         }
+                        boolean isLooping = mediaSession.getController().getRepeatMode() == PlaybackStateCompat.REPEAT_MODE_ONE;
                         setSource(queue.get(queuePosition));
+                        if (isLooping) {
+                            mediaPlayer.setLooping(true);
+                        }
                         onPlay();
                     }
                 }
@@ -213,7 +216,11 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
                         } else {
                             setQueuePosition(queuePosition);
                         }
+                        boolean isLooping = mediaSession.getController().getRepeatMode() == PlaybackStateCompat.REPEAT_MODE_ONE;
                         setSource(queue.get(queuePosition));
+                        if (isLooping) {
+                            mediaPlayer.setLooping(true);
+                        }
                         onPlay();
                     }
                 }
@@ -222,12 +229,7 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
             @Override
             public void onSeekTo(long pos) {
                 if (mediaSession.getController().getPlaybackState().getState() != PlaybackStateCompat.STATE_NONE) {
-                    boolean returnToPlay = mediaPlayer.isPlaying();
-                    mediaPlayer.pause();
                     mediaPlayer.seekTo((int)pos);
-                    if (returnToPlay) {
-                        mediaPlayer.start();
-                    }
                     sendPlaybackState();
                 }
             }
@@ -236,6 +238,7 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
             public void onSetRepeatMode(int repeatMode) {
                 mediaPlayer.setLooping(repeatMode == PlaybackStateCompat.REPEAT_MODE_ONE);
                 mediaSession.setRepeatMode(repeatMode);
+                startNotification();
             }
         });
 
@@ -258,14 +261,14 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
         becomingNoisyReceiver.register();
         mediaPlayer.start();
         sendPlaybackState();
-        startNotification(true);
+        startNotification();
     }
 
     private void pause() {
         becomingNoisyReceiver.unregister();
         mediaPlayer.pause();
         sendPlaybackState();
-        startNotification(false);
+        startNotification();
     }
 
     private void sendMetadata(@NonNull Song song) {
@@ -279,8 +282,12 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        MediaButtonReceiver.handleIntent(mediaSession, intent);
+    public int onStartCommand(@NonNull Intent intent, int flags, int startId) {
+        if (intent.hasExtra(Constants.LOOP_EXTRA)) {
+            mediaSession.getController().getTransportControls().setRepeatMode(mediaPlayer.isLooping() ? PlaybackStateCompat.REPEAT_MODE_ALL : PlaybackStateCompat.REPEAT_MODE_ONE);
+        } else {
+            MediaButtonReceiver.handleIntent(mediaSession, intent);
+        }
         return START_STICKY;
     }
 
@@ -297,9 +304,12 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
         }
     }
 
-    private void startNotification(final boolean isPlaying) {
-        NotificationCompat.Builder builder = MediaNotification.from(this, mediaSession, isPlaying);
-        Glide.with(this).asBitmap().load(Utilities.getCoverUri(currentSource)).placeholder(R.drawable.song).into(new CustomTarget<Bitmap>() {
+    private void startNotification() {
+        final boolean isPlaying = mediaPlayer.isPlaying();
+
+        final NotificationCompat.Builder builder = MediaNotification.from(this, mediaSession);
+
+        Glide.with(getApplicationContext()).asBitmap().load(Utilities.getCoverUri(currentSource)).into(new CustomTarget<Bitmap>() {
             @Override
             public void onResourceReady(@NonNull Bitmap cover, @Nullable Transition<? super Bitmap> transition) {
                 startForeground(NOTIFICATION_ID, builder.setLargeIcon(cover).build());
