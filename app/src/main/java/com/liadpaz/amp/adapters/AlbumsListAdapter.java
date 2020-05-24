@@ -12,7 +12,7 @@ import androidx.annotation.Nullable;
 import com.bumptech.glide.Glide;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.ItemAlbumBinding;
-import com.liadpaz.amp.utils.Album;
+import com.liadpaz.amp.viewmodels.Album;
 import com.liadpaz.amp.utils.Utilities;
 
 import java.util.List;

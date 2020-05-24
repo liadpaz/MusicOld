@@ -16,7 +16,7 @@ import com.liadpaz.amp.databinding.ItemSongBinding;
 import com.liadpaz.amp.interfaces.OnItemClickPopUpListener;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.QueueUtil;
-import com.liadpaz.amp.utils.Song;
+import com.liadpaz.amp.viewmodels.Song;
 import com.liadpaz.amp.utils.Utilities;
 
 import java.util.ArrayList;
@@ -51,8 +51,8 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
     public void onBindViewHolder(@NonNull SongViewHolder holder, int position) {
         Song song = getItem(position);
 
-        holder.binding.tvSongName.setText(song.getSongTitle());
-        holder.binding.tvSongArtist.setText(Utilities.joinArtists(song.getSongArtists()));
+        holder.binding.tvSongName.setText(song.songTitle);
+        holder.binding.tvSongArtist.setText(Utilities.joinArtists(song.songArtists));
 
         Glide.with(context).load(Utilities.getCoverUri(song)).into(holder.binding.ivSongCover);
 

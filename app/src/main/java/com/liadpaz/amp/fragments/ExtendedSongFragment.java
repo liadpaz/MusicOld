@@ -15,14 +15,14 @@ import androidx.fragment.app.Fragment;
 import com.bumptech.glide.Glide;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
-import com.liadpaz.amp.databinding.FragmentExtendedBinding;
+import com.liadpaz.amp.databinding.FragmentExtendedSongBinding;
 
 public class ExtendedSongFragment extends Fragment {
 
     private MediaControllerCompat controller;
     private MediaControllerCompat.Callback callback;
 
-    private FragmentExtendedBinding binding;
+    private FragmentExtendedSongBinding binding;
 
     public ExtendedSongFragment() { }
 
@@ -31,7 +31,7 @@ public class ExtendedSongFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return (binding = FragmentExtendedBinding.inflate(inflater, container, false)).getRoot();
+        return (binding = FragmentExtendedSongBinding.inflate(inflater, container, false)).getRoot();
     }
 
     @Override

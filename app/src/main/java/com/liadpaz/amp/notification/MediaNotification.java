@@ -10,7 +10,6 @@ import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -40,8 +39,6 @@ public final class MediaNotification {
 
         final boolean isPlaying = controller.getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING;
         final boolean isLooping = controller.getRepeatMode() == PlaybackStateCompat.REPEAT_MODE_ONE;
-
-        Log.d(TAG, "from: " + isLooping);
 
         PendingIntent repeatIntent = PendingIntent.getService(context, 4, new Intent(context, MediaPlayerService.class).putExtra(Constants.LOOP_EXTRA, 0), 0);
 

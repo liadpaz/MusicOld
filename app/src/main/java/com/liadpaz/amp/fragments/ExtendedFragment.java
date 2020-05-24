@@ -1,30 +1,34 @@
-package com.liadpaz.amp;
+package com.liadpaz.amp.fragments;
 
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.ResultReceiver;
-import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.SeekBar;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
-import com.liadpaz.amp.databinding.ActivityExtendedSongBinding;
-import com.liadpaz.amp.fragments.CurrentQueueFragment;
-import com.liadpaz.amp.fragments.ExtendedSongFragment;
+import com.liadpaz.amp.MainActivity;
+import com.liadpaz.amp.R;
+import com.liadpaz.amp.databinding.FragmentExtendedBinding;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.utils.QueueUtil;
 import com.liadpaz.amp.utils.Utilities;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.lang.ref.WeakReference;
 
-public class ExtendedSongActivity extends AppCompatActivity {
-    private static final String TAG = "EXTENDED_SONG_ACTIVITY";
+public class ExtendedFragment extends Fragment {
+    private static final String TAG = "ExtendedFragment";
 
     private Handler handler;
     private Runnable runnable;
@@ -35,19 +39,22 @@ public class ExtendedSongActivity extends AppCompatActivity {
 
     private long duration = 0;
 
-    private ActivityExtendedSongBinding binding;
+    private boolean isUp = false;
 
-    private boolean isShowingQueue = false;
+    private FragmentExtendedBinding binding;
+
+    public ExtendedFragment() { }
+
+    public static ExtendedFragment newInstance() { return new ExtendedFragment(); }
+
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return (binding = FragmentExtendedBinding.inflate(inflater, container, false)).getRoot();
+    }
 
     @SuppressWarnings("ConstantConditions")
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        binding = ActivityExtendedSongBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-
-        binding.tvCurrentSongName.setSelected(true);
-
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         handler = new SeekBarHandler(binding);
 
         (controller = MainActivity.getController()).registerCallback(callback = new MediaControllerCompat.Callback() {
@@ -68,7 +75,7 @@ public class ExtendedSongActivity extends AppCompatActivity {
         binding.btnSkipPrev.setOnClickListener(v -> controller.getTransportControls().skipToPrevious());
         binding.btnPlayPause.setOnClickListener(v -> {
             if (QueueUtil.queue.getValue().size() == 0) {
-                QueueUtil.queue.setValue(LocalFiles.listSongs(this));
+                QueueUtil.queue.setValue(LocalFiles.listSongs(requireContext()));
                 Bundle bundle = new Bundle();
                 bundle.putInt(Constants.ACTION_QUEUE_POSITION, 0);
                 controller.sendCommand(Constants.ACTION_QUEUE_POSITION, bundle, null);
@@ -94,23 +101,38 @@ public class ExtendedSongActivity extends AppCompatActivity {
                 controller.getTransportControls().seekTo((int)((double)seekBar.getProgress() * duration / 1000));
             }
         });
-
-        binding.btnQueue.setOnClickListener(v -> {
-            getSupportFragmentManager().beginTransaction().replace(R.id.layoutExtended, isShowingQueue ? ExtendedSongFragment.newInstance() : CurrentQueueFragment.newInstance()).commit();
-            v.setBackgroundResource(isShowingQueue ? R.drawable.queue_music_not_shown : R.drawable.queue_music_shown);
-            isShowingQueue = !isShowingQueue;
-        });
         binding.tvTimeElapsed.setText(Utilities.formatTime(0));
         binding.tvTotalTime.setText(Utilities.formatTime(0));
 
         setMetadata(controller.getMetadata());
         setPlayback(controller.getPlaybackState());
 
-        getSupportFragmentManager().beginTransaction().replace(R.id.layoutExtended, ExtendedSongFragment.newInstance()).commit();
+        ((MainActivity)requireActivity()).binding.mainLayout.addPanelSlideListener(new SlidingUpPanelLayout.SimplePanelSlideListener() {
+            @Override
+            public void onPanelSlide(@NonNull View panel, float slideOffset) {
+                if (slideOffset == 1.0) {
+                    // show the info fragment
+                    if (!isUp) {
+                        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ExtendedInfoFragment.newInstance()).commit();
+                        isUp = true;
+                    }
+                } else if (slideOffset == 0) {
+                    // show the controller fragment
+                    if (isUp) {
+                        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedSongFragment.newInstance()).commit();
+                        isUp = false;
+                    }
+                }
+            }
+        });
+
+        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedSongFragment.newInstance()).commit();
+
+        ((MainActivity)requireActivity()).binding.mainLayout.setDragView(binding.infoFragment);
     }
 
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         if (shouldSeek) {
             handler.post(runnable);
@@ -133,13 +155,7 @@ public class ExtendedSongActivity extends AppCompatActivity {
     }
 
     private void setMetadata(MediaMetadataCompat metadata) {
-        if (metadata == null) {
-            binding.tvCurrentSongName.setText(null);
-            binding.tvCurrentSongArtist.setText(null);
-        } else {
-            MediaDescriptionCompat description = metadata.getDescription();
-            binding.tvCurrentSongName.setText(description.getTitle());
-            binding.tvCurrentSongArtist.setText(description.getSubtitle());
+        if (metadata != null) {
             binding.tvTimeElapsed.setText(Utilities.formatTime(0));
             binding.tvTotalTime.setText(Utilities.formatTime(duration = metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)));
         }
@@ -165,29 +181,23 @@ public class ExtendedSongActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onPause() {
+    public void onPause() {
         super.onPause();
         handler.removeCallbacks(runnable);
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    public void onDestroyView() {
+        super.onDestroyView();
         if (callback != null) {
             controller.unregisterCallback(callback);
         }
     }
 
-    @Override
-    public void finish() {
-        super.finish();
-        overridePendingTransition(R.anim.slide_down_reverse, R.anim.slide_up_reverse);
-    }
-
     private static class SeekBarHandler extends Handler {
-        private WeakReference<ActivityExtendedSongBinding> bindingWeakReference;
+        private WeakReference<FragmentExtendedBinding> bindingWeakReference;
 
-        SeekBarHandler(ActivityExtendedSongBinding binding) {
+        SeekBarHandler(@NonNull FragmentExtendedBinding binding) {
             bindingWeakReference = new WeakReference<>(binding);
         }
 

@@ -14,7 +14,8 @@
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:ignore="UnusedAttribute">
         <activity
             android:name=".ArtistSongListActivity"
             android:launchMode="singleInstance" />
@@ -27,9 +28,6 @@
             android:launchMode="singleInstance" />
         <activity
             android:name=".AboutActivity"
-            android:launchMode="singleInstance" />
-        <activity
-            android:name=".ExtendedSongActivity"
             android:launchMode="singleInstance" />
         <activity
             android:name=".MainActivity"

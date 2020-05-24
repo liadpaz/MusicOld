@@ -2,7 +2,8 @@ package com.liadpaz.amp.adapters;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.Lifecycle;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 import java.util.ArrayList;
@@ -11,8 +12,8 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 
     private ArrayList<Class> fragments;
 
-    public ViewPagerAdapter(@NonNull FragmentActivity activity, @NonNull ArrayList<Class> fragments) {
-        super(activity);
+    public ViewPagerAdapter(@NonNull FragmentManager fragmentManager, @NonNull Lifecycle lifecycle, @NonNull ArrayList<Class> fragments) {
+        super(fragmentManager, lifecycle);
         this.fragments = fragments;
     }
 

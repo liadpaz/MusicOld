@@ -19,7 +19,7 @@ import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.QueueAdapter;
 import com.liadpaz.amp.databinding.FragmentCurrentQueueBinding;
 import com.liadpaz.amp.utils.QueueUtil;
-import com.liadpaz.amp.utils.Song;
+import com.liadpaz.amp.viewmodels.Song;
 
 public class CurrentQueueFragment extends Fragment {
     private static final String TAG = "QUEUE_FRAGMENT";

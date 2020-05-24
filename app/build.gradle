@@ -35,6 +35,9 @@ android {
     viewBinding {
         enabled = true
     }
+    dataBinding {
+        enabled = true
+    }
 }
 
 dependencies {
@@ -48,6 +51,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'androidx.preference:preference:1.1.1'
     implementation 'com.github.bumptech.glide:glide:4.11.0'
+    implementation 'com.sothree.slidinguppanel:library:3.4.0'
 
     annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
 }

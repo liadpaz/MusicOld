@@ -11,7 +11,7 @@ import androidx.annotation.Nullable;
 
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.ItemArtistBinding;
-import com.liadpaz.amp.utils.Artist;
+import com.liadpaz.amp.viewmodels.Artist;
 
 import java.util.List;
 

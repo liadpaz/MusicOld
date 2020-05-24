@@ -3,6 +3,8 @@ package com.liadpaz.amp.utils;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.MutableLiveData;
 
+import com.liadpaz.amp.viewmodels.Song;
+
 import java.util.ArrayList;
 
 public class QueueUtil {

@@ -23,7 +23,7 @@ import com.liadpaz.amp.interfaces.OnItemClickPopUpListener;
 import com.liadpaz.amp.interfaces.OnStartDragListener;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.QueueUtil;
-import com.liadpaz.amp.utils.Song;
+import com.liadpaz.amp.viewmodels.Song;
 import com.liadpaz.amp.utils.Utilities;
 
 import java.util.ArrayList;
@@ -62,8 +62,8 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
     public void onBindViewHolder(@NonNull final SongViewHolder holder, final int position) {
         Song song = getItem(position);
 
-        holder.binding.tvSongTitle.setText(song.getSongTitle());
-        holder.binding.tvSongArtist.setText(Utilities.joinArtists(song.getSongArtists()));
+        holder.binding.tvSongTitle.setText(song.songTitle);
+        holder.binding.tvSongArtist.setText(Utilities.joinArtists(song.songArtists));
         Glide.with(context).load(Utilities.getCoverUri(song)).placeholder(R.drawable.song).into(holder.binding.ivSongCover);
 
         holder.binding.btnDrag.setOnTouchListener((v, event) -> {
@@ -79,7 +79,7 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
         if (queuePosition > position) {
             QueueUtil.addToPosition(-1);
         }
-        Toast.makeText(context, String.format("%s %s", getItem(position).getSongTitle(), context.getString(R.string.queue_removed)), Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, String.format("%s %s", getItem(position).songTitle, context.getString(R.string.queue_removed)), Toast.LENGTH_SHORT).show();
     }
 
     public void onItemMove(int from, int to) {

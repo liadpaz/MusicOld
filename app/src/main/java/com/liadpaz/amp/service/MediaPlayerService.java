@@ -36,7 +36,7 @@ import com.liadpaz.amp.R;
 import com.liadpaz.amp.notification.MediaNotification;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.QueueUtil;
-import com.liadpaz.amp.utils.Song;
+import com.liadpaz.amp.viewmodels.Song;
 import com.liadpaz.amp.utils.Utilities;
 
 import java.util.ArrayList;
@@ -272,7 +272,7 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
     }
 
     private void sendMetadata(@NonNull Song song) {
-        metadataBuilder.putText(MediaMetadataCompat.METADATA_KEY_TITLE, song.getSongTitle()).putText(MediaMetadataCompat.METADATA_KEY_ARTIST, Utilities.joinArtists(song.getSongArtists())).putText(MediaMetadataCompat.METADATA_KEY_ALBUM, song.getAlbum()).putString(MediaMetadataCompat.METADATA_KEY_ART_URI, Utilities.getCoverUri(song).toString()).putLong(MediaMetadataCompat.METADATA_KEY_DURATION, mediaPlayer.getDuration());
+        metadataBuilder.putText(MediaMetadataCompat.METADATA_KEY_TITLE, song.songTitle).putText(MediaMetadataCompat.METADATA_KEY_ARTIST, Utilities.joinArtists(song.songArtists)).putText(MediaMetadataCompat.METADATA_KEY_ALBUM, song.album).putString(MediaMetadataCompat.METADATA_KEY_ART_URI, Utilities.getCoverUri(song).toString()).putLong(MediaMetadataCompat.METADATA_KEY_DURATION, mediaPlayer.getDuration());
         mediaSession.setMetadata(metadataBuilder.build());
     }
 
@@ -297,7 +297,7 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
                 audioManager.abandonAudioFocusRequest(audioFocusRequest);
             }
             mediaPlayer.reset();
-            mediaPlayer.setDataSource(getApplicationContext(), ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, (currentSource = song).getSongId()));
+            mediaPlayer.setDataSource(getApplicationContext(), ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, (currentSource = song).songId));
             mediaPlayer.prepare();
             sendMetadata(currentSource);
         } catch (Exception ignored) {

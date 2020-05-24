@@ -5,11 +5,13 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.provider.MediaStore.Audio.Media;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.liadpaz.amp.R;
+import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,7 +37,7 @@ public class LocalFiles {
         LocalFiles.playlistsSharedPreferences = playlistsSharedPreferences;
 
         QueueUtil.queue.observeForever(songs -> {
-            String songsIds = new Gson().toJson((Object)songs.stream().map(Song::getSongId).collect(Collectors.toCollection(ArrayList::new)));
+            String songsIds = new Gson().toJson((Object)songs.stream().map(song -> song.songId).collect(Collectors.toCollection(ArrayList::new)));
             musicSharedPreferences.edit().putString(Constants.SHARED_PREFERENCES_QUEUE, songsIds).apply();
         });
         QueueUtil.queuePosition.observeForever(queuePosition -> musicSharedPreferences.edit().putInt(Constants.SHARED_PREFERENCES_QUEUE, queuePosition).apply());
@@ -62,6 +64,7 @@ public class LocalFiles {
 
     @NonNull
     public static ArrayList<Song> listSongs(@NonNull Context context) {
+        long start = System.currentTimeMillis();
         String songUntitled = context.getString(R.string.song_no_name);
         String noArtist = context.getString(R.string.song_no_artist);
         String noAlbum = context.getString(R.string.song_no_album);
@@ -105,6 +108,7 @@ public class LocalFiles {
                 } while (musicCursor.moveToNext());
             }
         }
+        Log.d(TAG, "listSongs: " + (System.currentTimeMillis() - start));
         LocalFiles.allSongs = songs;
         setArtists();
         setAlbums();
@@ -117,7 +121,7 @@ public class LocalFiles {
             artists.clear();
         }
         for (final Song song : allSongs) {
-            for (String artist : song.getSongArtists()) {
+            for (String artist : song.songArtists) {
                 if (artists.containsKey(artist)) {
                     artists.get(artist).add(song);
                 } else {
@@ -138,10 +142,10 @@ public class LocalFiles {
             albums.clear();
         }
         for (final Song song : allSongs) {
-            if (albums.containsKey(song.getAlbum())) {
-                albums.get(song.getAlbum()).add(song);
+            if (albums.containsKey(song.album)) {
+                albums.get(song.album).add(song);
             } else {
-                albums.put(song.getAlbum(), new ArrayList<Song>() {{
+                albums.put(song.album, new ArrayList<Song>() {{
                     add(song);
                 }});
             }
@@ -150,16 +154,6 @@ public class LocalFiles {
 
     @NonNull
     public static HashMap<String, ArrayList<Song>> getAlbums() { return albums; }
-
-    @NonNull
-    public static ArrayList<Song> getSongsByArtist(@NonNull String artist) {
-        return allSongs.stream().filter(song -> song.getSongArtists().contains(artist)).collect(Collectors.toCollection(ArrayList::new));
-    }
-
-    @NonNull
-    public static ArrayList<Song> getSongsByAlbum(@NonNull String album) {
-        return allSongs.stream().filter(song -> song.getAlbum().equals(album)).collect(Collectors.toCollection(ArrayList::new));
-    }
 
     //    @NonNull
     //    public ArrayList<Song> getQueueFromLocal(@NonNull Context context) {

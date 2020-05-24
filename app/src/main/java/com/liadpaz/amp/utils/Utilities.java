@@ -11,6 +11,8 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
+import com.liadpaz.amp.viewmodels.Song;
+
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -38,7 +40,7 @@ public class Utilities {
 
     @NonNull
     public static Uri getCoverUri(@NonNull Song song) {
-        return ContentUris.withAppendedId(albumsUri, Long.parseLong(song.getAlbumId()));
+        return ContentUris.withAppendedId(albumsUri, Long.parseLong(song.albumId));
     }
 
     @NonNull

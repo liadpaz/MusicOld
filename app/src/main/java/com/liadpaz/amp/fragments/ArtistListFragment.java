@@ -13,7 +13,7 @@ import androidx.fragment.app.Fragment;
 import com.liadpaz.amp.ArtistSongListActivity;
 import com.liadpaz.amp.adapters.ArtistsListAdapter;
 import com.liadpaz.amp.databinding.FragmentArtistListBinding;
-import com.liadpaz.amp.utils.Artist;
+import com.liadpaz.amp.viewmodels.Artist;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
 
@@ -48,6 +48,6 @@ public class ArtistListFragment extends Fragment {
         ArtistsListAdapter adapter = new ArtistsListAdapter(getContext(), artists);
 
         binding.lvArtists.setAdapter(adapter);
-        binding.lvArtists.setOnItemClickListener((parent, view1, position, id) -> startActivity(new Intent(getContext(), ArtistSongListActivity.class).putExtra(Constants.ARTIST, adapter.getItem(position).name)));
+        binding.lvArtists.setOnItemClickListener((parent, view1, position, id) -> startActivity(new Intent(getContext(), ArtistSongListActivity.class).putExtra(Constants.ARTIST, adapter.getItem(position))));
     }
 }
