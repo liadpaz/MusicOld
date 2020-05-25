@@ -1,7 +1,6 @@
 package com.liadpaz.amp.fragments;
 
 import android.os.Bundle;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,35 +14,34 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.SongsListAdapter;
-import com.liadpaz.amp.databinding.FragmentSongsListBinding;
-import com.liadpaz.amp.utils.LocalFiles;
+import com.liadpaz.amp.databinding.FragmentAlbumSongListBinding;
+import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.QueueUtil;
+import com.liadpaz.amp.viewmodels.Album;
 
-public class SongsListFragment extends Fragment {
-    @SuppressWarnings("unused")
-    private static final String TAG = "SONGS_LIST_FRAGMENT";
-
+public class AlbumSongListFragment extends Fragment {
     private SongsListAdapter adapter;
 
-    private FragmentSongsListBinding binding;
+    private FragmentAlbumSongListBinding binding;
 
-    public SongsListFragment() { }
+    public AlbumSongListFragment() { }
 
-    @SuppressWarnings("unused")
     @NonNull
-    public static SongsListFragment newInstance() {
-        return new SongsListFragment();
-    }
+    public static AlbumSongListFragment newInstance() { return new AlbumSongListFragment(); }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return (binding = FragmentSongsListBinding.inflate(inflater, container, false)).getRoot();
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return (binding = FragmentAlbumSongListBinding.inflate(inflater, container, false)).getRoot();
     }
 
     @SuppressWarnings("ConstantConditions")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        adapter = new SongsListAdapter(getContext(), (v, position) -> {
+        Album album = getArguments().getParcelable(Constants.ALBUM);
+
+        binding.setAlbum(album);
+
+        adapter = new SongsListAdapter(requireContext(), (v, position) -> {
             PopupMenu popupMenu = new PopupMenu(requireContext(), v);
             popupMenu.inflate(R.menu.menu_song);
             popupMenu.setOnMenuItemClickListener(item -> {
@@ -67,18 +65,10 @@ public class SongsListFragment extends Fragment {
             });
             popupMenu.show();
         });
-        adapter.submitList(LocalFiles.listSongsByName(getContext()));
+        adapter.submitList(album.songs);
 
-        binding.rvSongs.setLayoutManager(new LinearLayoutManager(getContext()));
-        binding.rvSongs.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
+        binding.rvSongs.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.rvSongs.addItemDecoration(new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));
         binding.rvSongs.setAdapter(adapter);
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    @Override
-    public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, @Nullable ContextMenu.ContextMenuInfo menuInfo) {
-        super.onCreateContextMenu(menu, v, menuInfo);
-        getActivity().getMenuInflater()
-                     .inflate(R.menu.menu_song, menu);
     }
 }

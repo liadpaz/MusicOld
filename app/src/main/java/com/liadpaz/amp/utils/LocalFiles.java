@@ -63,7 +63,7 @@ public class LocalFiles {
     }
 
     @NonNull
-    public static ArrayList<Song> listSongs(@NonNull Context context) {
+    public static ArrayList<Song> listSongsByName(@NonNull Context context) {
         long start = System.currentTimeMillis();
         String songUntitled = context.getString(R.string.song_no_name);
         String noArtist = context.getString(R.string.song_no_artist);
@@ -71,7 +71,60 @@ public class LocalFiles {
         ArrayList<Song> songs = new ArrayList<>();
         //retrieve song info
         ContentResolver musicResolver = context.getContentResolver();
-        try (Cursor musicCursor = musicResolver.query(Media.EXTERNAL_CONTENT_URI.buildUpon().appendPath("").build(), PROJECTION, "_data like ?", new String[]{"%" + getPath() + "%"}, Media.TITLE)) {
+        try (Cursor musicCursor = musicResolver.query(Media.EXTERNAL_CONTENT_URI, PROJECTION, "_data like ?", new String[]{"%" + getPath() + "%"}, Media.TITLE + " COLLATE NOCASE")) {
+            //iterate over results if valid
+            if (musicCursor != null && musicCursor.moveToFirst()) {
+                //get columns
+                int titleColumn = musicCursor.getColumnIndex(Media.TITLE);
+                int idColumn = musicCursor.getColumnIndex(Media._ID);
+                int artistColumn = musicCursor.getColumnIndex(Media.ARTIST);
+                int albumColumn = musicCursor.getColumnIndex(Media.ALBUM);
+                int albumIdColumn = musicCursor.getColumnIndex(Media.ALBUM_ID);
+                //add songs to list
+                do {
+                    long id = musicCursor.getLong(idColumn);
+                    String title = musicCursor.getString(titleColumn);
+                    if (title == null) {
+                        title = songUntitled;
+                    }
+                    String artist = musicCursor.getString(artistColumn);
+                    String album = musicCursor.getString(albumColumn);
+                    if (album == null) {
+                        album = noAlbum;
+                    }
+                    String albumId = musicCursor.getString(albumIdColumn);
+
+                    ArrayList<String> artists = new ArrayList<>();
+                    if (artist != null && !artist.isEmpty()) {
+                        Matcher matcher = Pattern.compile("([^ &,]([^,&])*[^ ,&]+)").matcher(artist);
+                        while (matcher.find()) {
+                            artists.add(matcher.group());
+                        }
+                    } else {
+                        artists.add(noArtist);
+                    }
+
+                    songs.add(new Song(id, title, artists, album, albumId));
+                } while (musicCursor.moveToNext());
+            }
+        }
+        Log.d(TAG, "listSongs: " + (System.currentTimeMillis() - start));
+        LocalFiles.allSongs = songs;
+        setArtists();
+        setAlbums();
+        return songs;
+    }
+
+    @NonNull
+    public static ArrayList<Song> listSongsByLastAdded(@NonNull Context context) {
+        long start = System.currentTimeMillis();
+        String songUntitled = context.getString(R.string.song_no_name);
+        String noArtist = context.getString(R.string.song_no_artist);
+        String noAlbum = context.getString(R.string.song_no_album);
+        ArrayList<Song> songs = new ArrayList<>();
+        //retrieve song info
+        ContentResolver musicResolver = context.getContentResolver();
+        try (Cursor musicCursor = musicResolver.query(Media.EXTERNAL_CONTENT_URI, PROJECTION, "_data like ?", new String[]{"%" + getPath() + "%"}, Media.DATE_ADDED + " DESC")) {
             //iterate over results if valid
             if (musicCursor != null && musicCursor.moveToFirst()) {
                 //get columns

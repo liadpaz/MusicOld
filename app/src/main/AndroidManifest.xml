@@ -17,12 +17,6 @@
         android:theme="@style/AppTheme"
         tools:ignore="UnusedAttribute">
         <activity
-            android:name=".ArtistSongListActivity"
-            android:launchMode="singleInstance" />
-        <activity
-            android:name=".AlbumSongListActivity"
-            android:launchMode="singleInstance" />
-        <activity
             android:name=".SettingsActivity"
             android:label="@string/menu_settings"
             android:launchMode="singleInstance" />

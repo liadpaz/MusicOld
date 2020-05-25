@@ -80,9 +80,9 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
         mediaPlayer.setOnCompletionListener(mp -> {
             if (!mediaPlayer.isLooping()) {
                 mediaSession.getController().getTransportControls().skipToNext();
-            } else {
-                sendPlaybackState();
             }
+            sendPlaybackState();
+            startNotification();
         });
 
         QueueUtil.queue.observeForever(songs -> {
@@ -93,7 +93,7 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
         });
         QueueUtil.queuePosition.observeForever(queuePosition -> this.queuePosition = queuePosition);
 
-        audioManager = (AudioManager)getSystemService(AUDIO_SERVICE);
+        audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
         audioAttributes = new AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).setUsage(AudioAttributes.USAGE_MEDIA).build();
 
         mediaPlayer.setAudioAttributes(audioAttributes);
@@ -282,11 +282,13 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
     }
 
     @Override
-    public int onStartCommand(@NonNull Intent intent, int flags, int startId) {
-        if (intent.hasExtra(Constants.LOOP_EXTRA)) {
-            mediaSession.getController().getTransportControls().setRepeatMode(mediaPlayer.isLooping() ? PlaybackStateCompat.REPEAT_MODE_ALL : PlaybackStateCompat.REPEAT_MODE_ONE);
-        } else {
-            MediaButtonReceiver.handleIntent(mediaSession, intent);
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null) {
+            if (intent.hasExtra(Constants.LOOP_EXTRA)) {
+                mediaSession.getController().getTransportControls().setRepeatMode(mediaPlayer.isLooping() ? PlaybackStateCompat.REPEAT_MODE_ALL : PlaybackStateCompat.REPEAT_MODE_ONE);
+            } else {
+                MediaButtonReceiver.handleIntent(mediaSession, intent);
+            }
         }
         return START_STICKY;
     }
@@ -320,7 +322,7 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
 
             @Override
             public void onLoadFailed(@Nullable Drawable errorDrawable) {
-                Bitmap cover = Utilities.getBitmapFromVectorDrawable(MediaPlayerService.this, R.drawable.song_color);
+                Bitmap cover = Utilities.getBitmapFromVectorDrawable(MediaPlayerService.this, R.drawable.song);
 
                 startForeground(NOTIFICATION_ID, builder.setLargeIcon(cover).build());
                 if (!isPlaying) {

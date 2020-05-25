@@ -52,7 +52,7 @@ public class ControllerFragment extends Fragment {
         binding.btnPlay.setOnClickListener(v -> {
             MediaControllerCompat controller = MainActivity.getController();
             if (controller.getPlaybackState().getState() == PlaybackStateCompat.STATE_NONE) {
-                QueueUtil.queue.postValue(LocalFiles.listSongs(requireContext()));
+                QueueUtil.queue.postValue(LocalFiles.listSongsByName(requireContext()));
                 Bundle bundle = new Bundle();
                 bundle.putInt(Constants.ACTION_QUEUE_POSITION, 0);
                 controller.sendCommand(Constants.ACTION_QUEUE_POSITION, bundle, null);
@@ -62,7 +62,6 @@ public class ControllerFragment extends Fragment {
                 controller.getTransportControls().play();
             }
         });
-//        binding.getRoot().setOnClickListener(v -> ((MainActivity)requireActivity()).setViewPagerPostion(1));
 
         setPlayback(controller.getPlaybackState());
         setMetadata(controller.getMetadata());
@@ -70,7 +69,7 @@ public class ControllerFragment extends Fragment {
 
     private void setPlayback(PlaybackStateCompat state) {
         if (state != null) {
-            binding.btnPlay.setImageResource(state.getState() == PlaybackStateCompat.STATE_PLAYING ? R.drawable.pause : R.drawable.play);
+            binding.btnPlay.setBackgroundResource(state.getState() == PlaybackStateCompat.STATE_PLAYING ? R.drawable.pause : R.drawable.play);
         }
     }
 

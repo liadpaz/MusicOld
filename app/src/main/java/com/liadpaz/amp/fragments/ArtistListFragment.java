@@ -1,6 +1,5 @@
 package com.liadpaz.amp.fragments;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,12 +9,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.liadpaz.amp.ArtistSongListActivity;
+import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.ArtistsListAdapter;
 import com.liadpaz.amp.databinding.FragmentArtistListBinding;
-import com.liadpaz.amp.viewmodels.Artist;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
+import com.liadpaz.amp.viewmodels.Artist;
 
 import java.util.ArrayList;
 
@@ -25,14 +24,12 @@ import java.util.ArrayList;
  * to create an instance of this fragment.
  */
 public class ArtistListFragment extends Fragment {
-
-    private static final String TAG = "ARTIST_LIST_FRAGMENT";
-
     private FragmentArtistListBinding binding;
 
     public ArtistListFragment() {}
 
-    static ArtistListFragment newInstance() { return new ArtistListFragment(); }
+    @NonNull
+    public static ArtistListFragment newInstance() { return new ArtistListFragment(); }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -48,6 +45,12 @@ public class ArtistListFragment extends Fragment {
         ArtistsListAdapter adapter = new ArtistsListAdapter(getContext(), artists);
 
         binding.lvArtists.setAdapter(adapter);
-        binding.lvArtists.setOnItemClickListener((parent, view1, position, id) -> startActivity(new Intent(getContext(), ArtistSongListActivity.class).putExtra(Constants.ARTIST, adapter.getItem(position))));
+        binding.lvArtists.setOnItemClickListener((parent, view1, position, id) -> {
+            Bundle bundle = new Bundle();
+            bundle.putParcelable(Constants.ARTIST, adapter.getItem(position));
+            Fragment fragment = ArtistSongListFragment.newInstance();
+            fragment.setArguments(bundle);
+            requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.viewpagerFragment, fragment).addToBackStack(null).commit();
+        });
     }
 }

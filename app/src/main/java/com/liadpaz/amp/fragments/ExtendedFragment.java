@@ -1,9 +1,13 @@
 package com.liadpaz.amp.fragments;
 
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.ResultReceiver;
+import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -14,7 +18,9 @@ import android.widget.SeekBar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.graphics.ColorUtils;
 import androidx.fragment.app.Fragment;
+import androidx.palette.graphics.Palette;
 
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
@@ -68,6 +74,9 @@ public class ExtendedFragment extends Fragment {
             public void onRepeatModeChanged(int repeatMode) { setRepeat(repeatMode); }
         });
 
+        binding.tvSongTitle.setSelected(true);
+        binding.tvSongArtist.setSelected(true);
+
         setPlayback(controller.getPlaybackState());
         setMetadata(controller.getMetadata());
         setRepeat(controller.getRepeatMode());
@@ -75,7 +84,7 @@ public class ExtendedFragment extends Fragment {
         binding.btnSkipPrev.setOnClickListener(v -> controller.getTransportControls().skipToPrevious());
         binding.btnPlayPause.setOnClickListener(v -> {
             if (QueueUtil.queue.getValue().size() == 0) {
-                QueueUtil.queue.setValue(LocalFiles.listSongs(requireContext()));
+                QueueUtil.queue.setValue(LocalFiles.listSongsByName(requireContext()));
                 Bundle bundle = new Bundle();
                 bundle.putInt(Constants.ACTION_QUEUE_POSITION, 0);
                 controller.sendCommand(Constants.ACTION_QUEUE_POSITION, bundle, null);
@@ -98,7 +107,7 @@ public class ExtendedFragment extends Fragment {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                controller.getTransportControls().seekTo((int)((double)seekBar.getProgress() * duration / 1000));
+                controller.getTransportControls().seekTo((long)((double)seekBar.getProgress() * duration / 1000));
             }
         });
         binding.tvTimeElapsed.setText(Utilities.formatTime(0));
@@ -110,16 +119,23 @@ public class ExtendedFragment extends Fragment {
         ((MainActivity)requireActivity()).binding.mainLayout.addPanelSlideListener(new SlidingUpPanelLayout.SimplePanelSlideListener() {
             @Override
             public void onPanelSlide(@NonNull View panel, float slideOffset) {
-                if (slideOffset == 1.0) {
+                if (isUp) {
+                    binding.infoFragment.setAlpha(slideOffset);
+                } else {
+                    binding.infoFragment.setAlpha(1 - slideOffset);
+                }
+                if (slideOffset == 1) {
                     // show the info fragment
                     if (!isUp) {
-                        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ExtendedInfoFragment.newInstance()).commit();
+                        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ExtendedInfoFragment.newInstance()).commitNow();
+                        binding.infoFragment.setAlpha(1);
                         isUp = true;
                     }
                 } else if (slideOffset == 0) {
                     // show the controller fragment
                     if (isUp) {
-                        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedSongFragment.newInstance()).commit();
+                        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedSongFragment.newInstance()).commitNow();
+                        binding.infoFragment.setAlpha(1);
                         isUp = false;
                     }
                 }
@@ -154,10 +170,28 @@ public class ExtendedFragment extends Fragment {
         }
     }
 
-    private void setMetadata(MediaMetadataCompat metadata) {
+    @SuppressWarnings("ConstantConditions")
+    private void setMetadata(@Nullable MediaMetadataCompat metadata) {
         if (metadata != null) {
+            MediaDescriptionCompat description = metadata.getDescription();
+            binding.tvSongTitle.setText(description.getTitle());
+            binding.tvSongArtist.setText(description.getSubtitle());
             binding.tvTimeElapsed.setText(Utilities.formatTime(0));
             binding.tvTotalTime.setText(Utilities.formatTime(duration = metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)));
+            try {
+                Palette.from(BitmapFactory.decodeStream(requireActivity().getContentResolver().openInputStream(description.getIconUri()))).generate(palette -> {
+                    int colorDominant = palette.getDominantColor(Color.WHITE);
+                    requireActivity().getWindow().setStatusBarColor(colorDominant);
+                    GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{colorDominant, Color.BLACK});
+                    binding.extendedFragment.setBackground(gradientDrawable);
+                });
+            } catch (Exception e) {
+                int colorTop = ColorUtils.blendARGB(Color.WHITE, Color.BLACK, 0.3F);
+                requireActivity().getWindow().setStatusBarColor(colorTop);
+                int colorBottom = ColorUtils.blendARGB(Color.WHITE, Color.BLACK, 0.9F);
+                GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{colorTop, colorBottom});
+                binding.extendedFragment.setBackground(gradientDrawable);
+            }
         }
     }
 

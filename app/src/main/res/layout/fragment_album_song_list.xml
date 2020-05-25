@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-    <data>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <data
+        android:id="@+id/data"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
         <variable
             name="album"
             type="com.liadpaz.amp.viewmodels.Album" />
@@ -10,16 +14,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        tools:context=".AlbumSongListActivity">
-
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbarAlbum"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?attr/colorPrimary"
-            android:minHeight="?attr/actionBarSize"
-            android:theme="?attr/actionBarTheme" />
+        android:background="@android:drawable/screen_background_dark"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/tvAlbumArtist"
@@ -50,9 +46,5 @@
             android:layout_weight="1"
             android:scrollbars="vertical" />
 
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/controllerFragment"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
     </LinearLayout>
 </layout>

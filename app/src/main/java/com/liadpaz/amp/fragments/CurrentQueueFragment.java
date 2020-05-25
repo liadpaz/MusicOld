@@ -69,7 +69,16 @@ public class CurrentQueueFragment extends Fragment {
             popupMenu.show();
         });
 
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN, ItemTouchHelper.START | ItemTouchHelper.END) {
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.Callback() { //ItemTouchHelper.UP | ItemTouchHelper.DOWN, ItemTouchHelper.START | ItemTouchHelper.END) {
+            boolean isSwiping = true;
+
+            @Override
+            public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                int moveFlags = ItemTouchHelper.UP | ItemTouchHelper.DOWN;
+                int swipeFlags = isSwiping ? 0 : (ItemTouchHelper.START | ItemTouchHelper.END);
+                return makeMovementFlags(moveFlags, swipeFlags);
+            }
+
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
                 adapter.onItemMove(viewHolder.getAdapterPosition(), target.getAdapterPosition());
@@ -79,20 +88,6 @@ public class CurrentQueueFragment extends Fragment {
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 adapter.onItemDismiss(viewHolder.getAdapterPosition());
-            }
-
-            @Override
-            public int getSwipeDirs(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
-                int swipeFlags = ItemTouchHelper.START | ItemTouchHelper.END;
-                if (QueueUtil.queuePosition.getValue() == viewHolder.getAdapterPosition()) {
-                    swipeFlags = 0;
-                }
-                return swipeFlags;
-            }
-
-            @Override
-            public int getDragDirs(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
-                return ItemTouchHelper.UP | ItemTouchHelper.DOWN;
             }
         });
         itemTouchHelper.attachToRecyclerView(binding.rvQueue);

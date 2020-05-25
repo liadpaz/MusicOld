@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
-def versionMajor = 1
-def versionMinor = 0
+def versionMajor = 0
+def versionMinor = 1
 def versionPatch = 0
 
 android {
@@ -50,6 +50,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.1.0'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'androidx.preference:preference:1.1.1'
+    implementation 'androidx.palette:palette:1.0.0'
     implementation 'com.github.bumptech.glide:glide:4.11.0'
     implementation 'com.sothree.slidinguppanel:library:3.4.0'
 

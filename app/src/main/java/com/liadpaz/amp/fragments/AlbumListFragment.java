@@ -1,6 +1,5 @@
 package com.liadpaz.amp.fragments;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,24 +9,22 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.liadpaz.amp.AlbumSongListActivity;
+import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.AlbumsListAdapter;
 import com.liadpaz.amp.databinding.FragmentAlbumListBinding;
-import com.liadpaz.amp.viewmodels.Album;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
+import com.liadpaz.amp.viewmodels.Album;
 
 import java.util.ArrayList;
 
 public class AlbumListFragment extends Fragment {
-    private static final String TAG = "ALBUM_LIST_FRAGMENT";
-
     private FragmentAlbumListBinding binding;
 
     public AlbumListFragment() {}
 
     @NonNull
-    static AlbumListFragment newInstance() { return new AlbumListFragment(); }
+    public static AlbumListFragment newInstance() { return new AlbumListFragment(); }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -44,6 +41,12 @@ public class AlbumListFragment extends Fragment {
         AlbumsListAdapter adapter = new AlbumsListAdapter(getContext(), albums);
         binding.lvAlbums.setAdapter(adapter);
 
-        binding.lvAlbums.setOnItemClickListener((parent, view1, position, id) -> startActivity(new Intent(getContext(), AlbumSongListActivity.class).putExtra(Constants.ALBUM, adapter.getItem(position))));
+        binding.lvAlbums.setOnItemClickListener((parent, view1, position, id) -> {
+            Bundle bundle = new Bundle();
+            bundle.putParcelable(Constants.ALBUM, adapter.getItem(position));
+            Fragment fragment = AlbumSongListFragment.newInstance();
+            fragment.setArguments(bundle);
+            requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.viewpagerFragment, fragment).addToBackStack(null).commit();
+        });
     }
 }

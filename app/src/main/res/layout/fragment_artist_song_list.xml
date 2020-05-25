@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
 
     <data>
+
         <variable
             name="artist"
             type="com.liadpaz.amp.viewmodels.Artist" />
@@ -11,16 +11,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        tools:context=".ArtistSongListActivity">
-
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbarArtist"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?attr/colorPrimary"
-            android:minHeight="?attr/actionBarSize"
-            android:theme="?attr/actionBarTheme" />
+        android:background="@android:drawable/screen_background_dark"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/tvArtistTitle"
