@@ -12,7 +12,9 @@ import android.graphics.drawable.Drawable;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
+import android.media.MediaDescription;
 import android.media.MediaPlayer;
+import android.media.session.MediaSession;
 import android.os.Bundle;
 import android.os.ResultReceiver;
 import android.provider.MediaStore;
@@ -36,8 +38,8 @@ import com.liadpaz.amp.R;
 import com.liadpaz.amp.notification.MediaNotification;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.QueueUtil;
-import com.liadpaz.amp.viewmodels.Song;
 import com.liadpaz.amp.utils.Utilities;
+import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,9 +83,9 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
             if (!mediaPlayer.isLooping()) {
                 mediaSession.getController().getTransportControls().skipToNext();
             }
-            sendPlaybackState();
-            startNotification();
         });
+
+        new MediaSession.QueueItem(new MediaDescription.Builder().build(), 0);
 
         QueueUtil.queue.observeForever(songs -> {
             this.queue = songs;
@@ -118,7 +120,6 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
                         try {
                             Bundle bundle = new Bundle();
                             bundle.putInt(Constants.ACTION_GET_POSITION, mediaPlayer.getCurrentPosition());
-                            bundle.putInt(Constants.EXTRA_TOTAL_TIME, mediaPlayer.getDuration());
                             cb.send(1, bundle);
                         } catch (Exception ignored) {
                         }
@@ -309,30 +310,33 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
     private void startNotification() {
         final boolean isPlaying = mediaPlayer.isPlaying();
 
-        final NotificationCompat.Builder builder = MediaNotification.from(this, mediaSession);
+        try {
+            final NotificationCompat.Builder builder = MediaNotification.from(this, mediaSession);
 
-        Glide.with(getApplicationContext()).asBitmap().load(Utilities.getCoverUri(currentSource)).into(new CustomTarget<Bitmap>() {
-            @Override
-            public void onResourceReady(@NonNull Bitmap cover, @Nullable Transition<? super Bitmap> transition) {
-                startForeground(NOTIFICATION_ID, builder.setLargeIcon(cover).build());
-                if (!isPlaying) {
-                    stopForeground(false);
+            Glide.with(getApplicationContext()).asBitmap().load(Utilities.getCoverUri(currentSource)).into(new CustomTarget<Bitmap>() {
+                @Override
+                public void onResourceReady(@NonNull Bitmap cover, @Nullable Transition<? super Bitmap> transition) {
+                    startForeground(NOTIFICATION_ID, builder.setLargeIcon(cover).build());
+                    if (!isPlaying) {
+                        stopForeground(false);
+                    }
                 }
-            }
 
-            @Override
-            public void onLoadFailed(@Nullable Drawable errorDrawable) {
-                Bitmap cover = Utilities.getBitmapFromVectorDrawable(MediaPlayerService.this, R.drawable.song);
+                @Override
+                public void onLoadFailed(@Nullable Drawable errorDrawable) {
+                    Bitmap cover = Utilities.getBitmapFromVectorDrawable(MediaPlayerService.this, R.drawable.song);
 
-                startForeground(NOTIFICATION_ID, builder.setLargeIcon(cover).build());
-                if (!isPlaying) {
-                    stopForeground(false);
+                    startForeground(NOTIFICATION_ID, builder.setLargeIcon(cover).build());
+                    if (!isPlaying) {
+                        stopForeground(false);
+                    }
                 }
-            }
 
-            @Override
-            public void onLoadCleared(@Nullable Drawable placeholder) {}
-        });
+                @Override
+                public void onLoadCleared(@Nullable Drawable placeholder) {}
+            });
+        } catch (Exception ignored) {
+        }
     }
 
     @NonNull

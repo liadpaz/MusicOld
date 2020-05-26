@@ -1,139 +1,134 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/extendedFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="0dp"
     tools:context=".fragments.ExtendedFragment">
 
-    <LinearLayout
-        android:id="@+id/extendedFragment"
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/infoFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        tools:ignore="UselessParent">
+        android:layout_height="wrap_content" />
 
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/infoFragment"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/layoutFragment"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="8dp"
+        android:layout_weight="1" />
 
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/layoutFragment"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toTopOf="@+id/sbSongProgress"
+            app:layout_constraintEnd_toEndOf="@+id/sbSongProgress"
+            app:layout_constraintStart_toStartOf="@+id/sbSongProgress">
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintBottom_toTopOf="@+id/sbSongProgress"
-                app:layout_constraintEnd_toEndOf="@+id/sbSongProgress"
-                app:layout_constraintStart_toStartOf="@+id/sbSongProgress">
-
-                <TextView
-                    android:id="@+id/tvSongTitle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginBottom="8dp"
-                    android:ellipsize="marquee"
-                    android:singleLine="true"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvSongArtist"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginBottom="8dp"
-                    android:ellipsize="marquee"
-                    android:singleLine="true"
-                    android:textSize="18sp"
-                    app:layout_constraintBottom_toTopOf="@+id/sbSongProgress"
-                    app:layout_constraintEnd_toEndOf="@+id/sbSongProgress"
-                    app:layout_constraintStart_toStartOf="@+id/sbSongProgress" />
-
-            </LinearLayout>
-
-
-
-            <SeekBar
-                android:id="@+id/sbSongProgress"
+            <TextView
+                android:id="@+id/tvSongTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
-                app:layout_constraintBottom_toTopOf="@+id/tvTotalTime"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent" />
+                android:layout_marginHorizontal="8dp"
+                android:layout_marginBottom="8dp"
+                android:ellipsize="marquee"
+                android:singleLine="true"
+                android:textSize="22sp"
+                android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/tvTimeElapsed"
-                android:layout_width="wrap_content"
+                android:id="@+id/tvSongArtist"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                app:layout_constraintBottom_toTopOf="@+id/btnPlayPause"
-                app:layout_constraintStart_toStartOf="@+id/sbSongProgress"
-                app:layout_constraintTop_toBottomOf="@+id/sbSongProgress" />
-
-            <TextView
-                android:id="@+id/tvTotalTime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                app:layout_constraintBottom_toTopOf="@+id/btnSkipNext"
-                app:layout_constraintEnd_toEndOf="@+id/sbSongProgress" />
-
-            <Button
-                android:id="@+id/btnSkipPrev"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:layout_marginEnd="8dp"
-                android:background="@drawable/skip_prev"
-                android:foreground="?android:attr/selectableItemBackground"
-                app:layout_constraintBottom_toBottomOf="@+id/btnPlayPause"
-                app:layout_constraintEnd_toStartOf="@+id/btnPlayPause" />
-
-            <Button
-                android:id="@+id/btnPlayPause"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:layout_marginBottom="32dp"
-                android:background="@drawable/play"
-                android:foreground="?android:attr/selectableItemBackground"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent" />
-
-            <Button
-                android:id="@+id/btnSkipNext"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:layout_marginStart="8dp"
-                android:background="@drawable/skip_next"
-                android:foreground="?android:attr/selectableItemBackground"
-                app:layout_constraintBottom_toBottomOf="@+id/btnPlayPause"
-                app:layout_constraintStart_toEndOf="@+id/btnPlayPause" />
-
-            <Button
-                android:id="@+id/btnRepeat"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:background="@drawable/repeat"
-                app:layout_constraintBottom_toBottomOf="@+id/btnSkipNext"
+                android:layout_marginHorizontal="8dp"
+                android:layout_marginBottom="8dp"
+                android:ellipsize="marquee"
+                android:singleLine="true"
+                android:textSize="18sp"
+                app:layout_constraintBottom_toTopOf="@+id/sbSongProgress"
                 app:layout_constraintEnd_toEndOf="@+id/sbSongProgress"
-                app:layout_constraintTop_toTopOf="@+id/btnSkipNext" />
+                app:layout_constraintStart_toStartOf="@+id/sbSongProgress" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        </LinearLayout>
 
-    </LinearLayout>
-</RelativeLayout>
+        <SeekBar
+            android:id="@+id/sbSongProgress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/tvTotalTime"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/tvTimeElapsed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/btnPlayPause"
+            app:layout_constraintStart_toStartOf="@+id/sbSongProgress"
+            app:layout_constraintTop_toBottomOf="@+id/sbSongProgress" />
+
+        <TextView
+            android:id="@+id/tvTotalTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/btnSkipNext"
+            app:layout_constraintEnd_toEndOf="@+id/sbSongProgress" />
+
+        <Button
+            android:id="@+id/btnSkipPrev"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/skip_prev"
+            android:foreground="?android:attr/selectableItemBackground"
+            app:layout_constraintBottom_toBottomOf="@+id/btnPlayPause"
+            app:layout_constraintEnd_toStartOf="@+id/btnPlayPause" />
+
+        <Button
+            android:id="@+id/btnPlayPause"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginBottom="32dp"
+            android:background="@drawable/play"
+            android:foreground="?android:attr/selectableItemBackground"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <Button
+            android:id="@+id/btnSkipNext"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/skip_next"
+            android:foreground="?android:attr/selectableItemBackground"
+            app:layout_constraintBottom_toBottomOf="@+id/btnPlayPause"
+            app:layout_constraintStart_toEndOf="@+id/btnPlayPause" />
+
+        <Button
+            android:id="@+id/btnRepeat"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/repeat"
+            app:layout_constraintBottom_toBottomOf="@+id/btnSkipNext"
+            app:layout_constraintEnd_toEndOf="@+id/sbSongProgress"
+            app:layout_constraintTop_toTopOf="@+id/btnSkipNext" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</LinearLayout>

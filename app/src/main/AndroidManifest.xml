@@ -18,13 +18,16 @@
         tools:ignore="UnusedAttribute">
         <activity
             android:name=".SettingsActivity"
+            android:configChanges="uiMode"
             android:label="@string/menu_settings"
             android:launchMode="singleInstance" />
         <activity
             android:name=".AboutActivity"
+            android:configChanges="uiMode"
             android:launchMode="singleInstance" />
         <activity
             android:name=".MainActivity"
+            android:configChanges="uiMode"
             android:launchMode="singleInstance"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity">

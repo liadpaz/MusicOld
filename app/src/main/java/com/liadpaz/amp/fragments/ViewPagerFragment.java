@@ -12,7 +12,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.liadpaz.amp.R;
-import com.liadpaz.amp.adapters.ViewPagerAdapter;
+import com.liadpaz.amp.adapters.MainViewPagerAdapter;
 import com.liadpaz.amp.databinding.FragmentViewPagerBinding;
 
 import java.util.ArrayList;
@@ -35,12 +35,7 @@ public class ViewPagerFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         ViewPager2 viewPager = binding.viewPagerMain;
 
-        viewPager.setAdapter(new ViewPagerAdapter(getChildFragmentManager(), getLifecycle(), new ArrayList<Class>() {{
-            add(SongsListFragment.class);
-            add(PlaylistsFragment.class);
-            add(ArtistListFragment.class);
-            add(AlbumListFragment.class);
-        }}));
+        viewPager.setAdapter(new MainViewPagerAdapter(getChildFragmentManager(), getLifecycle()));
 
         ArrayList<String> tabsTitle = new ArrayList<String>() {{
             add(getString(R.string.tab_songs));

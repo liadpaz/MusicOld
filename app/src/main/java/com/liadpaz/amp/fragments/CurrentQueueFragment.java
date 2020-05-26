@@ -9,7 +9,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -19,7 +18,6 @@ import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.QueueAdapter;
 import com.liadpaz.amp.databinding.FragmentCurrentQueueBinding;
 import com.liadpaz.amp.utils.QueueUtil;
-import com.liadpaz.amp.viewmodels.Song;
 
 public class CurrentQueueFragment extends Fragment {
     private static final String TAG = "QUEUE_FRAGMENT";
@@ -41,13 +39,7 @@ public class CurrentQueueFragment extends Fragment {
     @SuppressWarnings("ConstantConditions")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        adapter = new QueueAdapter(this, new DiffUtil.ItemCallback<Song>() {
-            @Override
-            public boolean areItemsTheSame(@NonNull Song oldItem, @NonNull Song newItem) { return oldItem == newItem; }
-
-            @Override
-            public boolean areContentsTheSame(@NonNull Song oldItem, @NonNull Song newItem) { return oldItem.equals(newItem); }
-        }, (v, position) -> {
+        adapter = new QueueAdapter(this, (v, position) -> {
             PopupMenu popupMenu = new PopupMenu(requireContext(), v);
             popupMenu.inflate(R.menu.menu_queue_song);
             popupMenu.setOnMenuItemClickListener(item -> {

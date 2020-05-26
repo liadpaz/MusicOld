@@ -39,8 +39,14 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
 
     private int queuePosition;
 
-    public QueueAdapter(@NonNull Fragment fragment, @NonNull DiffUtil.ItemCallback<Song> diffCallback, OnItemClickPopUpListener onItemClickPopUpListener) {
-        super(diffCallback);
+    public QueueAdapter(@NonNull Fragment fragment, @NonNull OnItemClickPopUpListener onItemClickPopUpListener) {
+        super(new DiffUtil.ItemCallback<Song>() {
+            @Override
+            public boolean areItemsTheSame(@NonNull Song oldItem, @NonNull Song newItem) { return oldItem == newItem; }
+
+            @Override
+            public boolean areContentsTheSame(@NonNull Song oldItem, @NonNull Song newItem) { return oldItem.equals(newItem); }
+        });
         this.context = fragment.requireContext();
         this.onItemClickPopUpListener = onItemClickPopUpListener;
 

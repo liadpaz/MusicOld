@@ -184,13 +184,14 @@ public class ExtendedFragment extends Fragment {
                     requireActivity().getWindow().setStatusBarColor(colorDominant);
                     GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{colorDominant, Color.BLACK});
                     binding.extendedFragment.setBackground(gradientDrawable);
+                    binding.infoFragment.setBackground(null);
                 });
             } catch (Exception e) {
                 int colorTop = ColorUtils.blendARGB(Color.WHITE, Color.BLACK, 0.3F);
                 requireActivity().getWindow().setStatusBarColor(colorTop);
-                int colorBottom = ColorUtils.blendARGB(Color.WHITE, Color.BLACK, 0.9F);
-                GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{colorTop, colorBottom});
+                GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{colorTop, Color.BLACK});
                 binding.extendedFragment.setBackground(gradientDrawable);
+                binding.infoFragment.setBackground(null);
             }
         }
     }
@@ -204,7 +205,7 @@ public class ExtendedFragment extends Fragment {
                 protected void onReceiveResult(int resultCode, Bundle resultData) {
                     Message message = new Message();
                     message.arg1 = resultData.getInt(Constants.ACTION_GET_POSITION);
-                    message.arg2 = resultData.getInt(Constants.EXTRA_TOTAL_TIME);
+                    message.arg2 = (int)duration;
                     handler.dispatchMessage(message);
                 }
             });
