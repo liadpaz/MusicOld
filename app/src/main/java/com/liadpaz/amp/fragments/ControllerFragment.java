@@ -14,6 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentControllerBinding;
@@ -65,6 +66,8 @@ public class ControllerFragment extends Fragment {
 
         setPlayback(controller.getPlaybackState());
         setMetadata(controller.getMetadata());
+
+        binding.getRoot().setOnClickListener(v -> BottomSheetBehavior.from(((MainActivity)requireActivity()).binding.extendedFragment).setState(BottomSheetBehavior.STATE_EXPANDED));
     }
 
     private void setPlayback(PlaybackState state) {

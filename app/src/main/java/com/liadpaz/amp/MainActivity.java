@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.liadpaz.amp.databinding.ActivityMainBinding;
 import com.liadpaz.amp.fragments.ExtendedFragment;
 import com.liadpaz.amp.fragments.MainFragment;
@@ -23,7 +24,6 @@ import com.liadpaz.amp.notification.MediaNotification;
 import com.liadpaz.amp.service.MediaPlayerService;
 import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.utils.Utilities;
-import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_PERMISSION = 459;
@@ -132,8 +132,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (binding.mainLayout.getPanelState() == SlidingUpPanelLayout.PanelState.EXPANDED) {
-            binding.mainLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+        BottomSheetBehavior bsb = BottomSheetBehavior.from(binding.extendedFragment);
+        if (bsb.getState() == BottomSheetBehavior.STATE_EXPANDED) {
+            bsb.setState(BottomSheetBehavior.STATE_COLLAPSED);
         } else {
             super.onBackPressed();
         }

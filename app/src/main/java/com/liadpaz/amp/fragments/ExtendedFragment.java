@@ -22,6 +22,7 @@ import androidx.core.graphics.ColorUtils;
 import androidx.fragment.app.Fragment;
 import androidx.palette.graphics.Palette;
 
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentExtendedBinding;
@@ -29,7 +30,6 @@ import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.utils.QueueUtil;
 import com.liadpaz.amp.utils.Utilities;
-import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.io.FileNotFoundException;
 import java.lang.ref.WeakReference;
@@ -122,35 +122,33 @@ public class ExtendedFragment extends Fragment {
         setMetadata(controller.getMetadata());
         setPlayback(controller.getPlaybackState());
 
-        ((MainActivity)requireActivity()).binding.mainLayout.addPanelSlideListener(new SlidingUpPanelLayout.SimplePanelSlideListener() {
+        BottomSheetBehavior.from(((MainActivity)requireActivity()).binding.extendedFragment).addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
             @Override
-            public void onPanelSlide(@NonNull View panel, float slideOffset) {
+            public void onStateChanged(@NonNull View bottomSheet, int newState) {
+                if (newState == BottomSheetBehavior.STATE_EXPANDED) {
+                    // show the info fragment
+                    getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ExtendedInfoFragment.newInstance()).commitNow();
+                    binding.infoFragment.setAlpha(1);
+                    isUp = true;
+                } else if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
+                    // show the controller fragment
+                    getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedSongFragment.newInstance()).commitNow();
+                    binding.infoFragment.setAlpha(1);
+                    isUp = false;
+                }
+            }
+
+            @Override
+            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
                 if (isUp) {
                     binding.infoFragment.setAlpha(slideOffset);
                 } else {
                     binding.infoFragment.setAlpha(1 - slideOffset);
                 }
-                if (slideOffset == 1) {
-                    // show the info fragment
-                    if (!isUp) {
-                        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ExtendedInfoFragment.newInstance()).commitNow();
-                        binding.infoFragment.setAlpha(1);
-                        isUp = true;
-                    }
-                } else if (slideOffset == 0) {
-                    // show the controller fragment
-                    if (isUp) {
-                        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedSongFragment.newInstance()).commitNow();
-                        binding.infoFragment.setAlpha(1);
-                        isUp = false;
-                    }
-                }
             }
         });
 
         getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedSongFragment.newInstance()).commit();
-
-        ((MainActivity)requireActivity()).binding.mainLayout.setDragView(binding.infoFragment);
     }
 
     @Override
