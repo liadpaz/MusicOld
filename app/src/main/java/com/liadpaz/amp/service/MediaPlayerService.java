@@ -13,22 +13,19 @@ import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.media.MediaDescription;
+import android.media.MediaMetadata;
 import android.media.MediaPlayer;
+import android.media.browse.MediaBrowser;
+import android.media.session.MediaController;
 import android.media.session.MediaSession;
+import android.media.session.PlaybackState;
 import android.os.Bundle;
 import android.os.ResultReceiver;
 import android.provider.MediaStore;
-import android.support.v4.media.MediaBrowserCompat;
-import android.support.v4.media.MediaMetadataCompat;
-import android.support.v4.media.session.MediaControllerCompat;
-import android.support.v4.media.session.MediaSessionCompat;
-import android.support.v4.media.session.PlaybackStateCompat;
+import android.service.media.MediaBrowserService;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.NotificationCompat;
-import androidx.media.MediaBrowserServiceCompat;
-import androidx.media.session.MediaButtonReceiver;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
@@ -45,7 +42,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public final class MediaPlayerService extends MediaBrowserServiceCompat {
+public final class MediaPlayerService extends MediaBrowserService {
     @SuppressWarnings("unused")
     private static final String TAG = "MUSIC_SERVICE";
     private static final String LOG_TAG = "MEDIA_SESSION_LOG";
@@ -53,14 +50,12 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
 
     private static final String CHANNEL_ID = "music_channel";
 
-    private final Object lock = new Object();
-
     private MediaPlayer mediaPlayer;
-    private MediaSessionCompat mediaSession;
+    private MediaSession mediaSession;
     private BecomingNoisyReceiver becomingNoisyReceiver;
 
-    private MediaMetadataCompat.Builder metadataBuilder;
-    private PlaybackStateCompat.Builder playbackBuilder;
+    private MediaMetadata.Builder metadataBuilder;
+    private PlaybackState.Builder playbackBuilder;
 
     private AudioManager audioManager;
     private AudioFocusRequest audioFocusRequest;
@@ -100,13 +95,12 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
 
         mediaPlayer.setAudioAttributes(audioAttributes);
 
-        mediaSession = new MediaSessionCompat(this, LOG_TAG);
-        mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+        mediaSession = new MediaSession(this, LOG_TAG);
         mediaSession.setSessionActivity(PendingIntent.getActivity(this, 10, new Intent(this, MainActivity.class), 0));
 
-        mediaSession.setCallback(new MediaSessionCompat.Callback() {
+        mediaSession.setCallback(new MediaSession.Callback() {
             @Override
-            public void onCommand(String command, Bundle extras, ResultReceiver cb) {
+            public void onCommand(@NonNull String command, Bundle extras, ResultReceiver cb) {
                 switch (command) {
                     case Constants.ACTION_QUEUE_POSITION: {
                         if (queue.size() > 0) {
@@ -125,18 +119,21 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
                         }
                         break;
                     }
+
+                    case Constants.LOOP_EXTRA: {
+                        mediaPlayer.setLooping(extras.getBoolean(Constants.LOOP_EXTRA));
+                        sendPlaybackState();
+                    }
                 }
             }
 
             @Override
             public void onPlay() {
-                if (audioManager.requestAudioFocus(audioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).setOnAudioFocusChangeListener(focusChange -> {
+                audioManager.requestAudioFocus(audioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).setOnAudioFocusChangeListener(focusChange -> {
                     switch (focusChange) {
                         case AudioManager.AUDIOFOCUS_GAIN: {
                             if (resumeOnFocusGain) {
-                                synchronized (lock) {
-                                    resumeOnFocusGain = false;
-                                }
+                                resumeOnFocusGain = false;
                                 mediaPlayer.setVolume(1F, 1F);
                                 play();
                             }
@@ -144,9 +141,7 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
                         }
 
                         case AudioManager.AUDIOFOCUS_LOSS: {
-                            synchronized (lock) {
-                                resumeOnFocusGain = false;
-                            }
+                            resumeOnFocusGain = false;
                             pause();
                             break;
                         }
@@ -157,17 +152,14 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
                         }
 
                         case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT: {
-                            synchronized (lock) {
-                                resumeOnFocusGain = mediaPlayer.isPlaying();
-                            }
+                            resumeOnFocusGain = mediaPlayer.isPlaying();
                             pause();
                             break;
                         }
                     }
-                }).setAudioAttributes(audioAttributes).build()) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                    mediaPlayer.setVolume(1F, 1F);
-                    play();
-                }
+                }).setAudioAttributes(audioAttributes).build());
+                mediaPlayer.setVolume(1F, 1F);
+                play();
             }
 
             @Override
@@ -187,16 +179,17 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
                 stopSelf();
             }
 
+            @SuppressWarnings("ConstantConditions")
             @Override
             public void onSkipToNext() {
-                if (mediaSession.getController().getPlaybackState().getState() != PlaybackStateCompat.STATE_NONE) {
+                if (mediaSession.getController().getPlaybackState().getState() != PlaybackState.STATE_NONE) {
                     if (queue.size() > 0) {
                         if (++queuePosition == queue.size()) {
                             setQueuePosition(queuePosition = 0);
                         } else {
                             setQueuePosition(queuePosition);
                         }
-                        boolean isLooping = mediaSession.getController().getRepeatMode() == PlaybackStateCompat.REPEAT_MODE_ONE;
+                        boolean isLooping = mediaPlayer.isLooping();
                         setSource(queue.get(queuePosition));
                         if (isLooping) {
                             mediaPlayer.setLooping(true);
@@ -206,9 +199,10 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
                 }
             }
 
+            @SuppressWarnings("ConstantConditions")
             @Override
             public void onSkipToPrevious() {
-                if (mediaSession.getController().getPlaybackState().getState() != PlaybackStateCompat.STATE_NONE) {
+                if (mediaSession.getController().getPlaybackState().getState() != PlaybackState.STATE_NONE) {
                     if (TimeUnit.MILLISECONDS.toSeconds(mediaPlayer.getCurrentPosition()) > 2) {
                         onSeekTo(0);
                     } else if (queue.size() > 0) {
@@ -217,7 +211,7 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
                         } else {
                             setQueuePosition(queuePosition);
                         }
-                        boolean isLooping = mediaSession.getController().getRepeatMode() == PlaybackStateCompat.REPEAT_MODE_ONE;
+                        boolean isLooping = mediaPlayer.isLooping();
                         setSource(queue.get(queuePosition));
                         if (isLooping) {
                             mediaPlayer.setLooping(true);
@@ -227,27 +221,21 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
                 }
             }
 
+            @SuppressWarnings("ConstantConditions")
             @Override
             public void onSeekTo(long pos) {
-                if (mediaSession.getController().getPlaybackState().getState() != PlaybackStateCompat.STATE_NONE) {
+                if (mediaSession.getController().getPlaybackState().getState() != PlaybackState.STATE_NONE) {
                     mediaPlayer.seekTo((int)pos);
                     sendPlaybackState();
                 }
             }
-
-            @Override
-            public void onSetRepeatMode(int repeatMode) {
-                mediaPlayer.setLooping(repeatMode == PlaybackStateCompat.REPEAT_MODE_ONE);
-                mediaSession.setRepeatMode(repeatMode);
-                startNotification();
-            }
         });
 
-        metadataBuilder = new MediaMetadataCompat.Builder();
-        mediaSession.setMetadata(null);
+        metadataBuilder = new MediaMetadata.Builder();
+        mediaSession.setMetadata(metadataBuilder.build());
 
-        playbackBuilder = new PlaybackStateCompat.Builder();
-        mediaSession.setPlaybackState(playbackBuilder.setState(PlaybackStateCompat.STATE_NONE, 0, 0).build());
+        playbackBuilder = new PlaybackState.Builder();
+        sendPlaybackState();
 
         startForeground(NOTIFICATION_ID, new Notification.Builder(this, CHANNEL_ID).build());
         stopForeground(true);
@@ -272,23 +260,53 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
         startNotification();
     }
 
+    private void setLooping(boolean isLooping) {
+        mediaPlayer.setLooping(isLooping);
+        sendPlaybackState();
+        startNotification();
+    }
+
     private void sendMetadata(@NonNull Song song) {
-        metadataBuilder.putText(MediaMetadataCompat.METADATA_KEY_TITLE, song.songTitle).putText(MediaMetadataCompat.METADATA_KEY_ARTIST, Utilities.joinArtists(song.songArtists)).putText(MediaMetadataCompat.METADATA_KEY_ALBUM, song.album).putString(MediaMetadataCompat.METADATA_KEY_ART_URI, Utilities.getCoverUri(song).toString()).putLong(MediaMetadataCompat.METADATA_KEY_DURATION, mediaPlayer.getDuration());
+        metadataBuilder.putText(MediaMetadata.METADATA_KEY_TITLE, song.songTitle).putText(MediaMetadata.METADATA_KEY_ARTIST, Utilities.joinArtists(song.songArtists)).putText(MediaMetadata.METADATA_KEY_ALBUM, song.album).putString(MediaMetadata.METADATA_KEY_ART_URI, Utilities.getCoverUri(song).toString()).putLong(MediaMetadata.METADATA_KEY_DURATION, mediaPlayer.getDuration());
         mediaSession.setMetadata(metadataBuilder.build());
     }
 
     private void sendPlaybackState() {
-        playbackBuilder.setActions(PlaybackStateCompat.ACTION_PLAY | PlaybackStateCompat.ACTION_PAUSE | PlaybackStateCompat.ACTION_SEEK_TO | PlaybackStateCompat.ACTION_SKIP_TO_NEXT | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS | PlaybackStateCompat.ACTION_SET_REPEAT_MODE).setState(mediaPlayer.isPlaying() ? PlaybackStateCompat.STATE_PLAYING : PlaybackStateCompat.STATE_PAUSED, mediaPlayer.getCurrentPosition(), 1F);
+        playbackBuilder.setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_SEEK_TO | PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS).setState(mediaPlayer.isPlaying() ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED, mediaPlayer.getCurrentPosition(), 1F);
+        Bundle bundle = new Bundle();
+        bundle.putBoolean(Constants.LOOP_EXTRA, mediaPlayer.isLooping());
+        playbackBuilder.setExtras(bundle);
         mediaSession.setPlaybackState(playbackBuilder.build());
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
-            if (intent.hasExtra(Constants.LOOP_EXTRA)) {
-                mediaSession.getController().getTransportControls().setRepeatMode(mediaPlayer.isLooping() ? PlaybackStateCompat.REPEAT_MODE_ALL : PlaybackStateCompat.REPEAT_MODE_ONE);
-            } else {
-                MediaButtonReceiver.handleIntent(mediaSession, intent);
+            if (intent.hasExtra(Constants.ACTION)) {
+                switch (intent.getStringExtra(Constants.ACTION)) {
+                    case Constants.ACTION_SKIP_PREV: {
+                        mediaSession.getController().getTransportControls().skipToPrevious();
+                        break;
+                    }
+
+                    case Constants.ACTION_PAUSE: {
+                        mediaSession.getController().getTransportControls().pause();
+                        break;
+                    }
+
+                    case Constants.ACTION_PLAY: {
+                        mediaSession.getController().getTransportControls().play();
+                        break;
+                    }
+
+                    case Constants.ACTION_SKIP_NEXT: {
+                        mediaSession.getController().getTransportControls().skipToNext();
+                        break;
+                    }
+                }
+            } else if (intent.hasExtra(Constants.LOOP_EXTRA)) {
+                setLooping(intent.getExtras().getBoolean(Constants.LOOP_EXTRA, false));
             }
         }
         return START_STICKY;
@@ -300,7 +318,7 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
                 audioManager.abandonAudioFocusRequest(audioFocusRequest);
             }
             mediaPlayer.reset();
-            mediaPlayer.setDataSource(getApplicationContext(), ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, (currentSource = song).songId));
+            mediaPlayer.setDataSource(this, ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, (currentSource = song).songId));
             mediaPlayer.prepare();
             sendMetadata(currentSource);
         } catch (Exception ignored) {
@@ -311,30 +329,32 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
         final boolean isPlaying = mediaPlayer.isPlaying();
 
         try {
-            final NotificationCompat.Builder builder = MediaNotification.from(this, mediaSession);
+            final Notification.Builder builder = MediaNotification.from(this, mediaSession);
 
-            Glide.with(getApplicationContext()).asBitmap().load(Utilities.getCoverUri(currentSource)).into(new CustomTarget<Bitmap>() {
-                @Override
-                public void onResourceReady(@NonNull Bitmap cover, @Nullable Transition<? super Bitmap> transition) {
-                    startForeground(NOTIFICATION_ID, builder.setLargeIcon(cover).build());
-                    if (!isPlaying) {
-                        stopForeground(false);
+            if (builder != null) {
+                Glide.with(getApplicationContext()).asBitmap().load(Utilities.getCoverUri(currentSource)).into(new CustomTarget<Bitmap>() {
+                    @Override
+                    public void onResourceReady(@NonNull Bitmap cover, @Nullable Transition<? super Bitmap> transition) {
+                        startForeground(NOTIFICATION_ID, builder.setLargeIcon(cover).build());
+                        if (!isPlaying) {
+                            stopForeground(false);
+                        }
                     }
-                }
 
-                @Override
-                public void onLoadFailed(@Nullable Drawable errorDrawable) {
-                    Bitmap cover = Utilities.getBitmapFromVectorDrawable(MediaPlayerService.this, R.drawable.song);
+                    @Override
+                    public void onLoadFailed(@Nullable Drawable errorDrawable) {
+                        Bitmap cover = Utilities.getBitmapFromVectorDrawable(MediaPlayerService.this, R.drawable.song);
 
-                    startForeground(NOTIFICATION_ID, builder.setLargeIcon(cover).build());
-                    if (!isPlaying) {
-                        stopForeground(false);
+                        startForeground(NOTIFICATION_ID, builder.setLargeIcon(cover).build());
+                        if (!isPlaying) {
+                            stopForeground(false);
+                        }
                     }
-                }
 
-                @Override
-                public void onLoadCleared(@Nullable Drawable placeholder) {}
-            });
+                    @Override
+                    public void onLoadCleared(@Nullable Drawable placeholder) {}
+                });
+            }
         } catch (Exception ignored) {
         }
     }
@@ -344,7 +364,7 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
     public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUid, @Nullable Bundle rootHints) { return new BrowserRoot(getString(R.string.app_name), null); }
 
     @Override
-    public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowserCompat.MediaItem>> result) { result.sendResult(null); }
+    public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowser.MediaItem>> result) { result.sendResult(null); }
 
     @Override
     public void onDestroy() {
@@ -357,11 +377,11 @@ public final class MediaPlayerService extends MediaBrowserServiceCompat {
         private IntentFilter noisyFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
 
         private Context context;
-        private MediaControllerCompat controller;
+        private MediaController controller;
 
         private boolean registered = false;
 
-        public BecomingNoisyReceiver(@NonNull Context context, @NonNull MediaControllerCompat controller) {
+        public BecomingNoisyReceiver(@NonNull Context context, @NonNull MediaController controller) {
             this.context = context;
             this.controller = controller;
         }

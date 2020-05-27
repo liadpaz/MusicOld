@@ -40,10 +40,9 @@ public class SongsListFragment extends Fragment {
         return (binding = FragmentSongsListBinding.inflate(inflater, container, false)).getRoot();
     }
 
-    @SuppressWarnings("ConstantConditions")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        adapter = new SongsListAdapter(getContext(), (v, position) -> {
+        adapter = new SongsListAdapter(requireContext(), (v, position) -> {
             PopupMenu popupMenu = new PopupMenu(requireContext(), v);
             popupMenu.inflate(R.menu.menu_song);
             popupMenu.setOnMenuItemClickListener(item -> {
@@ -67,10 +66,11 @@ public class SongsListFragment extends Fragment {
             });
             popupMenu.show();
         });
-        adapter.submitList(LocalFiles.listSongsByName(getContext()));
+        adapter.submitList(LocalFiles.listSongsByName(requireContext()));
+//        CompletableFuture.supplyAsync(() -> LocalFiles.listSongsByName(requireContext())).thenAccept(songs -> adapter.submitList(songs));
 
-        binding.rvSongs.setLayoutManager(new LinearLayoutManager(getContext()));
-        binding.rvSongs.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
+        binding.rvSongs.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.rvSongs.addItemDecoration(new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));
         binding.rvSongs.setAdapter(adapter);
     }
 
@@ -78,7 +78,6 @@ public class SongsListFragment extends Fragment {
     @Override
     public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, @Nullable ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
-        getActivity().getMenuInflater()
-                     .inflate(R.menu.menu_song, menu);
+        getActivity().getMenuInflater().inflate(R.menu.menu_song, menu);
     }
 }

@@ -62,7 +62,7 @@ public class CurrentQueueFragment extends Fragment {
         });
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.Callback() { //ItemTouchHelper.UP | ItemTouchHelper.DOWN, ItemTouchHelper.START | ItemTouchHelper.END) {
-            boolean isSwiping = true;
+            boolean isSwiping = false;
 
             @Override
             public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
@@ -73,8 +73,7 @@ public class CurrentQueueFragment extends Fragment {
 
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                adapter.onItemMove(viewHolder.getAdapterPosition(), target.getAdapterPosition());
-                return true;
+                return adapter.onItemMove(viewHolder.getAdapterPosition(), target.getAdapterPosition());
             }
 
             @Override
@@ -82,10 +81,10 @@ public class CurrentQueueFragment extends Fragment {
                 adapter.onItemDismiss(viewHolder.getAdapterPosition());
             }
         });
-        itemTouchHelper.attachToRecyclerView(binding.rvQueue);
         binding.rvQueue.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.rvQueue.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
         binding.rvQueue.setAdapter(adapter);
+        itemTouchHelper.attachToRecyclerView(binding.rvQueue);
 
         adapter.setOnStartDragListener(itemTouchHelper::startDrag);
 

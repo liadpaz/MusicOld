@@ -4,16 +4,16 @@ import android.Manifest;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.browse.MediaBrowser;
+import android.media.session.MediaController;
 import android.os.Bundle;
-import android.os.RemoteException;
-import android.support.v4.media.MediaBrowserCompat;
-import android.support.v4.media.session.MediaControllerCompat;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 
 import com.liadpaz.amp.databinding.ActivityMainBinding;
@@ -32,30 +32,24 @@ public class MainActivity extends AppCompatActivity {
     @SuppressWarnings("unused")
     private static final String TAG = "MAIN_ACTIVITY";
 
-    private static MediaControllerCompat controller;
-    private MediaBrowserCompat mediaBrowser;
-
+    private static MediaController controller;
     public ActivityMainBinding binding;
+    private MediaBrowser mediaBrowser;
 
-    public static MediaControllerCompat getController() {return controller;}
+    public static MediaController getController() {return controller;}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        mediaBrowser = new MediaBrowserCompat(this, new ComponentName(this, MediaPlayerService.class), new MediaBrowserCompat.ConnectionCallback() {
+        mediaBrowser = new MediaBrowser(this, new ComponentName(this, MediaPlayerService.class), new MediaBrowser.ConnectionCallback() {
             @Override
             public void onConnected() {
-                try {
-                    MediaControllerCompat controller = new MediaControllerCompat(MainActivity.this, mediaBrowser.getSessionToken());
-                    MediaControllerCompat.setMediaController(MainActivity.this, MainActivity.controller = controller);
-
-                    initView();
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
+                controller = new MediaController(MainActivity.this, mediaBrowser.getSessionToken());
+                initView();
             }
         }, null);
 
@@ -74,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         if (!mediaBrowser.isConnected()) {
             mediaBrowser.connect();
         }
-        ContextCompat.startForegroundService(this, new Intent(this, MediaPlayerService.class));
+        startForegroundService(new Intent(this, MediaPlayerService.class));
     }
 
     private void initView() {

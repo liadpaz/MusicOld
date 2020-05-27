@@ -3,14 +3,14 @@ package com.liadpaz.amp.fragments;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.media.MediaDescription;
+import android.media.MediaMetadata;
+import android.media.session.MediaController;
+import android.media.session.PlaybackState;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.ResultReceiver;
-import android.support.v4.media.MediaDescriptionCompat;
-import android.support.v4.media.MediaMetadataCompat;
-import android.support.v4.media.session.MediaControllerCompat;
-import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,7 +31,9 @@ import com.liadpaz.amp.utils.QueueUtil;
 import com.liadpaz.amp.utils.Utilities;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
+import java.io.FileNotFoundException;
 import java.lang.ref.WeakReference;
+import java.util.concurrent.CompletableFuture;
 
 public class ExtendedFragment extends Fragment {
     private static final String TAG = "ExtendedFragment";
@@ -40,8 +42,8 @@ public class ExtendedFragment extends Fragment {
     private Runnable runnable;
     private boolean shouldSeek = false;
 
-    private MediaControllerCompat controller;
-    private MediaControllerCompat.Callback callback;
+    private MediaController controller;
+    private MediaController.Callback callback;
 
     private long duration = 0;
 
@@ -63,15 +65,12 @@ public class ExtendedFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         handler = new SeekBarHandler(binding);
 
-        (controller = MainActivity.getController()).registerCallback(callback = new MediaControllerCompat.Callback() {
+        (controller = MainActivity.getController()).registerCallback(callback = new MediaController.Callback() {
             @Override
-            public void onPlaybackStateChanged(PlaybackStateCompat state) { setPlayback(state); }
+            public void onPlaybackStateChanged(PlaybackState state) { setPlayback(state); }
 
             @Override
-            public void onMetadataChanged(MediaMetadataCompat metadata) { setMetadata(metadata); }
-
-            @Override
-            public void onRepeatModeChanged(int repeatMode) { setRepeat(repeatMode); }
+            public void onMetadataChanged(MediaMetadata metadata) { setMetadata(metadata); }
         });
 
         binding.tvSongTitle.setSelected(true);
@@ -79,7 +78,6 @@ public class ExtendedFragment extends Fragment {
 
         setPlayback(controller.getPlaybackState());
         setMetadata(controller.getMetadata());
-        setRepeat(controller.getRepeatMode());
 
         binding.btnSkipPrev.setOnClickListener(v -> controller.getTransportControls().skipToPrevious());
         binding.btnPlayPause.setOnClickListener(v -> {
@@ -88,14 +86,22 @@ public class ExtendedFragment extends Fragment {
                 Bundle bundle = new Bundle();
                 bundle.putInt(Constants.ACTION_QUEUE_POSITION, 0);
                 controller.sendCommand(Constants.ACTION_QUEUE_POSITION, bundle, null);
-            } else if (controller.getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING) {
+            } else if (controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING) {
                 controller.getTransportControls().pause();
             } else {
                 controller.getTransportControls().play();
             }
         });
         binding.btnSkipNext.setOnClickListener(v -> controller.getTransportControls().skipToNext());
-        binding.btnRepeat.setOnClickListener(v -> controller.getTransportControls().setRepeatMode(controller.getRepeatMode() == PlaybackStateCompat.REPEAT_MODE_ONE ? PlaybackStateCompat.REPEAT_MODE_ALL : PlaybackStateCompat.REPEAT_MODE_ONE));
+        binding.btnRepeat.setOnClickListener(v -> {
+            if (controller.getPlaybackState().getExtras().containsKey(Constants.LOOP_EXTRA)) {
+                if (controller.getPlaybackState().getExtras().containsKey(Constants.LOOP_EXTRA)) {
+                    Bundle bundle = new Bundle();
+                    bundle.putBoolean(Constants.LOOP_EXTRA, !controller.getPlaybackState().getExtras().getBoolean(Constants.LOOP_EXTRA));
+                    controller.sendCommand(Constants.LOOP_EXTRA, bundle, null);
+                }
+            }
+        });
 
         binding.sbSongProgress.setMax(1000);
         binding.sbSongProgress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -155,11 +161,12 @@ public class ExtendedFragment extends Fragment {
         }
     }
 
-    private void setPlayback(PlaybackStateCompat state) {
+    @SuppressWarnings("ConstantConditions")
+    private void setPlayback(PlaybackState state) {
         if (state == null) {
             binding.btnPlayPause.setBackgroundResource(R.drawable.play);
         } else {
-            if (state.getState() == PlaybackStateCompat.STATE_PLAYING) {
+            if (state.getState() == PlaybackState.STATE_PLAYING) {
                 binding.btnPlayPause.setBackgroundResource(R.drawable.pause);
                 updateSeekBar();
                 shouldSeek = true;
@@ -167,37 +174,45 @@ public class ExtendedFragment extends Fragment {
                 binding.btnPlayPause.setBackgroundResource(R.drawable.play);
                 shouldSeek = false;
             }
+            binding.btnRepeat.setBackgroundResource(state.getExtras().getBoolean(Constants.LOOP_EXTRA) ? R.drawable.repeat_one : R.drawable.repeat);
         }
     }
 
     @SuppressWarnings("ConstantConditions")
-    private void setMetadata(@Nullable MediaMetadataCompat metadata) {
-        if (metadata != null) {
-            MediaDescriptionCompat description = metadata.getDescription();
+    private void setMetadata(@Nullable MediaMetadata metadata) {
+        MediaDescription description = metadata.getDescription();
+        if (description != null) {
             binding.tvSongTitle.setText(description.getTitle());
             binding.tvSongArtist.setText(description.getSubtitle());
             binding.tvTimeElapsed.setText(Utilities.formatTime(0));
-            binding.tvTotalTime.setText(Utilities.formatTime(duration = metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION)));
-            try {
-                Palette.from(BitmapFactory.decodeStream(requireActivity().getContentResolver().openInputStream(description.getIconUri()))).generate(palette -> {
-                    int colorDominant = palette.getDominantColor(Color.WHITE);
-                    requireActivity().getWindow().setStatusBarColor(colorDominant);
-                    GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{colorDominant, Color.BLACK});
+            binding.tvTotalTime.setText(Utilities.formatTime(duration = metadata.getLong(MediaMetadata.METADATA_KEY_DURATION)));
+            CompletableFuture.supplyAsync(() -> {
+                try {
+                    return BitmapFactory.decodeStream(requireActivity().getContentResolver().openInputStream(description.getIconUri()));
+                } catch (FileNotFoundException e) {
+                    return null;
+                }
+            }).thenAccept(bitmap -> {
+                if (bitmap != null) {
+                    Palette.from(bitmap).generate(palette -> {
+                        int colorDominant = palette.getDominantColor(Color.WHITE);
+                        requireActivity().getWindow().setStatusBarColor(colorDominant);
+                        GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{colorDominant, Color.BLACK});
+                        binding.extendedFragment.setBackground(gradientDrawable);
+                        binding.infoFragment.setBackground(null);
+                    });
+                } else {
+                    int colorTop = ColorUtils.blendARGB(Color.WHITE, Color.BLACK, 0.3F);
+                    requireActivity().getWindow().setStatusBarColor(colorTop);
+                    GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{colorTop, Color.BLACK});
                     binding.extendedFragment.setBackground(gradientDrawable);
                     binding.infoFragment.setBackground(null);
-                });
-            } catch (Exception e) {
-                int colorTop = ColorUtils.blendARGB(Color.WHITE, Color.BLACK, 0.3F);
-                requireActivity().getWindow().setStatusBarColor(colorTop);
-                GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{colorTop, Color.BLACK});
-                binding.extendedFragment.setBackground(gradientDrawable);
-                binding.infoFragment.setBackground(null);
-            }
+                }
+            });
         }
     }
 
-    private void setRepeat(int repeatMode) { binding.btnRepeat.setBackgroundResource(repeatMode == PlaybackStateCompat.REPEAT_MODE_ONE ? R.drawable.repeat_one : R.drawable.repeat); }
-
+    @SuppressWarnings("ConstantConditions")
     private void updateSeekBar() {
         handler.postDelayed(runnable = () -> {
             controller.sendCommand(Constants.ACTION_GET_POSITION, null, new ResultReceiver(new Handler()) {
@@ -209,7 +224,7 @@ public class ExtendedFragment extends Fragment {
                     handler.dispatchMessage(message);
                 }
             });
-            if (controller.getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING) {
+            if (controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING) {
                 updateSeekBar();
             }
         }, 500);

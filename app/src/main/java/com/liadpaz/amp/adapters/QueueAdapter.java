@@ -88,7 +88,7 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
         Toast.makeText(context, String.format("%s %s", getItem(position).songTitle, context.getString(R.string.queue_removed)), Toast.LENGTH_SHORT).show();
     }
 
-    public void onItemMove(int from, int to) {
+    public boolean onItemMove(int from, int to) {
         QueueUtil.addAtIndex(QueueUtil.removeAtIndex(from), to);
         if (queuePosition == from) {
             QueueUtil.setPosition(to);
@@ -97,6 +97,7 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
         } else if (queuePosition < from && queuePosition > to) {
             QueueUtil.addToPosition(-1);
         }
+        return true;
     }
 
     @Override

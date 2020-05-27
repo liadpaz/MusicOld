@@ -1,9 +1,9 @@
 package com.liadpaz.amp.fragments;
 
+import android.media.MediaDescription;
+import android.media.MediaMetadata;
+import android.media.session.MediaController;
 import android.os.Bundle;
-import android.support.v4.media.MediaDescriptionCompat;
-import android.support.v4.media.MediaMetadataCompat;
-import android.support.v4.media.session.MediaControllerCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,8 +19,8 @@ import com.liadpaz.amp.databinding.FragmentExtendedSongBinding;
 
 public class ExtendedSongFragment extends Fragment {
 
-    private MediaControllerCompat controller;
-    private MediaControllerCompat.Callback callback;
+    private MediaController controller;
+    private MediaController.Callback callback;
 
     private FragmentExtendedSongBinding binding;
 
@@ -36,19 +36,17 @@ public class ExtendedSongFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        (controller = MainActivity.getController()).registerCallback(callback = new MediaControllerCompat.Callback() {
+        (controller = MainActivity.getController()).registerCallback(callback = new MediaController.Callback() {
             @Override
-            public void onMetadataChanged(MediaMetadataCompat metadata) {
-                setMetadata(metadata);
-            }
+            public void onMetadataChanged(MediaMetadata metadata) { setMetadata(metadata); }
         });
 
         setMetadata(controller.getMetadata());
     }
 
-    private void setMetadata(MediaMetadataCompat metadata) {
+    private void setMetadata(MediaMetadata metadata) {
         if (metadata != null) {
-            MediaDescriptionCompat description = metadata.getDescription();
+            MediaDescription description = metadata.getDescription();
             Glide.with(this).load(description.getIconUri()).placeholder(R.drawable.song).into(binding.ivSongCover);
         }
     }
