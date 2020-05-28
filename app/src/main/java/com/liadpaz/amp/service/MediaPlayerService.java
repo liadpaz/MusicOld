@@ -62,6 +62,8 @@ public final class MediaPlayerService extends MediaBrowserService {
     private AudioAttributes audioAttributes;
     private boolean resumeOnFocusGain = false;
 
+    private boolean isLooping = false;
+
     private Song currentSource;
     private int queuePosition = 0;
     private ArrayList<Song> queue = new ArrayList<>();
@@ -75,8 +77,10 @@ public final class MediaPlayerService extends MediaBrowserService {
         super.onCreate();
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnCompletionListener(mp -> {
-            if (!mediaPlayer.isLooping()) {
+            if (!isLooping) {
                 mediaSession.getController().getTransportControls().skipToNext();
+            } else {
+                mediaSession.getController().getTransportControls().seekTo(0);
             }
         });
 
@@ -110,19 +114,9 @@ public final class MediaPlayerService extends MediaBrowserService {
                         break;
                     }
 
-                    case Constants.ACTION_GET_POSITION: {
-                        try {
-                            Bundle bundle = new Bundle();
-                            bundle.putInt(Constants.ACTION_GET_POSITION, mediaPlayer.getCurrentPosition());
-                            cb.send(1, bundle);
-                        } catch (Exception ignored) {
-                        }
-                        break;
-                    }
-
                     case Constants.LOOP_EXTRA: {
-                        mediaPlayer.setLooping(extras.getBoolean(Constants.LOOP_EXTRA));
-                        sendPlaybackState();
+                        setLooping(extras.getBoolean(Constants.LOOP_EXTRA));
+                        sendPlaybackState(mediaPlayer.getCurrentPosition());
                     }
                 }
             }
@@ -175,7 +169,7 @@ public final class MediaPlayerService extends MediaBrowserService {
                 mediaPlayer.stop();
                 mediaSession.setActive(false);
                 audioManager.abandonAudioFocusRequest(audioFocusRequest);
-                sendPlaybackState();
+                sendPlaybackState(mediaPlayer.getCurrentPosition());
                 stopSelf();
             }
 
@@ -189,11 +183,7 @@ public final class MediaPlayerService extends MediaBrowserService {
                         } else {
                             setQueuePosition(queuePosition);
                         }
-                        boolean isLooping = mediaPlayer.isLooping();
                         setSource(queue.get(queuePosition));
-                        if (isLooping) {
-                            mediaPlayer.setLooping(true);
-                        }
                         onPlay();
                     }
                 }
@@ -211,11 +201,7 @@ public final class MediaPlayerService extends MediaBrowserService {
                         } else {
                             setQueuePosition(queuePosition);
                         }
-                        boolean isLooping = mediaPlayer.isLooping();
                         setSource(queue.get(queuePosition));
-                        if (isLooping) {
-                            mediaPlayer.setLooping(true);
-                        }
                         onPlay();
                     }
                 }
@@ -226,7 +212,10 @@ public final class MediaPlayerService extends MediaBrowserService {
             public void onSeekTo(long pos) {
                 if (mediaSession.getController().getPlaybackState().getState() != PlaybackState.STATE_NONE) {
                     mediaPlayer.seekTo((int)pos);
-                    sendPlaybackState();
+                    if (resumeOnFocusGain) {
+                        mediaPlayer.start();
+                    }
+                    sendPlaybackState(mediaPlayer.getCurrentPosition());
                 }
             }
         });
@@ -235,7 +224,7 @@ public final class MediaPlayerService extends MediaBrowserService {
         mediaSession.setMetadata(metadataBuilder.build());
 
         playbackBuilder = new PlaybackState.Builder();
-        sendPlaybackState();
+        sendPlaybackState(mediaPlayer.getCurrentPosition());
 
         startForeground(NOTIFICATION_ID, new Notification.Builder(this, CHANNEL_ID).build());
         stopForeground(true);
@@ -249,20 +238,20 @@ public final class MediaPlayerService extends MediaBrowserService {
         resumeOnFocusGain = true;
         becomingNoisyReceiver.register();
         mediaPlayer.start();
-        sendPlaybackState();
+        sendPlaybackState(mediaPlayer.getCurrentPosition());
         startNotification();
     }
 
     private void pause() {
         becomingNoisyReceiver.unregister();
         mediaPlayer.pause();
-        sendPlaybackState();
+        sendPlaybackState(mediaPlayer.getCurrentPosition());
         startNotification();
     }
 
     private void setLooping(boolean isLooping) {
-        mediaPlayer.setLooping(isLooping);
-        sendPlaybackState();
+        this.isLooping = isLooping;
+        sendPlaybackState(mediaPlayer.getCurrentPosition());
         startNotification();
     }
 
@@ -271,10 +260,10 @@ public final class MediaPlayerService extends MediaBrowserService {
         mediaSession.setMetadata(metadataBuilder.build());
     }
 
-    private void sendPlaybackState() {
-        playbackBuilder.setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_SEEK_TO | PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS).setState(mediaPlayer.isPlaying() ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED, mediaPlayer.getCurrentPosition(), 1F);
+    private void sendPlaybackState(int position) {
+        playbackBuilder.setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_SEEK_TO | PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS).setState(mediaPlayer.isPlaying() ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED, position, 1F);
         Bundle bundle = new Bundle();
-        bundle.putBoolean(Constants.LOOP_EXTRA, mediaPlayer.isLooping());
+        bundle.putBoolean(Constants.LOOP_EXTRA, isLooping);
         playbackBuilder.setExtras(bundle);
         mediaSession.setPlaybackState(playbackBuilder.build());
     }

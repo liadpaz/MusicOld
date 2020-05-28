@@ -12,7 +12,6 @@ import androidx.fragment.app.Fragment;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.ArtistsListAdapter;
 import com.liadpaz.amp.databinding.FragmentArtistListBinding;
-import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.viewmodels.Artist;
 
@@ -46,10 +45,7 @@ public class ArtistListFragment extends Fragment {
 
         binding.lvArtists.setAdapter(adapter);
         binding.lvArtists.setOnItemClickListener((parent, view1, position, id) -> {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.ARTIST, adapter.getItem(position));
-            Fragment fragment = ArtistSongListFragment.newInstance();
-            fragment.setArguments(bundle);
+            Fragment fragment = ArtistSongListFragment.newInstance(artists.get(position));
             requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.viewpagerFragment, fragment).addToBackStack(null).commit();
         });
     }

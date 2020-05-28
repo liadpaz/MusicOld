@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.databinding.ItemSongBinding;
-import com.liadpaz.amp.interfaces.OnItemClickPopUpListener;
+import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.QueueUtil;
 import com.liadpaz.amp.viewmodels.Song;
@@ -25,11 +25,11 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
     @SuppressWarnings("unused")
     private static final String TAG = "SONGS_LIST_ADAPTER";
 
-    private OnItemClickPopUpListener onItemClickPopUpListener;
+    private OnRecyclerItemClickListener onRecyclerItemClickListener;
 
     private Context context;
 
-    public SongsListAdapter(@NonNull Context context, OnItemClickPopUpListener onItemClickPopUpListener) {
+    public SongsListAdapter(@NonNull Context context, OnRecyclerItemClickListener onRecyclerItemClickListener) {
         super(new DiffUtil.ItemCallback<Song>() {
             @Override
             public boolean areItemsTheSame(@NonNull Song oldItem, @NonNull Song newItem) { return false; }
@@ -38,13 +38,13 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
             public boolean areContentsTheSame(@NonNull Song oldItem, @NonNull Song newItem) { return false; }
         });
         this.context = context;
-        this.onItemClickPopUpListener = onItemClickPopUpListener;
+        this.onRecyclerItemClickListener = onRecyclerItemClickListener;
     }
 
     @NonNull
     @Override
     public SongViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new SongViewHolder(ItemSongBinding.inflate(LayoutInflater.from(context), parent, false), onItemClickPopUpListener);
+        return new SongViewHolder(ItemSongBinding.inflate(LayoutInflater.from(context), parent, false), onRecyclerItemClickListener);
     }
 
     @Override
@@ -68,11 +68,11 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
     static class SongViewHolder extends RecyclerView.ViewHolder {
         private ItemSongBinding binding;
 
-        SongViewHolder(@NonNull ItemSongBinding binding, @NonNull OnItemClickPopUpListener onItemClickPopUpListener) {
+        SongViewHolder(@NonNull ItemSongBinding binding, @NonNull OnRecyclerItemClickListener onRecyclerItemClickListener) {
             super(binding.getRoot());
             this.binding = binding;
 
-            binding.btnMore.setOnClickListener(v -> onItemClickPopUpListener.onItemClickPopUp(v, getAdapterPosition()));
+            binding.btnMore.setOnClickListener(v -> onRecyclerItemClickListener.onItemClick(v, getAdapterPosition()));
         }
     }
 }

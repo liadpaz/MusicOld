@@ -43,6 +43,12 @@ public class Utilities {
         return ContentUris.withAppendedId(albumsUri, Long.parseLong(song.albumId));
     }
 
+    /**
+     * This function returns the time in a formatted string, eg. 0 millis to 0:00.
+     *
+     * @param millis the time to format in milliseconds
+     * @return the formatted
+     */
     @NonNull
     @SuppressLint("DefaultLocale")
     public static String formatTime(long millis) {

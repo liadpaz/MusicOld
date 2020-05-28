@@ -9,8 +9,6 @@ import android.media.session.MediaController;
 import android.media.session.PlaybackState;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
-import android.os.ResultReceiver;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,7 +30,6 @@ import com.liadpaz.amp.utils.QueueUtil;
 import com.liadpaz.amp.utils.Utilities;
 
 import java.io.FileNotFoundException;
-import java.lang.ref.WeakReference;
 import java.util.concurrent.CompletableFuture;
 
 public class ExtendedFragment extends Fragment {
@@ -46,6 +43,7 @@ public class ExtendedFragment extends Fragment {
     private MediaController.Callback callback;
 
     private long duration = 0;
+    private double currentPosition = 0;
 
     private boolean isUp = false;
 
@@ -63,7 +61,7 @@ public class ExtendedFragment extends Fragment {
     @SuppressWarnings("ConstantConditions")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        handler = new SeekBarHandler(binding);
+        handler = new Handler();
 
         (controller = MainActivity.getController()).registerCallback(callback = new MediaController.Callback() {
             @Override
@@ -126,15 +124,19 @@ public class ExtendedFragment extends Fragment {
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
                 if (newState == BottomSheetBehavior.STATE_EXPANDED) {
-                    // show the info fragment
-                    getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ExtendedInfoFragment.newInstance()).commitNow();
-                    binding.infoFragment.setAlpha(1);
-                    isUp = true;
+                    if (!isUp) {
+                        // show the info fragment
+                        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ExtendedInfoFragment.newInstance()).commitNow();
+                        binding.infoFragment.setAlpha(1);
+                        isUp = true;
+                    }
                 } else if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
-                    // show the controller fragment
-                    getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedSongFragment.newInstance()).commitNow();
-                    binding.infoFragment.setAlpha(1);
-                    isUp = false;
+                    if (isUp) {
+                        // show the controller fragment
+                        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedSongFragment.newInstance()).commitNow();
+                        binding.infoFragment.setAlpha(1);
+                        isUp = false;
+                    }
                 }
             }
 
@@ -164,6 +166,7 @@ public class ExtendedFragment extends Fragment {
         if (state == null) {
             binding.btnPlayPause.setBackgroundResource(R.drawable.play);
         } else {
+            currentPosition = state.getPosition();
             if (state.getState() == PlaybackState.STATE_PLAYING) {
                 binding.btnPlayPause.setBackgroundResource(R.drawable.pause);
                 updateSeekBar();
@@ -210,22 +213,20 @@ public class ExtendedFragment extends Fragment {
         }
     }
 
+    /**
+     * This function updates the progress bar and the elapsed time text.
+     */
     @SuppressWarnings("ConstantConditions")
     private void updateSeekBar() {
         handler.postDelayed(runnable = () -> {
-            controller.sendCommand(Constants.ACTION_GET_POSITION, null, new ResultReceiver(new Handler()) {
-                @Override
-                protected void onReceiveResult(int resultCode, Bundle resultData) {
-                    Message message = new Message();
-                    message.arg1 = resultData.getInt(Constants.ACTION_GET_POSITION);
-                    message.arg2 = (int)duration;
-                    handler.dispatchMessage(message);
-                }
-            });
+            binding.sbSongProgress.setProgress((int)((currentPosition / duration) * 1000));
+            binding.tvTimeElapsed.setText(Utilities.formatTime((long)currentPosition));
+            currentPosition += 250;
+            handler.removeCallbacks(runnable);
             if (controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING) {
                 updateSeekBar();
             }
-        }, 500);
+        }, 250);
     }
 
     @Override
@@ -239,23 +240,6 @@ public class ExtendedFragment extends Fragment {
         super.onDestroyView();
         if (callback != null) {
             controller.unregisterCallback(callback);
-        }
-    }
-
-    private static class SeekBarHandler extends Handler {
-        private WeakReference<FragmentExtendedBinding> bindingWeakReference;
-
-        SeekBarHandler(@NonNull FragmentExtendedBinding binding) {
-            bindingWeakReference = new WeakReference<>(binding);
-        }
-
-        public void handleMessage(@NonNull Message msg) {
-            SeekBar seekBar = bindingWeakReference.get().sbSongProgress;
-            int current = msg.arg1;
-            double total = msg.arg2;
-            int seek = (int)(current / total * 1000);
-            bindingWeakReference.get().tvTimeElapsed.setText(Utilities.formatTime(current));
-            seekBar.setProgress(seek);
         }
     }
 }

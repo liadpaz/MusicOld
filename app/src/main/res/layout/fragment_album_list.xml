@@ -5,8 +5,8 @@
     android:layout_height="match_parent"
     tools:context=".fragments.AlbumListFragment">
 
-    <ListView
-        android:id="@+id/lvAlbums"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvAlbums"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 </FrameLayout>

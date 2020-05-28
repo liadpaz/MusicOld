@@ -67,7 +67,6 @@ public class SongsListFragment extends Fragment {
             popupMenu.show();
         });
         adapter.submitList(LocalFiles.listSongsByName(requireContext()));
-//        CompletableFuture.supplyAsync(() -> LocalFiles.listSongsByName(requireContext())).thenAccept(songs -> adapter.submitList(songs));
 
         binding.rvSongs.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvSongs.addItemDecoration(new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));

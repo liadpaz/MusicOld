@@ -15,30 +15,28 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.SongsListAdapter;
 import com.liadpaz.amp.databinding.FragmentAlbumSongListBinding;
-import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.QueueUtil;
 import com.liadpaz.amp.viewmodels.Album;
 
 public class AlbumSongListFragment extends Fragment {
     private SongsListAdapter adapter;
 
+    private Album album;
+
     private FragmentAlbumSongListBinding binding;
 
-    public AlbumSongListFragment() { }
+    private AlbumSongListFragment(Album album) { this.album = album; }
 
     @NonNull
-    public static AlbumSongListFragment newInstance() { return new AlbumSongListFragment(); }
+    public static AlbumSongListFragment newInstance(Album album) { return new AlbumSongListFragment(album); }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return (binding = FragmentAlbumSongListBinding.inflate(inflater, container, false)).getRoot();
     }
 
-    @SuppressWarnings("ConstantConditions")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        Album album = getArguments().getParcelable(Constants.ALBUM);
-
         binding.setAlbum(album);
 
         adapter = new SongsListAdapter(requireContext(), (v, position) -> {

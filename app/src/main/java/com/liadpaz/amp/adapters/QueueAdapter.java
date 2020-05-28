@@ -19,7 +19,7 @@ import com.bumptech.glide.Glide;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.ItemQueueSongBinding;
-import com.liadpaz.amp.interfaces.OnItemClickPopUpListener;
+import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
 import com.liadpaz.amp.interfaces.OnStartDragListener;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.QueueUtil;
@@ -33,13 +33,13 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
     private static final String TAG = "QUEUE_ADAPTER";
 
     private OnStartDragListener onStartDragListener;
-    private OnItemClickPopUpListener onItemClickPopUpListener;
+    private OnRecyclerItemClickListener onRecyclerItemClickListener;
 
     private Context context;
 
     private int queuePosition;
 
-    public QueueAdapter(@NonNull Fragment fragment, @NonNull OnItemClickPopUpListener onItemClickPopUpListener) {
+    public QueueAdapter(@NonNull Fragment fragment, @NonNull OnRecyclerItemClickListener onRecyclerItemClickListener) {
         super(new DiffUtil.ItemCallback<Song>() {
             @Override
             public boolean areItemsTheSame(@NonNull Song oldItem, @NonNull Song newItem) { return oldItem == newItem; }
@@ -48,7 +48,7 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
             public boolean areContentsTheSame(@NonNull Song oldItem, @NonNull Song newItem) { return oldItem.equals(newItem); }
         });
         this.context = fragment.requireContext();
-        this.onItemClickPopUpListener = onItemClickPopUpListener;
+        this.onRecyclerItemClickListener = onRecyclerItemClickListener;
 
         QueueUtil.queuePosition.observe(fragment, queuePosition -> this.queuePosition = queuePosition);
     }
@@ -60,7 +60,7 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
     @NonNull
     @Override
     public SongViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new QueueAdapter.SongViewHolder(ItemQueueSongBinding.inflate(LayoutInflater.from(context), parent, false), onItemClickPopUpListener);
+        return new QueueAdapter.SongViewHolder(ItemQueueSongBinding.inflate(LayoutInflater.from(context), parent, false), onRecyclerItemClickListener);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -109,7 +109,7 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
     static class SongViewHolder extends RecyclerView.ViewHolder {
         private ItemQueueSongBinding binding;
 
-        SongViewHolder(@NonNull ItemQueueSongBinding binding, OnItemClickPopUpListener onItemClickPopUpListener) {
+        SongViewHolder(@NonNull ItemQueueSongBinding binding, OnRecyclerItemClickListener onRecyclerItemClickListener) {
             super(binding.getRoot());
 
             this.binding = binding;
@@ -122,7 +122,7 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
                 MainActivity.getController().sendCommand(Constants.ACTION_QUEUE_POSITION, bundle, null);
             });
 
-            binding.btnMore.setOnClickListener(v -> onItemClickPopUpListener.onItemClickPopUp(v, getAdapterPosition()));
+            binding.btnMore.setOnClickListener(v -> onRecyclerItemClickListener.onItemClick(v, getAdapterPosition()));
         }
     }
 }

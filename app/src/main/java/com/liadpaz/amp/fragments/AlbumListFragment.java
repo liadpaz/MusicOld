@@ -8,11 +8,12 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.AlbumsListAdapter;
 import com.liadpaz.amp.databinding.FragmentAlbumListBinding;
-import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.viewmodels.Album;
 
@@ -38,15 +39,15 @@ public class AlbumListFragment extends Fragment {
         LocalFiles.getAlbums().forEach((albumName, albumSongs) -> albums.add(new Album(albumName, albumSongs.get(0).songArtists.get(0), albumSongs)));
         albums.sort((album1, album2) -> album1.name.toLowerCase().compareTo(album2.name.toLowerCase()));
 
-        AlbumsListAdapter adapter = new AlbumsListAdapter(getContext(), albums);
-        binding.lvAlbums.setAdapter(adapter);
-
-        binding.lvAlbums.setOnItemClickListener((parent, view1, position, id) -> {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.ALBUM, adapter.getItem(position));
-            Fragment fragment = AlbumSongListFragment.newInstance();
-            fragment.setArguments(bundle);
+        AlbumsListAdapter adapter = new AlbumsListAdapter(getContext(), (v, position) -> {
+            Fragment fragment = AlbumSongListFragment.newInstance(albums.get(position));
             requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.viewpagerFragment, fragment).addToBackStack(null).commit();
         });
+
+        binding.rvAlbums.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.rvAlbums.addItemDecoration(new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL) );
+        binding.rvAlbums.setAdapter(adapter);
+
+        adapter.submitList(albums);
     }
 }

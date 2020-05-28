@@ -7,7 +7,6 @@ public class Constants {
 
     public final static String DEFAULT_PATH = "music";
 
-    public final static String ACTION_GET_POSITION = "get_position";
     public final static String ACTION_QUEUE_POSITION = "queue_position";
 
     public final static String ACTION = "action";
