@@ -9,6 +9,7 @@ import android.media.session.MediaController;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,6 +24,7 @@ import com.liadpaz.amp.fragments.MainFragment;
 import com.liadpaz.amp.notification.MediaNotification;
 import com.liadpaz.amp.service.MediaPlayerService;
 import com.liadpaz.amp.utils.LocalFiles;
+import com.liadpaz.amp.utils.PlaylistsUtil;
 import com.liadpaz.amp.utils.Utilities;
 
 public class MainActivity extends AppCompatActivity {
@@ -55,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
         new MediaNotification(this);
 
-        new LocalFiles(getSharedPreferences("Music.Data", 0), getSharedPreferences("Music.Playlists", 0));
+        LocalFiles.init(this, this);
 
         if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_PERMISSION);
@@ -132,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        BottomSheetBehavior bsb = BottomSheetBehavior.from(binding.extendedFragment);
+        BottomSheetBehavior<View> bsb = BottomSheetBehavior.from(binding.extendedFragment);
         if (bsb.getState() == BottomSheetBehavior.STATE_EXPANDED) {
             bsb.setState(BottomSheetBehavior.STATE_COLLAPSED);
         } else {
@@ -140,9 +142,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Override
     protected void onDestroy() {
         super.onDestroy();
         mediaBrowser.disconnect();
+        LocalFiles.setPlaylists(PlaylistsUtil.playlists.getValue());
     }
+
+
 }

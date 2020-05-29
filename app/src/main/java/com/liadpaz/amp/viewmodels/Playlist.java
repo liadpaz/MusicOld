@@ -4,6 +4,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 
@@ -31,6 +32,15 @@ public class Playlist implements Parcelable {
     private Playlist(@NonNull Parcel in) {
         name = in.readString();
         songs = in.createTypedArrayList(Song.CREATOR);
+    }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if (obj instanceof Playlist) {
+            Playlist other = (Playlist)obj;
+            return name.equals(other.name) && songs.equals(other.songs);
+        }
+        return false;
     }
 
     @Override

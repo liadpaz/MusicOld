@@ -20,4 +20,15 @@
     <string name="description_more">עוד</string>
     <string name="description_playlist_cover">תמונת פלייליסט</string>
     <string name="playlist_recently_added">נוספו לאחרונה</string>
+    <string name="description_album_cover">תמונת אלבום</string>
+    <string name="dialog_cancel">בטל</string>
+    <string name="dialog_add_to_playlist">הוסף לפלייליסט</string>
+    <string name="dialog_new_playlist">פלייליסט חדש</string>
+    <string name="dialog_create_playlist">צור פלייליסט</string>
+    <string name="dialog_create">צור</string>
+    <string name="description_playlist_name">שם הפלייליסט</string>
+    <string name="toast_playlist_exists">פלייליסט קיים כבר!</string>
+    <string name="dialog_edit_playlist">עריכת פלייליסט</string>
+    <string name="dialog_delete">מחיקת פלייליסט</string>
+    <string name="dialog_apply">החל עריכה</string>
 </resources>

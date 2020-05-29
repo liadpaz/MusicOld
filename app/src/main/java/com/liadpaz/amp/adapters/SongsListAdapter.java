@@ -25,11 +25,11 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
     @SuppressWarnings("unused")
     private static final String TAG = "SONGS_LIST_ADAPTER";
 
-    private OnRecyclerItemClickListener onRecyclerItemClickListener;
+    private OnRecyclerItemClickListener onItemClickListener;
 
     private Context context;
 
-    public SongsListAdapter(@NonNull Context context, OnRecyclerItemClickListener onRecyclerItemClickListener) {
+    public SongsListAdapter(@NonNull Context context, OnRecyclerItemClickListener onItemClickListener) {
         super(new DiffUtil.ItemCallback<Song>() {
             @Override
             public boolean areItemsTheSame(@NonNull Song oldItem, @NonNull Song newItem) { return false; }
@@ -38,13 +38,13 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
             public boolean areContentsTheSame(@NonNull Song oldItem, @NonNull Song newItem) { return false; }
         });
         this.context = context;
-        this.onRecyclerItemClickListener = onRecyclerItemClickListener;
+        this.onItemClickListener = onItemClickListener;
     }
 
     @NonNull
     @Override
     public SongViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new SongViewHolder(ItemSongBinding.inflate(LayoutInflater.from(context), parent, false), onRecyclerItemClickListener);
+        return new SongViewHolder(ItemSongBinding.inflate(LayoutInflater.from(context), parent, false), onItemClickListener);
     }
 
     @Override
@@ -68,11 +68,11 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
     static class SongViewHolder extends RecyclerView.ViewHolder {
         private ItemSongBinding binding;
 
-        SongViewHolder(@NonNull ItemSongBinding binding, @NonNull OnRecyclerItemClickListener onRecyclerItemClickListener) {
+        SongViewHolder(@NonNull ItemSongBinding binding, @NonNull OnRecyclerItemClickListener onItemClickListener) {
             super(binding.getRoot());
             this.binding = binding;
 
-            binding.btnMore.setOnClickListener(v -> onRecyclerItemClickListener.onItemClick(v, getAdapterPosition()));
+            binding.btnMore.setOnClickListener(v -> onItemClickListener.onItemClick(v, getAdapterPosition()));
         }
     }
 }

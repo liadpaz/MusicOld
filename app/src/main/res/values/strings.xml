@@ -20,6 +20,15 @@
     <string name="description_more">More</string>
     <string name="description_playlist_cover">Playlist Cover</string>
     <string name="playlist_recently_added">Recently Added</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
+    <string name="description_album_cover">Album Cover</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_add_to_playlist">Add To Playlist</string>
+    <string name="dialog_new_playlist">New Playlist</string>
+    <string name="dialog_create_playlist">Create Playlist</string>
+    <string name="description_playlist_name">Playlist Name</string>
+    <string name="dialog_create">Create</string>
+    <string name="toast_playlist_exists">Playlist already exists!</string>
+    <string name="dialog_edit_playlist">Edit Playlist</string>
+    <string name="dialog_delete">Delete Playlist</string>
+    <string name="dialog_apply">Apply Change</string>
 </resources>

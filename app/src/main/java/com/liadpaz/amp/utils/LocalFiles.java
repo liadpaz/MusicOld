@@ -1,6 +1,7 @@
 package com.liadpaz.amp.utils;
 
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -8,9 +9,12 @@ import android.provider.MediaStore.Audio.Media;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.liadpaz.amp.R;
+import com.liadpaz.amp.viewmodels.Playlist;
 import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.ArrayList;
@@ -31,20 +35,24 @@ public class LocalFiles {
     private static SharedPreferences playlistsSharedPreferences;
     private static HashMap<String, ArrayList<Song>> artists = new HashMap<>();
     private static HashMap<String, ArrayList<Song>> albums = new HashMap<>();
+    private static ArrayList<Playlist> playlists;
 
-    public LocalFiles(@NonNull SharedPreferences musicSharedPreferences, @NonNull SharedPreferences playlistsSharedPreferences) {
-        LocalFiles.musicSharedPreferences = musicSharedPreferences;
-        LocalFiles.playlistsSharedPreferences = playlistsSharedPreferences;
+    public static void init(@NonNull Context context, @NonNull LifecycleOwner lifecycleOwner) {
+        LocalFiles.musicSharedPreferences = context.getSharedPreferences("Music.Data", 0);
+        LocalFiles.playlistsSharedPreferences = context.getSharedPreferences("Music.Playlists", 0);
 
-        QueueUtil.queue.observeForever(songs -> {
+        PlaylistsUtil.playlists.setValue(getPlaylists(context));
+
+        QueueUtil.queue.observe(lifecycleOwner, songs -> {
             String songsIds = new Gson().toJson((Object)songs.stream().map(song -> song.songId).collect(Collectors.toCollection(ArrayList::new)));
             musicSharedPreferences.edit().putString(Constants.SHARED_PREFERENCES_QUEUE, songsIds).apply();
         });
-        QueueUtil.queuePosition.observeForever(queuePosition -> musicSharedPreferences.edit().putInt(Constants.SHARED_PREFERENCES_QUEUE, queuePosition).apply());
+        QueueUtil.queuePosition.observe(lifecycleOwner, queuePosition -> musicSharedPreferences.edit().putInt(Constants.SHARED_PREFERENCES_QUEUE, queuePosition).apply());
     }
 
     /**
-     * This function returns the music folder path, if it does not exists, it returns the default one
+     * This function returns the music folder path, if it does not exists, it returns the default
+     * one
      *
      * @return The music folder path, if not exists returns the default one
      */
@@ -102,13 +110,40 @@ public class LocalFiles {
                     } else {
                         artists.add(noArtist);
                     }
-
                     songs.add(new Song(id, title, artists, album, albumId));
                 } while (musicCursor.moveToNext());
             }
         }
         Log.d(TAG, "listSongs: " + (System.currentTimeMillis() - start));
         return songs;
+    }
+
+    @NonNull
+    private static ArrayList<Playlist> getPlaylists(@NonNull Context context) {
+        ArrayList<Playlist> playlists = new ArrayList<>();
+        playlistsSharedPreferences.getAll().forEach((name, songs) -> {
+            ArrayList<Song> songsList = new Gson().fromJson(songs.toString(), new TypeToken<ArrayList<Song>>() {}.getType());
+            playlists.add(new Playlist(name, songsList.stream().filter(song -> isSongExists(context, song)).collect(Collectors.toCollection(ArrayList::new))));
+        });
+        return playlists;
+    }
+
+    public static void setPlaylists(@NonNull ArrayList<Playlist> playlists) {
+        SharedPreferences.Editor editor = playlistsSharedPreferences.edit().clear();
+        for (Playlist playlist : playlists) {
+            editor.putString(playlist.name, new Gson().toJson(playlist.songs));
+        }
+        editor.apply();
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    private static boolean isSongExists(@NonNull Context context, @NonNull Song song) {
+        ContentResolver contentResolver = context.getContentResolver();
+        try (Cursor cursor = contentResolver.query(ContentUris.withAppendedId(Media.EXTERNAL_CONTENT_URI, song.songId), null, null, null)) {
+            return cursor.moveToFirst();
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     @NonNull

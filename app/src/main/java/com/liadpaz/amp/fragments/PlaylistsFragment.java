@@ -1,6 +1,7 @@
 package com.liadpaz.amp.fragments;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,12 +15,21 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.PlaylistsAdapter;
 import com.liadpaz.amp.databinding.FragmentPlaylistsBinding;
+import com.liadpaz.amp.dialogs.EditPlaylistDialog;
+import com.liadpaz.amp.dialogs.NewPlaylistDialog;
 import com.liadpaz.amp.utils.LocalFiles;
+import com.liadpaz.amp.utils.PlaylistsUtil;
 import com.liadpaz.amp.viewmodels.Playlist;
 
 import java.util.ArrayList;
 
 public class PlaylistsFragment extends Fragment {
+    private static final String TAG = "PlaylistsFragment";
+
+    private Playlist recentlyAddedPlaylist;
+    private ArrayList<Playlist> playlists;
+
+    private PlaylistsAdapter adapter;
 
     private FragmentPlaylistsBinding binding;
 
@@ -35,16 +45,31 @@ public class PlaylistsFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        ArrayList<Playlist> playlists = new ArrayList<Playlist>() {
-            { add(new Playlist(getString(R.string.playlist_recently_added), LocalFiles.listSongsByLastAdded(requireContext()))); }
-        };
+        recentlyAddedPlaylist = new Playlist(getString(R.string.playlist_recently_added), LocalFiles.listSongsByLastAdded(requireContext()));
 
-        PlaylistsAdapter adapter = new PlaylistsAdapter(requireContext(), (v, position) -> requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.viewpagerFragment, PlaylistFragment.newInstance(playlists.get(position))).addToBackStack(null).commit());
+        PlaylistsUtil.playlists.observe(getViewLifecycleOwner(), playlists -> {
+            Log.d(TAG, "onViewCreated: " + playlists.size());
+            this.playlists = playlists;
+            this.playlists.add(0, recentlyAddedPlaylist);
+            adapter.submitList(this.playlists);
+        });
+
+        adapter = new PlaylistsAdapter(requireContext(), (v, position) -> requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.viewpagerFragment, PlaylistFragment.newInstance(playlists.get(position))).addToBackStack(null).commit(), position -> {
+            if (position != 0) {
+                new EditPlaylistDialog(requireContext(), playlists.get(position)).show();
+            }
+        });
 
         binding.rvPlaylists.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvPlaylists.addItemDecoration(new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));
         binding.rvPlaylists.setAdapter(adapter);
 
+        binding.fabNewPlaylist.setOnClickListener(v -> new NewPlaylistDialog(requireContext(), null).show());
+
         adapter.submitList(playlists);
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
     }
 }
