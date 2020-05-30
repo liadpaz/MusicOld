@@ -24,8 +24,9 @@ import com.liadpaz.amp.fragments.MainFragment;
 import com.liadpaz.amp.notification.MediaNotification;
 import com.liadpaz.amp.service.MediaPlayerService;
 import com.liadpaz.amp.utils.LocalFiles;
-import com.liadpaz.amp.utils.PlaylistsUtil;
 import com.liadpaz.amp.utils.Utilities;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_PERMISSION = 459;
@@ -37,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
     private static MediaController controller;
     public ActivityMainBinding binding;
     private MediaBrowser mediaBrowser;
+
+    private AtomicBoolean shouldInitializeView = new AtomicBoolean(false);
 
     public static MediaController getController() {return controller;}
 
@@ -51,7 +54,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onConnected() {
                 controller = new MediaController(MainActivity.this, mediaBrowser.getSessionToken());
-                initView();
+                if (!shouldInitializeView.get()) {
+                    shouldInitializeView.set(true);
+                } else {
+                    initView();
+                }
             }
         }, null);
 
@@ -59,18 +66,24 @@ public class MainActivity extends AppCompatActivity {
 
         LocalFiles.init(this, this);
 
+        startService();
+
         if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_PERMISSION);
         } else {
-            startService();
+            if (!shouldInitializeView.get()) {
+                shouldInitializeView.set(true);
+            } else {
+                initView();
+            }
         }
     }
 
     private void startService() {
+        startForegroundService(new Intent(this, MediaPlayerService.class));
         if (!mediaBrowser.isConnected()) {
             mediaBrowser.connect();
         }
-        startForegroundService(new Intent(this, MediaPlayerService.class));
     }
 
     private void initView() {
@@ -142,13 +155,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @SuppressWarnings("ConstantConditions")
     @Override
     protected void onDestroy() {
         super.onDestroy();
         mediaBrowser.disconnect();
-        LocalFiles.setPlaylists(PlaylistsUtil.playlists.getValue());
     }
-
-
 }

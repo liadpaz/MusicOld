@@ -3,6 +3,7 @@ package com.liadpaz.amp.dialogs;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -28,12 +29,15 @@ public class EditPlaylistDialog extends Dialog {
 
         binding.etPlaylistName.setText(playlist.name);
         binding.btnApply.setOnClickListener(v -> {
-            if (!PlaylistsUtil.isPlaylistExists(binding.etPlaylistName.getText().toString())) {
-                PlaylistsUtil.removePlaylist(playlist.name);
-                PlaylistsUtil.addPlaylist(new Playlist(binding.etPlaylistName.getText().toString(), playlist.songs));
-                dismiss();
-            } else {
-                Toast.makeText(getContext(), R.string.toast_playlist_exists, Toast.LENGTH_LONG).show();
+            String newName = binding.etPlaylistName.getText().toString();
+            if (!TextUtils.isEmpty(newName)) {
+                if (!PlaylistsUtil.isPlaylistExists(newName)) {
+                    PlaylistsUtil.removePlaylist(playlist.name);
+                    PlaylistsUtil.addPlaylist(new Playlist(newName, playlist.songs));
+                    dismiss();
+                } else {
+                    Toast.makeText(getContext(), R.string.toast_playlist_exists, Toast.LENGTH_LONG).show();
+                }
             }
         });
         binding.btnDelete.setOnClickListener(v -> {

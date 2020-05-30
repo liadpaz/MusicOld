@@ -34,8 +34,10 @@ public class PlaylistsDialog extends Dialog {
             dismiss();
         });
         binding.btnAdd.setOnClickListener(v -> {
-            PlaylistsUtil.getPlaylistByName((String)binding.spinnerPlaylists.getSelectedItem()).songs.add(song);
-            dismiss();
+            if (binding.spinnerPlaylists.getSelectedItem() != null) {
+                PlaylistsUtil.getPlaylistByName((String)binding.spinnerPlaylists.getSelectedItem()).songs.add(song);
+                dismiss();
+            }
         });
         binding.btnCancel.setOnClickListener(v -> dismiss());
 

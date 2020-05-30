@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.SongsListAdapter;
 import com.liadpaz.amp.databinding.FragmentAlbumSongListBinding;
+import com.liadpaz.amp.dialogs.PlaylistsDialog;
 import com.liadpaz.amp.utils.QueueUtil;
 import com.liadpaz.amp.viewmodels.Album;
 
@@ -54,8 +55,8 @@ public class AlbumSongListFragment extends Fragment {
                         break;
                     }
 
-                    case R.id.menuQueueAddPlaylist: {
-                        // TODO: add to playlist
+                    case R.id.menuAddToPlaylist: {
+                        new PlaylistsDialog(requireContext(), adapter.getCurrentList().get(position)).show();
                         break;
                     }
                 }

@@ -75,6 +75,10 @@ public final class MediaPlayerService extends MediaBrowserService {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        startForeground(NOTIFICATION_ID, new Notification.Builder(this, CHANNEL_ID).build());
+        stopForeground(true);
+
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnCompletionListener(mp -> {
             if (!isLooping) {
@@ -225,9 +229,6 @@ public final class MediaPlayerService extends MediaBrowserService {
 
         playbackBuilder = new PlaybackState.Builder();
         sendPlaybackState(mediaPlayer.getCurrentPosition());
-
-        startForeground(NOTIFICATION_ID, new Notification.Builder(this, CHANNEL_ID).build());
-        stopForeground(true);
 
         setSessionToken(mediaSession.getSessionToken());
 

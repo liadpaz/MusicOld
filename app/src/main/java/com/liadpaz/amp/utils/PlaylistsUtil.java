@@ -2,14 +2,19 @@ package com.liadpaz.amp.utils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 
 import com.liadpaz.amp.viewmodels.Playlist;
 
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class PlaylistsUtil {
-    public static MutableLiveData<ArrayList<Playlist>> playlists = new MutableLiveData<>();
+    private static final String TAG = "PlaylistsUtil";
+
+    private static MutableLiveData<ArrayList<Playlist>> playlists = new MutableLiveData<>();
 
     @SuppressWarnings({"ConstantConditions", "BooleanMethodIsAlwaysInverted"})
     public static boolean isPlaylistExists(String name) {
@@ -21,38 +26,49 @@ public class PlaylistsUtil {
         return false;
     }
 
-    @SuppressWarnings("ConstantConditions")
+    public static void observe(@NonNull LifecycleOwner lifecycleOwner, @NonNull Observer<ArrayList<Playlist>> observer) {
+        playlists.observe(lifecycleOwner, observer);
+    }
+
+    public static ArrayList<Playlist> getPlaylists() {
+        return playlists.getValue();
+    }
+
+    public static void setPlaylists(@NonNull ArrayList<Playlist> playlists) {
+        PlaylistsUtil.playlists.postValue(playlists);
+    }
+
     public static void addPlaylist(@NonNull Playlist playlist) {
-        ArrayList<Playlist> playlists = PlaylistsUtil.playlists.getValue();
+        ArrayList<Playlist> playlists = getPlaylists();
         playlists.add(playlist);
-        PlaylistsUtil.playlists.setValue(playlists);
+        setPlaylists(playlists);
     }
 
-    @SuppressWarnings("ConstantConditions")
-    public static void removePlaylist(@NonNull String name) {
-        ArrayList<Playlist> playlists = PlaylistsUtil.playlists.getValue();
-        playlists.removeIf(playlist -> playlist.name.equals(name));
-        PlaylistsUtil.playlists.setValue(playlists);
-    }
-
-    @SuppressWarnings("ConstantConditions")
     @Nullable
-    public static Playlist getPlaylistByName(@NonNull String name) {
-        for (Playlist playlist : playlists.getValue()) {
+    public static Playlist removePlaylist(@NonNull String name) {
+        ArrayList<Playlist> playlists = getPlaylists();
+        for (Playlist playlist : playlists) {
             if (playlist.name.equals(name)) {
+                playlists.remove(playlist);
+                setPlaylists(playlists);
                 return playlist;
             }
         }
         return null;
     }
 
-    @SuppressWarnings("ConstantConditions")
+    @Nullable
+    public static Playlist getPlaylistByName(@NonNull String name) {
+        for (Playlist playlist : getPlaylists()) {
+            if (name.equals(playlist.name)) {
+                return playlist;
+            }
+        }
+        return null;
+    }
+
     @NonNull
     public static ArrayList<String> getPlaylistsNames() {
-        ArrayList<String> names = new ArrayList<>();
-        for (Playlist playlist : playlists.getValue()) {
-            names.add(playlist.name);
-        }
-        return names;
+        return getPlaylists().stream().map(playlist -> playlist.name).collect(Collectors.toCollection(ArrayList::new));
     }
 }

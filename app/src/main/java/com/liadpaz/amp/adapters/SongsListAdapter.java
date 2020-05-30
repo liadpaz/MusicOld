@@ -25,26 +25,26 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
     @SuppressWarnings("unused")
     private static final String TAG = "SONGS_LIST_ADAPTER";
 
-    private OnRecyclerItemClickListener onItemClickListener;
+    private OnRecyclerItemClickListener onMoreClickListener;
 
     private Context context;
 
-    public SongsListAdapter(@NonNull Context context, OnRecyclerItemClickListener onItemClickListener) {
+    public SongsListAdapter(@NonNull Context context, OnRecyclerItemClickListener onMoreClickListener) {
         super(new DiffUtil.ItemCallback<Song>() {
             @Override
-            public boolean areItemsTheSame(@NonNull Song oldItem, @NonNull Song newItem) { return false; }
+            public boolean areItemsTheSame(@NonNull Song oldItem, @NonNull Song newItem) { return oldItem == newItem; }
 
             @Override
-            public boolean areContentsTheSame(@NonNull Song oldItem, @NonNull Song newItem) { return false; }
+            public boolean areContentsTheSame(@NonNull Song oldItem, @NonNull Song newItem) { return oldItem.equals(newItem); }
         });
         this.context = context;
-        this.onItemClickListener = onItemClickListener;
+        this.onMoreClickListener = onMoreClickListener;
     }
 
     @NonNull
     @Override
     public SongViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new SongViewHolder(ItemSongBinding.inflate(LayoutInflater.from(context), parent, false), onItemClickListener);
+        return new SongViewHolder(ItemSongBinding.inflate(LayoutInflater.from(context), parent, false), onMoreClickListener);
     }
 
     @Override
@@ -68,11 +68,11 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
     static class SongViewHolder extends RecyclerView.ViewHolder {
         private ItemSongBinding binding;
 
-        SongViewHolder(@NonNull ItemSongBinding binding, @NonNull OnRecyclerItemClickListener onItemClickListener) {
+        SongViewHolder(@NonNull ItemSongBinding binding, @NonNull OnRecyclerItemClickListener onMoreClickListener) {
             super(binding.getRoot());
             this.binding = binding;
 
-            binding.btnMore.setOnClickListener(v -> onItemClickListener.onItemClick(v, getAdapterPosition()));
+            binding.btnMore.setOnClickListener(v -> onMoreClickListener.onItemClick(v, getAdapterPosition()));
         }
     }
 }

@@ -1,7 +1,6 @@
 package com.liadpaz.amp.fragments;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,7 +38,7 @@ public class PlaylistsFragment extends Fragment {
     public static PlaylistsFragment newInstance() { return new PlaylistsFragment(); }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return (binding = FragmentPlaylistsBinding.inflate(inflater, container, false)).getRoot();
     }
 
@@ -47,17 +46,18 @@ public class PlaylistsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         recentlyAddedPlaylist = new Playlist(getString(R.string.playlist_recently_added), LocalFiles.listSongsByLastAdded(requireContext()));
 
-        PlaylistsUtil.playlists.observe(getViewLifecycleOwner(), playlists -> {
-            Log.d(TAG, "onViewCreated: " + playlists.size());
-            this.playlists = playlists;
+        PlaylistsUtil.observe(getViewLifecycleOwner(), playlists -> {
+            this.playlists = new ArrayList<>(playlists);
             this.playlists.add(0, recentlyAddedPlaylist);
             adapter.submitList(this.playlists);
+            LocalFiles.setPlaylists(playlists);
         });
 
         adapter = new PlaylistsAdapter(requireContext(), (v, position) -> requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.viewpagerFragment, PlaylistFragment.newInstance(playlists.get(position))).addToBackStack(null).commit(), position -> {
             if (position != 0) {
                 new EditPlaylistDialog(requireContext(), playlists.get(position)).show();
             }
+            return true;
         });
 
         binding.rvPlaylists.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -65,8 +65,6 @@ public class PlaylistsFragment extends Fragment {
         binding.rvPlaylists.setAdapter(adapter);
 
         binding.fabNewPlaylist.setOnClickListener(v -> new NewPlaylistDialog(requireContext(), null).show());
-
-        adapter.submitList(playlists);
     }
 
     @Override

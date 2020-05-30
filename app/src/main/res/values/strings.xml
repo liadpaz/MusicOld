@@ -31,4 +31,5 @@
     <string name="dialog_edit_playlist">Edit Playlist</string>
     <string name="dialog_delete">Delete Playlist</string>
     <string name="dialog_apply">Apply Change</string>
+    <string name="menu_remove_from_playlist">Remove from playlist</string>
 </resources>

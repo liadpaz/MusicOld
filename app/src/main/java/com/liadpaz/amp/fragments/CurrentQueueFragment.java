@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.QueueAdapter;
 import com.liadpaz.amp.databinding.FragmentCurrentQueueBinding;
+import com.liadpaz.amp.dialogs.PlaylistsDialog;
 import com.liadpaz.amp.utils.QueueUtil;
 
 public class CurrentQueueFragment extends Fragment {
@@ -52,7 +53,7 @@ public class CurrentQueueFragment extends Fragment {
                     }
 
                     case R.id.menuQueueAddPlaylist: {
-                        // TODO: add to playlist
+                        new PlaylistsDialog(requireContext(), adapter.getCurrentList().get(position)).show();
                         break;
                     }
                 }
@@ -67,7 +68,7 @@ public class CurrentQueueFragment extends Fragment {
             @Override
             public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
                 int moveFlags = ItemTouchHelper.UP | ItemTouchHelper.DOWN;
-                int swipeFlags = isSwiping ? 0 : (ItemTouchHelper.START | ItemTouchHelper.END);
+                int swipeFlags = isSwiping || viewHolder.getAdapterPosition() == QueueUtil.queuePosition.getValue() ? 0 : (ItemTouchHelper.START | ItemTouchHelper.END);
                 return makeMovementFlags(moveFlags, swipeFlags);
             }
 

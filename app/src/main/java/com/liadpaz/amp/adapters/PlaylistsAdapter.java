@@ -16,23 +16,23 @@ import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
 import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Playlist;
 
-import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class PlaylistsAdapter extends ListAdapter<Playlist, PlaylistsAdapter.PlaylistViewHolder> {
     private Context context;
     private OnRecyclerItemClickListener onClickListener;
-    private Consumer<Integer> onLongClickListener;
+    private Function<Integer, Boolean> onLongClickListener;
 
-    public PlaylistsAdapter(@NonNull Context context, @NonNull OnRecyclerItemClickListener onClickListener, @NonNull Consumer<Integer> onLongClickListener) {
+    public PlaylistsAdapter(@NonNull Context context, @NonNull OnRecyclerItemClickListener onClickListener, @NonNull Function<Integer, Boolean> onLongClickListener) {
         super(new DiffUtil.ItemCallback<Playlist>() {
             @Override
             public boolean areItemsTheSame(@NonNull Playlist oldItem, @NonNull Playlist newItem) {
-                return false;
+                return oldItem == newItem;
             }
 
             @Override
             public boolean areContentsTheSame(@NonNull Playlist oldItem, @NonNull Playlist newItem) {
-                return false;
+                return oldItem.equals(newItem);
             }
         });
 
@@ -60,15 +60,12 @@ public class PlaylistsAdapter extends ListAdapter<Playlist, PlaylistsAdapter.Pla
     static class PlaylistViewHolder extends RecyclerView.ViewHolder {
         ItemPlaylistBinding binding;
 
-        PlaylistViewHolder(@NonNull ItemPlaylistBinding binding, @NonNull OnRecyclerItemClickListener onClickListener, @NonNull Consumer<Integer> onLongClickListener) {
+        PlaylistViewHolder(@NonNull ItemPlaylistBinding binding, @NonNull OnRecyclerItemClickListener onClickListener, @NonNull Function<Integer, Boolean> onLongClickListener) {
             super(binding.getRoot());
 
             this.binding = binding;
             this.binding.getRoot().setOnClickListener(v -> onClickListener.onItemClick(v, getAdapterPosition()));
-            this.binding.getRoot().setOnLongClickListener(v -> {
-                onLongClickListener.accept(getAdapterPosition());
-                return true;
-            });
+            this.binding.getRoot().setOnLongClickListener(v -> onLongClickListener.apply(getAdapterPosition()));
         }
     }
 }

@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Playlist implements Parcelable {
     public static final Creator<Playlist> CREATOR = new Creator<Playlist>() {
@@ -52,5 +53,11 @@ public class Playlist implements Parcelable {
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         dest.writeString(name);
         dest.writeTypedList(songs);
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "name: " + name + "\nsongs: " + Arrays.deepToString(songs.toArray());
     }
 }

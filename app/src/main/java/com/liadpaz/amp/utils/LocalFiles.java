@@ -19,6 +19,7 @@ import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -41,7 +42,7 @@ public class LocalFiles {
         LocalFiles.musicSharedPreferences = context.getSharedPreferences("Music.Data", 0);
         LocalFiles.playlistsSharedPreferences = context.getSharedPreferences("Music.Playlists", 0);
 
-        PlaylistsUtil.playlists.setValue(getPlaylists(context));
+        PlaylistsUtil.setPlaylists(getPlaylists(context));
 
         QueueUtil.queue.observe(lifecycleOwner, songs -> {
             String songsIds = new Gson().toJson((Object)songs.stream().map(song -> song.songId).collect(Collectors.toCollection(ArrayList::new)));
@@ -70,6 +71,7 @@ public class LocalFiles {
         musicSharedPreferences.edit().putString(Constants.SHARED_PREFERENCES_PATH, path).apply();
     }
 
+    @NonNull
     private static ArrayList<Song> listSongs(@NonNull Context context, @NonNull String sort) {
         long start = System.currentTimeMillis();
         String songUntitled = context.getString(R.string.song_no_name);
@@ -129,11 +131,13 @@ public class LocalFiles {
     }
 
     public static void setPlaylists(@NonNull ArrayList<Playlist> playlists) {
-        SharedPreferences.Editor editor = playlistsSharedPreferences.edit().clear();
-        for (Playlist playlist : playlists) {
-            editor.putString(playlist.name, new Gson().toJson(playlist.songs));
-        }
-        editor.apply();
+        CompletableFuture.runAsync(() -> {
+            SharedPreferences.Editor editor = playlistsSharedPreferences.edit().clear();
+            for (Playlist playlist : playlists) {
+                editor.putString(playlist.name, new Gson().toJson(playlist.songs));
+            }
+            editor.apply();
+        });
     }
 
     @SuppressWarnings("ConstantConditions")
