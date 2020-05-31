@@ -5,6 +5,7 @@ import android.content.ContentUris;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.provider.MediaStore.Audio.Media;
 import android.util.Log;
 
@@ -18,6 +19,7 @@ import com.liadpaz.amp.R;
 import com.liadpaz.amp.viewmodels.Playlist;
 import com.liadpaz.amp.viewmodels.Song;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
@@ -37,13 +39,12 @@ public class LocalFiles {
     private static SharedPreferences playlistsSharedPreferences;
     private static HashMap<String, ArrayList<Song>> artists = new HashMap<>();
     private static HashMap<String, ArrayList<Song>> albums = new HashMap<>();
-    private static ArrayList<Playlist> playlists;
 
     public static void init(@NonNull Context context, @NonNull LifecycleOwner lifecycleOwner) {
         LocalFiles.musicSharedPreferences = context.getSharedPreferences("Music.Data", 0);
         LocalFiles.playlistsSharedPreferences = context.getSharedPreferences("Music.Playlists", 0);
 
-        PlaylistsUtil.setPlaylists(getPlaylists(context));
+        new LoadPlaylistsTask(context).execute();
 
         if (!lifecycleOwner.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.INITIALIZED)) {
             QueueUtil.queue.observe(lifecycleOwner, songs -> {
@@ -77,7 +78,6 @@ public class LocalFiles {
     @NonNull
     private static ArrayList<Song> listSongs(@NonNull Context context, @NonNull String sort) {
         long start = System.currentTimeMillis();
-        String songUntitled = context.getString(R.string.song_no_name);
         String noArtist = context.getString(R.string.song_no_artist);
         String noAlbum = context.getString(R.string.song_no_album);
         ArrayList<Song> songs = new ArrayList<>();
@@ -96,9 +96,6 @@ public class LocalFiles {
                 do {
                     long id = musicCursor.getLong(idColumn);
                     String title = musicCursor.getString(titleColumn);
-                    if (title == null) {
-                        title = songUntitled;
-                    }
                     String artist = musicCursor.getString(artistColumn);
                     String album = musicCursor.getString(albumColumn);
                     if (album == null) {
@@ -213,4 +210,18 @@ public class LocalFiles {
     //         if ()
     //        }
     //    }
+
+    private static class LoadPlaylistsTask extends AsyncTask<Void, Void, Void> {
+        private WeakReference<Context> context;
+
+        LoadPlaylistsTask(@NonNull Context context) {
+            this.context = new WeakReference<>(context);
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            PlaylistsUtil.setPlaylists(getPlaylists(context.get()));
+            return null;
+        }
+    }
 }

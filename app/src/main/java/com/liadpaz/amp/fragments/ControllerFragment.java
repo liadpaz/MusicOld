@@ -1,10 +1,14 @@
 package com.liadpaz.amp.fragments;
 
+import android.content.res.Resources;
+import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.media.MediaDescription;
 import android.media.MediaMetadata;
 import android.media.session.MediaController;
 import android.media.session.PlaybackState;
 import android.os.Bundle;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,15 +22,18 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentControllerBinding;
+import com.liadpaz.amp.utils.ColorUtil;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.utils.QueueUtil;
+import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.CurrentSong;
 
 public class ControllerFragment extends Fragment {
-
     private MediaController controller;
     private MediaController.Callback callback;
+
+    private boolean isDark = false;
 
     private FragmentControllerBinding binding;
 
@@ -66,12 +73,30 @@ public class ControllerFragment extends Fragment {
         setPlayback(controller.getPlaybackState());
         setMetadata(controller.getMetadata());
 
+        ColorUtil.observe(this, color -> {
+            if (isDark = Utilities.isColorBright(color)) {
+                binding.tvSongArtist.setTextColor(Color.BLACK);
+                binding.tvSongTitle.setTextColor(Color.BLACK);
+                binding.btnPlay.setBackgroundResource(controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING ? R.drawable.pause_black : R.drawable.play_black);
+            } else {
+                TypedValue typedValue = new TypedValue();
+                Resources.Theme theme = getActivity().getTheme();
+                theme.resolveAttribute(android.R.attr.textColorPrimary, typedValue, true);
+                TypedArray arr = getActivity().obtainStyledAttributes(typedValue.data, new int[]{android.R.attr.textColorPrimary});
+                int primaryColor = arr.getColor(0, -1);
+                arr.recycle();
+                binding.tvSongArtist.setTextColor(primaryColor);
+                binding.tvSongTitle.setTextColor(primaryColor);
+                binding.btnPlay.setBackgroundResource(controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING ? R.drawable.pause : R.drawable.play);
+            }
+        });
+
         binding.getRoot().setOnClickListener(v -> BottomSheetBehavior.from(((MainActivity)requireActivity()).binding.extendedFragment).setState(BottomSheetBehavior.STATE_EXPANDED));
     }
 
     private void setPlayback(PlaybackState state) {
         if (state != null) {
-            binding.btnPlay.setBackgroundResource(state.getState() == PlaybackState.STATE_PLAYING ? R.drawable.pause : R.drawable.play);
+            binding.btnPlay.setBackgroundResource(state.getState() == PlaybackState.STATE_PLAYING ? (isDark ? R.drawable.pause_black : R.drawable.pause) : (isDark ? R.drawable.play_black : R.drawable.play));
         }
     }
 

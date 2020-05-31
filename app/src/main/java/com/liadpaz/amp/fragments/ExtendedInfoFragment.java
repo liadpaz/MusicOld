@@ -16,17 +16,21 @@ import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentExtendedInfoBinding;
 import com.liadpaz.amp.dialogs.NewPlaylistDialog;
 import com.liadpaz.amp.dialogs.PlaylistsDialog;
+import com.liadpaz.amp.utils.ColorUtil;
 import com.liadpaz.amp.utils.QueueUtil;
+import com.liadpaz.amp.utils.Utilities;
 
 import java.util.ArrayList;
 
 public class ExtendedInfoFragment extends Fragment {
     private boolean isShowingQueue = false;
+    private boolean isDark = false;
 
     private FragmentExtendedInfoBinding binding;
 
     public ExtendedInfoFragment() { }
 
+    @NonNull
     public static ExtendedInfoFragment newInstance() { return new ExtendedInfoFragment(); }
 
     @Nullable
@@ -40,7 +44,7 @@ public class ExtendedInfoFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         binding.btnQueue.setOnClickListener(v -> {
             getParentFragmentManager().beginTransaction().replace(R.id.layoutFragment, isShowingQueue ? ExtendedSongFragment.newInstance() : CurrentQueueFragment.newInstance()).commit();
-            v.setBackgroundResource(isShowingQueue ? R.drawable.queue_music_not_shown : R.drawable.queue_music_shown);
+            v.setBackgroundResource(isShowingQueue ? (isDark ? R.drawable.queue_music_not_shown_black : R.drawable.queue_music_not_shown) : R.drawable.queue_music_shown);
             isShowingQueue = !isShowingQueue;
         });
         binding.btnMore.setOnClickListener(v -> {
@@ -71,5 +75,17 @@ public class ExtendedInfoFragment extends Fragment {
             popupMenu.show();
         });
         binding.ivDrop.setOnClickListener(v -> BottomSheetBehavior.from(((MainActivity)requireActivity()).binding.extendedFragment).setState(BottomSheetBehavior.STATE_COLLAPSED));
+
+        ColorUtil.observe(this, color -> {
+            if (isDark = Utilities.isColorBright(color)) {
+                binding.btnMore.setBackgroundResource(R.drawable.more_black);
+                binding.btnQueue.setBackgroundResource(isShowingQueue ? R.drawable.queue_music_shown : R.drawable.queue_music_not_shown_black);
+                binding.ivDrop.setImageResource(R.drawable.arrow_down_black);
+            } else {
+                binding.btnMore.setBackgroundResource(R.drawable.more);
+                binding.btnQueue.setBackgroundResource(isShowingQueue ? R.drawable.queue_music_shown : R.drawable.queue_music_not_shown);
+                binding.ivDrop.setImageResource(R.drawable.arrow_down);
+            }
+        });
     }
 }

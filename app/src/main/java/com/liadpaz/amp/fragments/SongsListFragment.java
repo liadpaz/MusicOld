@@ -1,5 +1,6 @@
 package com.liadpaz.amp.fragments;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -23,6 +24,7 @@ import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.utils.QueueUtil;
 import com.liadpaz.amp.viewmodels.Song;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -49,7 +51,6 @@ public class SongsListFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        ArrayList<Song> songs = LocalFiles.listSongsByName(requireContext());
         adapter = new SongsListAdapter(requireContext(), (v, position) -> {
             PopupMenu popupMenu = new PopupMenu(requireContext(), v);
             popupMenu.inflate(R.menu.menu_song);
@@ -74,17 +75,16 @@ public class SongsListFragment extends Fragment {
             });
             popupMenu.show();
         }, v -> {
-            ArrayList<Song> queue = new ArrayList<>(songs);
+            ArrayList<Song> queue = new ArrayList<>(adapter.getCurrentList());
             Collections.shuffle(queue);
             QueueUtil.queue.setValue(queue);
             QueueUtil.setPosition(0);
             MainActivity.getController().sendCommand(Constants.ACTION_QUEUE_POSITION, null, null);
         });
-        adapter.submitList(songs);
+        new LoadSongsTask(this).execute();
 
         binding.rvSongs.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvSongs.addItemDecoration(new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));
-        binding.rvSongs.setAdapter(adapter);
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -92,5 +92,25 @@ public class SongsListFragment extends Fragment {
     public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, @Nullable ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
         getActivity().getMenuInflater().inflate(R.menu.menu_song, menu);
+    }
+
+    private static class LoadSongsTask extends AsyncTask<Void, Void, ArrayList<Song>> {
+        private WeakReference<SongsListFragment> fragment;
+
+        LoadSongsTask(@NonNull SongsListFragment fragment) {
+            this.fragment = new WeakReference<>(fragment);
+        }
+
+        @Override
+        protected ArrayList<Song> doInBackground(Void... voids) {
+            return LocalFiles.listSongsByName(fragment.get().requireContext());
+        }
+
+        @Override
+        protected void onPostExecute(ArrayList<Song> songs) {
+            fragment.get().binding.rvSongs.setAdapter(fragment.get().adapter);
+            fragment.get().adapter.submitList(songs);
+//            fragment.get().binding.rvSongs.scrollToPosition(0);
+        }
     }
 }

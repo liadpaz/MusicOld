@@ -13,6 +13,7 @@ import androidx.viewbinding.ViewBinding;
 
 import com.bumptech.glide.Glide;
 import com.liadpaz.amp.MainActivity;
+import com.liadpaz.amp.databinding.ItemNoSongsBinding;
 import com.liadpaz.amp.databinding.ItemSongBinding;
 import com.liadpaz.amp.databinding.ItemSongShuffleBinding;
 import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
@@ -47,7 +48,9 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
     @NonNull
     @Override
     public SongViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        if (viewType == TYPE_ITEM) {
+        if (getItemCount() == 1) {
+            return new SongViewHolder(ItemNoSongsBinding.inflate(LayoutInflater.from(context), parent, false), onMoreClickListener, onShuffleClickListener);
+        } else if (viewType == TYPE_ITEM) {
             return new SongViewHolder(ItemSongBinding.inflate(LayoutInflater.from(context), parent, false), onMoreClickListener, onShuffleClickListener);
         }
         return new SongViewHolder(ItemSongShuffleBinding.inflate(LayoutInflater.from(context), parent, false), onMoreClickListener, onShuffleClickListener);
@@ -91,7 +94,7 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
             this.binding = binding;
             if (binding instanceof ItemSongBinding) {
                 ((ItemSongBinding)this.binding).btnMore.setOnClickListener(v -> onMoreClickListener.onItemClick(v, getAdapterPosition() - 1));
-            } else {
+            } else if (binding instanceof ItemSongShuffleBinding) {
                 ((ItemSongShuffleBinding)binding).getRoot().setOnClickListener(onClickListener);
             }
         }

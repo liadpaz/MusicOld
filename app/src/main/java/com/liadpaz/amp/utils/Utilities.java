@@ -8,8 +8,10 @@ import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.ColorUtils;
 
 import com.liadpaz.amp.viewmodels.Song;
 
@@ -38,6 +40,10 @@ public class Utilities {
         return path.length == 1 ? "" : path[1];
     }
 
+    public static boolean isColorBright(@ColorInt int color) {
+        return ColorUtils.calculateLuminance(color) > 0.5;
+    }
+
     @NonNull
     public static Uri getCoverUri(@NonNull Song song) {
         return ContentUris.withAppendedId(albumsUri, Long.parseLong(song.albumId));
@@ -58,7 +64,7 @@ public class Utilities {
         if (secondsTime < 10) {
             seconds.insert(0, "0");
         }
-        return String.format("%s:%s", String.valueOf(minutesTime), seconds);
+        return String.format("%s:%s", minutesTime, seconds);
     }
 
     @SuppressWarnings("ConstantConditions")

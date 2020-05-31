@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.SeekBar;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.graphics.ColorUtils;
@@ -24,6 +25,8 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentExtendedBinding;
+import com.liadpaz.amp.notification.OnColorChange;
+import com.liadpaz.amp.utils.ColorUtil;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.utils.QueueUtil;
@@ -33,24 +36,24 @@ import java.io.FileNotFoundException;
 import java.util.concurrent.CompletableFuture;
 
 public class ExtendedFragment extends Fragment {
-    private static final String TAG = "ExtendedFragment";
-
+    private static OnColorChange onColorChangeController;
+    private static OnColorChange onColorChangeInfo;
     private Handler handler;
     private Runnable runnable;
     private boolean shouldSeek = false;
-
     private MediaController controller;
     private MediaController.Callback callback;
-
     private long duration = 0;
     private double currentPosition = 0;
-
+    @ColorInt
+    private int defaultColor;
     private boolean isUp = false;
 
     private FragmentExtendedBinding binding;
 
     public ExtendedFragment() { }
 
+    @NonNull
     public static ExtendedFragment newInstance() { return new ExtendedFragment(); }
 
     @Override
@@ -61,6 +64,8 @@ public class ExtendedFragment extends Fragment {
     @SuppressWarnings("ConstantConditions")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        defaultColor = requireContext().getColor(R.color.colorPrimaryDark);
+
         handler = new Handler();
 
         (controller = MainActivity.getController()).registerCallback(callback = new MediaController.Callback() {
@@ -127,6 +132,7 @@ public class ExtendedFragment extends Fragment {
                     if (!isUp) {
                         // show the info fragment
                         getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ExtendedInfoFragment.newInstance()).commitNow();
+                        requireActivity().getWindow().setStatusBarColor(defaultColor);
                         binding.infoFragment.setAlpha(1);
                         isUp = true;
                     }
@@ -134,6 +140,7 @@ public class ExtendedFragment extends Fragment {
                     if (isUp) {
                         // show the controller fragment
                         getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedSongFragment.newInstance()).commitNow();
+                        requireActivity().getWindow().setStatusBarColor(requireActivity().getColor(R.color.colorPrimaryDark));
                         binding.infoFragment.setAlpha(1);
                         isUp = false;
                     }
@@ -200,17 +207,23 @@ public class ExtendedFragment extends Fragment {
                     if (bitmap != null) {
                         Palette.from(bitmap).generate(palette -> {
                             int colorDominant = palette.getDominantColor(Color.WHITE);
-                            requireActivity().getWindow().setStatusBarColor(colorDominant);
+                            defaultColor = colorDominant;
+                            if (isUp) {
+                                requireActivity().getWindow().setStatusBarColor(defaultColor);
+                            }
                             GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{colorDominant, Color.BLACK});
                             binding.extendedFragment.setBackground(gradientDrawable);
-                            binding.infoFragment.setBackground(null);
+                            ColorUtil.setColor(defaultColor);
                         });
                     } else {
                         int colorTop = ColorUtils.blendARGB(Color.WHITE, Color.BLACK, 0.3F);
-                        requireActivity().getWindow().setStatusBarColor(colorTop);
+                        defaultColor = colorTop;
+                        if (isUp) {
+                            requireActivity().getWindow().setStatusBarColor(defaultColor);
+                        }
                         GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{colorTop, Color.BLACK});
                         binding.extendedFragment.setBackground(gradientDrawable);
-                        binding.infoFragment.setBackground(null);
+                        ColorUtil.setColor(defaultColor);
                     }
                 });
             }

@@ -1,30 +1,59 @@
 package com.liadpaz.amp;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 
-import androidx.appcompat.app.ActionBar;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
-public class SettingsActivity extends AppCompatActivity {
+import com.liadpaz.amp.databinding.SettingsActivityBinding;
+import com.liadpaz.amp.utils.LocalFiles;
+import com.liadpaz.amp.utils.Utilities;
 
+public class SettingsActivity extends AppCompatActivity {
+    private static final int REQUEST_PICK_FOLDER = 44;
+
+    @SuppressWarnings("ConstantConditions")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.settings_activity);
-        getSupportFragmentManager().beginTransaction()
-                                   .replace(R.id.settings, new SettingsFragment())
-                                   .commit();
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
+        com.liadpaz.amp.databinding.SettingsActivityBinding binding;
+        setContentView((binding = SettingsActivityBinding.inflate(getLayoutInflater())).getRoot());
+        getSupportFragmentManager().beginTransaction().replace(R.id.settings, new SettingsFragment()).commit();
+        setSupportActionBar(binding.toolbarSettings);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     public static class SettingsFragment extends PreferenceFragmentCompat {
+        Preference pathPreference;
+
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
+
+            pathPreference = findPreference("path");
+            String path = LocalFiles.getPath();
+            pathPreference.setSummary(TextUtils.isEmpty(path) ? getString(R.string.preference_all_path) : path);
+            pathPreference.setOnPreferenceClickListener(preference -> {
+                startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION), REQUEST_PICK_FOLDER);
+                return true;
+            });
+        }
+
+        @SuppressWarnings("ConstantConditions")
+        @Override
+        public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+            if (requestCode == REQUEST_PICK_FOLDER && resultCode == RESULT_OK) {
+                String path = Utilities.getPathFromUri(data.getData());
+                if (!LocalFiles.getPath().equals(path)) {
+                    LocalFiles.setPath(path);
+                    pathPreference.setSummary(TextUtils.isEmpty(path) ? getString(R.string.preference_all_path) : path);
+                    requireActivity().setResult(RESULT_OK);
+                }
+            }
         }
     }
 }

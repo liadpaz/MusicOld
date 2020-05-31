@@ -7,7 +7,7 @@ import android.content.pm.PackageManager;
 import android.media.browse.MediaBrowser;
 import android.media.session.MediaController;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.StrictMode;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,13 +25,12 @@ import com.liadpaz.amp.fragments.MainFragment;
 import com.liadpaz.amp.notification.MediaNotification;
 import com.liadpaz.amp.service.MediaPlayerService;
 import com.liadpaz.amp.utils.LocalFiles;
-import com.liadpaz.amp.utils.Utilities;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_PERMISSION = 459;
-    private static final int REQUEST_PICK_FOLDER = 44;
+    private static final int REQUEST_SETTINGS = 525;
 
     @SuppressWarnings("unused")
     private static final String TAG = "MAIN_ACTIVITY";
@@ -46,16 +45,15 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().build());
         super.onCreate(savedInstanceState);
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        setContentView((binding = ActivityMainBinding.inflate(getLayoutInflater())).getRoot());
 
         mediaBrowser = new MediaBrowser(this, new ComponentName(this, MediaPlayerService.class), new MediaBrowser.ConnectionCallback() {
             @Override
             public void onConnected() {
                 controller = new MediaController(MainActivity.this, mediaBrowser.getSessionToken());
-                Log.d(TAG, "onConnected: " + shouldInitializeView.get());
                 if (!shouldInitializeView.get()) {
                     shouldInitializeView.set(true);
                 } else {
@@ -101,13 +99,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.menuItemSelectFolder: {
-                startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION), REQUEST_PICK_FOLDER);
-                return true;
-            }
-
             case R.id.menuItemSettings: {
-                startActivity(new Intent(this, SettingsActivity.class));
+                startActivityForResult(new Intent(this, SettingsActivity.class), REQUEST_SETTINGS);
                 return true;
             }
 
@@ -128,16 +121,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @SuppressWarnings("ConstantConditions")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK && requestCode == REQUEST_PICK_FOLDER) {
-            String path = Utilities.getPathFromUri(data.getData());
-            if (!LocalFiles.getPath().equals(path)) {
-                LocalFiles.setPath(path);
-                recreate();
-            }
+        if (requestCode == REQUEST_SETTINGS && resultCode == RESULT_OK) {
+            recreate();
         }
     }
 

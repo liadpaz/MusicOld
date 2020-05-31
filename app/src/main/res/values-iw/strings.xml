@@ -36,4 +36,8 @@
     <string name="menu_queue_clear">נקה את התור</string>
     <string name="menu_queue_save_playlist">שמור כפלייליסט</string>
     <string name="description_drop">הורד למטה</string>
+    <string name="list_no_song">זה נראה שאין לך שירים בתיקיה הזו, לחץ על ה 3 נקודות למעלה ובחר תיקיה אחרת</string>
+    <string name="preference_path">תיקיה</string>
+    <string name="preference_general">הגדרות כלליות</string>
+    <string name="preference_all_path">הכל</string>
 </resources>

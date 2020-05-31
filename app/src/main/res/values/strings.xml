@@ -36,4 +36,8 @@
     <string name="menu_queue_clear">Clear Queue</string>
     <string name="menu_queue_save_playlist">Save as Playlist</string>
     <string name="description_drop">Drop Down</string>
+    <string name="list_no_song">It\'s seems as you have no songs in this folder, try to change folder with the 3 dots up top and pick a different folder</string>
+    <string name="preference_path">Path</string>
+    <string name="preference_general">General Settings</string>
+    <string name="preference_all_path">All</string>
 </resources>
