@@ -33,4 +33,8 @@ public class MainFragment extends Fragment {
 
         getChildFragmentManager().beginTransaction().replace(R.id.viewpagerFragment, ViewPagerFragment.newInstance()).commit();
     }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+    }
 }

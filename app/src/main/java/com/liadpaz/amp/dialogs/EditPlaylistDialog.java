@@ -1,31 +1,32 @@
 package com.liadpaz.amp.dialogs;
 
-import android.app.Dialog;
-import android.content.Context;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
 
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.DialogEditPlaylistBinding;
 import com.liadpaz.amp.utils.PlaylistsUtil;
 import com.liadpaz.amp.viewmodels.Playlist;
 
-public class EditPlaylistDialog extends Dialog {
+public class EditPlaylistDialog extends DialogFragment {
     private Playlist playlist;
 
-    public EditPlaylistDialog(@NonNull Context context, @NonNull Playlist playlist) {
-        super(context);
+    public EditPlaylistDialog(@NonNull Playlist playlist) {
         this.playlist = playlist;
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        DialogEditPlaylistBinding binding = DialogEditPlaylistBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        DialogEditPlaylistBinding binding = DialogEditPlaylistBinding.inflate(inflater, container, false);
 
         binding.etPlaylistName.setText(playlist.name);
         binding.btnApply.setOnClickListener(v -> {
@@ -47,5 +48,7 @@ public class EditPlaylistDialog extends Dialog {
         binding.btnCancel.setOnClickListener(v -> dismiss());
 
         setCancelable(true);
+
+        return binding.getRoot();
     }
 }

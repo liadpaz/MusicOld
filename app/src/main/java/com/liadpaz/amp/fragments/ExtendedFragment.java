@@ -157,6 +157,7 @@ public class ExtendedFragment extends Fragment {
     public void onResume() {
         super.onResume();
         if (shouldSeek) {
+            setPlayback(controller.getPlaybackState());
             handler.post(runnable);
         }
     }
@@ -165,6 +166,7 @@ public class ExtendedFragment extends Fragment {
     private void setPlayback(PlaybackState state) {
         if (state == null) {
             binding.btnPlayPause.setBackgroundResource(R.drawable.play);
+            binding.btnRepeat.setBackgroundResource(R.drawable.repeat);
         } else {
             currentPosition = state.getPosition();
             if (state.getState() == PlaybackState.STATE_PLAYING) {
@@ -181,35 +183,43 @@ public class ExtendedFragment extends Fragment {
 
     @SuppressWarnings("ConstantConditions")
     private void setMetadata(@Nullable MediaMetadata metadata) {
-        MediaDescription description = metadata.getDescription();
-        if (description != null) {
-            binding.tvSongTitle.setText(description.getTitle());
-            binding.tvSongArtist.setText(description.getSubtitle());
-            binding.tvTimeElapsed.setText(Utilities.formatTime(0));
-            binding.tvTotalTime.setText(Utilities.formatTime(duration = metadata.getLong(MediaMetadata.METADATA_KEY_DURATION)));
-            CompletableFuture.supplyAsync(() -> {
-                try {
-                    return BitmapFactory.decodeStream(requireActivity().getContentResolver().openInputStream(description.getIconUri()));
-                } catch (FileNotFoundException e) {
-                    return null;
-                }
-            }).thenAccept(bitmap -> {
-                if (bitmap != null) {
-                    Palette.from(bitmap).generate(palette -> {
-                        int colorDominant = palette.getDominantColor(Color.WHITE);
-                        requireActivity().getWindow().setStatusBarColor(colorDominant);
-                        GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{colorDominant, Color.BLACK});
+        if (metadata != null) {
+            MediaDescription description = metadata.getDescription();
+            if (description != null) {
+                binding.tvSongTitle.setText(description.getTitle());
+                binding.tvSongArtist.setText(description.getSubtitle());
+                binding.tvTimeElapsed.setText(Utilities.formatTime(0));
+                binding.tvTotalTime.setText(Utilities.formatTime(duration = metadata.getLong(MediaMetadata.METADATA_KEY_DURATION)));
+                CompletableFuture.supplyAsync(() -> {
+                    try {
+                        return BitmapFactory.decodeStream(requireActivity().getContentResolver().openInputStream(description.getIconUri()));
+                    } catch (FileNotFoundException e) {
+                        return null;
+                    }
+                }).thenAccept(bitmap -> {
+                    if (bitmap != null) {
+                        Palette.from(bitmap).generate(palette -> {
+                            int colorDominant = palette.getDominantColor(Color.WHITE);
+                            requireActivity().getWindow().setStatusBarColor(colorDominant);
+                            GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{colorDominant, Color.BLACK});
+                            binding.extendedFragment.setBackground(gradientDrawable);
+                            binding.infoFragment.setBackground(null);
+                        });
+                    } else {
+                        int colorTop = ColorUtils.blendARGB(Color.WHITE, Color.BLACK, 0.3F);
+                        requireActivity().getWindow().setStatusBarColor(colorTop);
+                        GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{colorTop, Color.BLACK});
                         binding.extendedFragment.setBackground(gradientDrawable);
                         binding.infoFragment.setBackground(null);
-                    });
-                } else {
-                    int colorTop = ColorUtils.blendARGB(Color.WHITE, Color.BLACK, 0.3F);
-                    requireActivity().getWindow().setStatusBarColor(colorTop);
-                    GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{colorTop, Color.BLACK});
-                    binding.extendedFragment.setBackground(gradientDrawable);
-                    binding.infoFragment.setBackground(null);
-                }
-            });
+                    }
+                });
+            }
+        } else {
+            binding.tvSongTitle.setText(null);
+            binding.tvSongArtist.setText(null);
+            binding.tvTimeElapsed.setText(Utilities.formatTime(0));
+            binding.tvTotalTime.setText(Utilities.formatTime(0));
+            binding.extendedFragment.setBackgroundColor(Color.parseColor("#555555"));
         }
     }
 

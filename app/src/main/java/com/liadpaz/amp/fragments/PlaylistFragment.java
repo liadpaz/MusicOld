@@ -1,6 +1,7 @@
 package com.liadpaz.amp.fragments;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,14 +13,23 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.SongsListAdapter;
 import com.liadpaz.amp.databinding.FragmentPlaylistBinding;
+import com.liadpaz.amp.dialogs.PlaylistsDialog;
+import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.PlaylistsUtil;
 import com.liadpaz.amp.utils.QueueUtil;
 import com.liadpaz.amp.viewmodels.Playlist;
+import com.liadpaz.amp.viewmodels.Song;
+
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class PlaylistFragment extends Fragment {
+    private static final String TAG = "PlaylistFragment";
+
     private SongsListAdapter adapter;
 
     private Playlist playlist;
@@ -55,17 +65,17 @@ public class PlaylistFragment extends Fragment {
                         break;
                     }
 
+                    case R.id.menuQueueAddPlaylist: {
+                        new PlaylistsDialog(adapter.getCurrentList().get(position)).show(getChildFragmentManager(), null);
+                        break;
+                    }
+
                     case R.id.menuRemoveFromPlaylist: {
                         Playlist playlist = PlaylistsUtil.removePlaylist(PlaylistFragment.this.playlist.name);
-                        for (int i = 0; i < playlist.songs.size(); i++) {
-                            if (playlist.songs.get(i).songTitle.equals(adapter.getCurrentList().get(position).songTitle)) {
-                                playlist.songs.remove(i);
-                                adapter.submitList(playlist.songs);
-                                adapter.notifyDataSetChanged();
-                                PlaylistsUtil.addPlaylist(playlist);
-                                break;
-                            }
-                        }
+                        playlist.songs.remove(position);
+                        adapter.submitList(playlist.songs);
+                        adapter.notifyDataSetChanged();
+                        PlaylistsUtil.addPlaylist(playlist);
                         break;
                     }
                 }
@@ -73,6 +83,12 @@ public class PlaylistFragment extends Fragment {
             });
 
             popupMenu.show();
+        }, v -> {
+            ArrayList<Song> queue = new ArrayList<>(playlist.songs);
+            Collections.shuffle(queue);
+            QueueUtil.queue.setValue(queue);
+            QueueUtil.setPosition(0);
+            MainActivity.getController().sendCommand(Constants.ACTION_QUEUE_POSITION, null, null);
         });
 
         binding.tvPlaylistName.setText(playlist.name);
@@ -86,6 +102,17 @@ public class PlaylistFragment extends Fragment {
             binding.btnDelete.setOnClickListener(v -> {
                 PlaylistsUtil.removePlaylist(playlist.name);
                 requireActivity().onBackPressed();
+            });
+
+            PlaylistsUtil.observe(requireActivity(), playlists -> {
+                for (Playlist playlist : playlists) {
+                    if (playlist.name.equals(this.playlist.name)) {
+                        Log.d(TAG, "onViewCreated: " + playlist.songs.size());
+                        adapter.submitList(playlist.songs);
+                        adapter.notifyDataSetChanged();
+                        return;
+                    }
+                }
             });
         }
 

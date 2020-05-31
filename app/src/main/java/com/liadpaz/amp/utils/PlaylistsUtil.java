@@ -9,6 +9,7 @@ import androidx.lifecycle.Observer;
 import com.liadpaz.amp.viewmodels.Playlist;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.stream.Collectors;
 
 public class PlaylistsUtil {
@@ -41,6 +42,7 @@ public class PlaylistsUtil {
     public static void addPlaylist(@NonNull Playlist playlist) {
         ArrayList<Playlist> playlists = getPlaylists();
         playlists.add(playlist);
+        Collections.reverse(playlists);
         setPlaylists(playlists);
     }
 

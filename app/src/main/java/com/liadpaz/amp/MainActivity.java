@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.media.browse.MediaBrowser;
 import android.media.session.MediaController;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -54,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onConnected() {
                 controller = new MediaController(MainActivity.this, mediaBrowser.getSessionToken());
+                Log.d(TAG, "onConnected: " + shouldInitializeView.get());
                 if (!shouldInitializeView.get()) {
                     shouldInitializeView.set(true);
                 } else {
@@ -80,8 +82,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startService() {
-        startForegroundService(new Intent(this, MediaPlayerService.class));
         if (!mediaBrowser.isConnected()) {
+            startService(new Intent(this, MediaPlayerService.class));
             mediaBrowser.connect();
         }
     }
@@ -120,7 +122,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == REQUEST_PERMISSION) {
-            startService();
+            if (shouldInitializeView.get()) {
+                initView();
+            }
         }
     }
 

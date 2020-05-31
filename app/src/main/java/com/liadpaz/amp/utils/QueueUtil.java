@@ -12,14 +12,6 @@ public class QueueUtil {
     public static final MutableLiveData<Integer> queuePosition = new MutableLiveData<>(0);
 
     @SuppressWarnings("ConstantConditions")
-    public static Song removeAtIndex(int index) {
-        ArrayList<Song> songs = queue.getValue();
-        Song song = songs.remove(index);
-        queue.postValue(songs);
-        return song;
-    }
-
-    @SuppressWarnings("ConstantConditions")
     public static void addToEnd(@NonNull Song song) {
         ArrayList<Song> songs = queue.getValue();
         songs.add(song);
@@ -47,7 +39,7 @@ public class QueueUtil {
 
     @SuppressWarnings("ConstantConditions")
     public static void addToPosition(int add) {
-        queuePosition.postValue(queuePosition.getValue() + add);
+        queuePosition.setValue(queuePosition.getValue() + add);
     }
 
     public static void setPosition(int position) {

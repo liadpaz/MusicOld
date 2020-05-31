@@ -32,4 +32,8 @@
     <string name="dialog_delete">מחיקת פלייליסט</string>
     <string name="dialog_apply">החל עריכה</string>
     <string name="menu_remove_from_playlist">מחק מהפלייליסט</string>
+    <string name="queue_shuffle">ערבב</string>
+    <string name="menu_queue_clear">נקה את התור</string>
+    <string name="menu_queue_save_playlist">שמור כפלייליסט</string>
+    <string name="description_drop">הורד למטה</string>
 </resources>

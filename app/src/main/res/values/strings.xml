@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name" translatable="false">AMP</string>
-    <string name="menu_add_queue">Add To Queue</string>
+    <string name="menu_add_queue">Add to Queue</string>
     <string name="tab_songs">Songs</string>
     <string name="menu_settings">Settings</string>
     <string name="menu_pick_folder">Pick Folder</string>
@@ -13,7 +13,7 @@
     <string name="song_no_name">Untitled</string>
     <string name="tab_playlists">Playlists</string>
     <string name="menu_queue_remove_from">Remove From Queue</string>
-    <string name="menu_queue_add_to_playlist">Add To Playlist</string>
+    <string name="menu_queue_add_to_playlist">Add to Playlist</string>
     <string name="queue_removed">removed from the queue</string>
     <string name="menu_play_next">Play Next</string>
     <string name="description_queue">Show Queue</string>
@@ -22,7 +22,7 @@
     <string name="playlist_recently_added">Recently Added</string>
     <string name="description_album_cover">Album Cover</string>
     <string name="dialog_cancel">Cancel</string>
-    <string name="dialog_add_to_playlist">Add To Playlist</string>
+    <string name="dialog_add_to_playlist">Add to Playlist</string>
     <string name="dialog_new_playlist">New Playlist</string>
     <string name="dialog_create_playlist">Create Playlist</string>
     <string name="description_playlist_name">Playlist Name</string>
@@ -32,4 +32,8 @@
     <string name="dialog_delete">Delete Playlist</string>
     <string name="dialog_apply">Apply Change</string>
     <string name="menu_remove_from_playlist">Remove from playlist</string>
+    <string name="queue_shuffle">Shuffle</string>
+    <string name="menu_queue_clear">Clear Queue</string>
+    <string name="menu_queue_save_playlist">Save as Playlist</string>
+    <string name="description_drop">Drop Down</string>
 </resources>

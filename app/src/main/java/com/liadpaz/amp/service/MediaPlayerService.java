@@ -76,9 +76,6 @@ public final class MediaPlayerService extends MediaBrowserService {
     public void onCreate() {
         super.onCreate();
 
-        startForeground(NOTIFICATION_ID, new Notification.Builder(this, CHANNEL_ID).build());
-        stopForeground(true);
-
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnCompletionListener(mp -> {
             if (!isLooping) {
@@ -112,7 +109,7 @@ public final class MediaPlayerService extends MediaBrowserService {
                 switch (command) {
                     case Constants.ACTION_QUEUE_POSITION: {
                         if (queue.size() > 0) {
-                            setSource(queue.get(queuePosition = extras.getInt(Constants.ACTION_QUEUE_POSITION)));
+                            setSource(queue.get(queuePosition));
                             onPlay();
                         }
                         break;
@@ -172,9 +169,13 @@ public final class MediaPlayerService extends MediaBrowserService {
                 resumeOnFocusGain = false;
                 mediaPlayer.stop();
                 mediaSession.setActive(false);
-                audioManager.abandonAudioFocusRequest(audioFocusRequest);
+                if (audioFocusRequest != null) {
+                    audioManager.abandonAudioFocusRequest(audioFocusRequest);
+                }
+                currentSource = null;
                 sendPlaybackState(mediaPlayer.getCurrentPosition());
-                stopSelf();
+                sendMetadata(null);
+                stopForeground(true);
             }
 
             @SuppressWarnings("ConstantConditions")
@@ -256,9 +257,13 @@ public final class MediaPlayerService extends MediaBrowserService {
         startNotification();
     }
 
-    private void sendMetadata(@NonNull Song song) {
-        metadataBuilder.putText(MediaMetadata.METADATA_KEY_TITLE, song.songTitle).putText(MediaMetadata.METADATA_KEY_ARTIST, Utilities.joinArtists(song.songArtists)).putText(MediaMetadata.METADATA_KEY_ALBUM, song.album).putString(MediaMetadata.METADATA_KEY_ART_URI, Utilities.getCoverUri(song).toString()).putLong(MediaMetadata.METADATA_KEY_DURATION, mediaPlayer.getDuration());
-        mediaSession.setMetadata(metadataBuilder.build());
+    private void sendMetadata(@Nullable Song song) {
+        if (song != null) {
+            metadataBuilder.putText(MediaMetadata.METADATA_KEY_TITLE, song.songTitle).putText(MediaMetadata.METADATA_KEY_ARTIST, Utilities.joinArtists(song.songArtists)).putText(MediaMetadata.METADATA_KEY_ALBUM, song.album).putString(MediaMetadata.METADATA_KEY_ART_URI, Utilities.getCoverUri(song).toString()).putLong(MediaMetadata.METADATA_KEY_DURATION, mediaPlayer.getDuration());
+            mediaSession.setMetadata(metadataBuilder.build());
+        } else {
+            mediaSession.setMetadata(null);
+        }
     }
 
     private void sendPlaybackState(int position) {
@@ -359,6 +364,7 @@ public final class MediaPlayerService extends MediaBrowserService {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        becomingNoisyReceiver.unregister();
         mediaPlayer.release();
         mediaSession.release();
     }

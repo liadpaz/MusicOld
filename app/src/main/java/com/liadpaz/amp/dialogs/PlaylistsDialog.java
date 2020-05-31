@@ -1,46 +1,68 @@
 package com.liadpaz.amp.dialogs;
 
-import android.app.Dialog;
-import android.content.Context;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
 
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.DialogPlaylistsBinding;
 import com.liadpaz.amp.utils.PlaylistsUtil;
+import com.liadpaz.amp.viewmodels.Playlist;
 import com.liadpaz.amp.viewmodels.Song;
 
-public class PlaylistsDialog extends Dialog {
-    private Song song;
+import java.util.ArrayList;
 
-    public PlaylistsDialog(@NonNull Context context, @NonNull Song song) {
-        super(context);
+public class PlaylistsDialog extends DialogFragment {
+    private Song song;
+    private ArrayList<Song> songs;
+
+    public PlaylistsDialog(@NonNull Song song) {
         this.song = song;
+    }
+
+    public PlaylistsDialog(@NonNull ArrayList<Song> songs) {
+        this.songs = songs;
     }
 
     @SuppressWarnings("ConstantConditions")
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        DialogPlaylistsBinding binding = DialogPlaylistsBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        DialogPlaylistsBinding binding = DialogPlaylistsBinding.inflate(inflater, container, false);
 
-        binding.tvAddToPlaylist.setText(song.songTitle);
+        if (song != null) {
+            binding.tvAddToPlaylist.setText(song.songTitle);
+        }
         binding.spinnerPlaylists.setAdapter(new ArrayAdapter<>(getContext(), R.layout.support_simple_spinner_dropdown_item, PlaylistsUtil.getPlaylistsNames()));
         binding.btnNewPlaylist.setOnClickListener(v -> {
-            new NewPlaylistDialog(getContext(), song).show();
+            if (songs == null) {
+                new NewPlaylistDialog(song).show(getChildFragmentManager(), null);
+            } else {
+                new NewPlaylistDialog(songs).show(getChildFragmentManager(), null);
+            }
             dismiss();
         });
         binding.btnAdd.setOnClickListener(v -> {
             if (binding.spinnerPlaylists.getSelectedItem() != null) {
-                PlaylistsUtil.getPlaylistByName((String)binding.spinnerPlaylists.getSelectedItem()).songs.add(song);
+                Playlist playlist = PlaylistsUtil.removePlaylist((String)binding.spinnerPlaylists.getSelectedItem());
+                if (song != null) {
+                    playlist.songs.add(song);
+                } else {
+                    playlist.songs.addAll(songs);
+                }
+                PlaylistsUtil.addPlaylist(playlist);
                 dismiss();
             }
         });
         binding.btnCancel.setOnClickListener(v -> dismiss());
 
         setCancelable(true);
+
+        return binding.getRoot();
     }
 }

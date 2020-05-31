@@ -19,6 +19,7 @@ import com.liadpaz.amp.dialogs.NewPlaylistDialog;
 import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.utils.PlaylistsUtil;
 import com.liadpaz.amp.viewmodels.Playlist;
+import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.ArrayList;
 
@@ -46,16 +47,18 @@ public class PlaylistsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         recentlyAddedPlaylist = new Playlist(getString(R.string.playlist_recently_added), LocalFiles.listSongsByLastAdded(requireContext()));
 
-        PlaylistsUtil.observe(getViewLifecycleOwner(), playlists -> {
+        PlaylistsUtil.observe(requireActivity(), playlists -> {
             this.playlists = new ArrayList<>(playlists);
             this.playlists.add(0, recentlyAddedPlaylist);
-            adapter.submitList(this.playlists);
             LocalFiles.setPlaylists(playlists);
+            if (adapter != null) {
+                adapter.submitList(this.playlists);
+            }
         });
 
         adapter = new PlaylistsAdapter(requireContext(), (v, position) -> requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.viewpagerFragment, PlaylistFragment.newInstance(playlists.get(position))).addToBackStack(null).commit(), position -> {
             if (position != 0) {
-                new EditPlaylistDialog(requireContext(), playlists.get(position)).show();
+                new EditPlaylistDialog(playlists.get(position)).show(getChildFragmentManager(), null);
             }
             return true;
         });
@@ -64,10 +67,8 @@ public class PlaylistsFragment extends Fragment {
         binding.rvPlaylists.addItemDecoration(new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));
         binding.rvPlaylists.setAdapter(adapter);
 
-        binding.fabNewPlaylist.setOnClickListener(v -> new NewPlaylistDialog(requireContext(), null).show());
-    }
+        adapter.submitList(playlists);
 
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
+        binding.fabNewPlaylist.setOnClickListener(v -> new NewPlaylistDialog((Song)null).show(getChildFragmentManager(), null));
     }
 }

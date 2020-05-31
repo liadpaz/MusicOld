@@ -9,6 +9,7 @@ import android.provider.MediaStore.Audio.Media;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.google.gson.Gson;
@@ -44,11 +45,13 @@ public class LocalFiles {
 
         PlaylistsUtil.setPlaylists(getPlaylists(context));
 
-        QueueUtil.queue.observe(lifecycleOwner, songs -> {
-            String songsIds = new Gson().toJson((Object)songs.stream().map(song -> song.songId).collect(Collectors.toCollection(ArrayList::new)));
-            musicSharedPreferences.edit().putString(Constants.SHARED_PREFERENCES_QUEUE, songsIds).apply();
-        });
-        QueueUtil.queuePosition.observe(lifecycleOwner, queuePosition -> musicSharedPreferences.edit().putInt(Constants.SHARED_PREFERENCES_QUEUE, queuePosition).apply());
+        if (!lifecycleOwner.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.INITIALIZED)) {
+            QueueUtil.queue.observe(lifecycleOwner, songs -> {
+                String songsIds = new Gson().toJson((Object)songs.stream().map(song -> song.songId).collect(Collectors.toCollection(ArrayList::new)));
+                musicSharedPreferences.edit().putString(Constants.SHARED_PREFERENCES_QUEUE, songsIds).apply();
+            });
+            QueueUtil.queuePosition.observe(lifecycleOwner, queuePosition -> musicSharedPreferences.edit().putInt(Constants.SHARED_PREFERENCES_QUEUE, queuePosition).apply());
+        }
     }
 
     /**

@@ -3,6 +3,7 @@ package com.liadpaz.amp.fragments;
 import android.media.MediaDescription;
 import android.media.MediaMetadata;
 import android.media.session.MediaController;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -48,6 +49,8 @@ public class ExtendedSongFragment extends Fragment {
         if (metadata != null) {
             MediaDescription description = metadata.getDescription();
             Glide.with(this).load(description.getIconUri()).placeholder(R.drawable.song).into(binding.ivSongCover);
+        } else {
+            Glide.with(this).load((Uri)null).placeholder(R.drawable.song).into(binding.ivSongCover);
         }
     }
 

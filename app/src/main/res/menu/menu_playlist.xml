@@ -7,6 +7,9 @@
         android:id="@+id/menuAddQueue"
         android:title="@string/menu_add_queue" />
     <item
+        android:id="@+id/menuQueueAddPlaylist"
+        android:title="@string/menu_queue_add_to_playlist" />
+    <item
         android:id="@+id/menuRemoveFromPlaylist"
         android:title="@string/menu_remove_from_playlist" />
 </menu>

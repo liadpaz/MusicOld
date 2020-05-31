@@ -12,12 +12,18 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.SongsListAdapter;
 import com.liadpaz.amp.databinding.FragmentAlbumSongListBinding;
 import com.liadpaz.amp.dialogs.PlaylistsDialog;
+import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.QueueUtil;
 import com.liadpaz.amp.viewmodels.Album;
+import com.liadpaz.amp.viewmodels.Song;
+
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class AlbumSongListFragment extends Fragment {
     private SongsListAdapter adapter;
@@ -36,6 +42,7 @@ public class AlbumSongListFragment extends Fragment {
         return (binding = FragmentAlbumSongListBinding.inflate(inflater, container, false)).getRoot();
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         binding.setAlbum(album);
@@ -56,13 +63,19 @@ public class AlbumSongListFragment extends Fragment {
                     }
 
                     case R.id.menuAddToPlaylist: {
-                        new PlaylistsDialog(requireContext(), adapter.getCurrentList().get(position)).show();
+                        new PlaylistsDialog(adapter.getCurrentList().get(position)).show(getChildFragmentManager(), null);
                         break;
                     }
                 }
                 return true;
             });
             popupMenu.show();
+        }, v -> {
+            ArrayList<Song> queue = new ArrayList<>(album.songs);
+            Collections.shuffle(queue);
+            QueueUtil.queue.setValue(queue);
+            QueueUtil.setPosition(0);
+            MainActivity.getController().sendCommand(Constants.ACTION_QUEUE_POSITION, null, null);
         });
         adapter.submitList(album.songs);
 

@@ -54,9 +54,8 @@ public class ControllerFragment extends Fragment {
         binding.btnPlay.setOnClickListener(v -> {
             if (QueueUtil.queue.getValue().size() == 0) {
                 QueueUtil.queue.setValue(LocalFiles.listSongsByName(requireContext()));
-                Bundle bundle = new Bundle();
-                bundle.putInt(Constants.ACTION_QUEUE_POSITION, 0);
-                controller.sendCommand(Constants.ACTION_QUEUE_POSITION, bundle, null);
+                QueueUtil.setPosition(0);
+                controller.sendCommand(Constants.ACTION_QUEUE_POSITION, null, null);
             } else if (controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING) {
                 controller.getTransportControls().pause();
             } else {
@@ -78,13 +77,17 @@ public class ControllerFragment extends Fragment {
 
     @SuppressWarnings("ConstantConditions")
     private void setMetadata(MediaMetadata metadata) {
-        MediaDescription description = metadata.getDescription();
-        if (description != null) {
-            try {
-                Glide.with(this).load(description.getIconUri()).placeholder(R.drawable.song).into(binding.ivCurrentTrack);
-                binding.setSong(new CurrentSong(description.getTitle().toString(), description.getSubtitle().toString()));
-            } catch (Exception ignored) {
+        if (metadata != null) {
+            MediaDescription description = metadata.getDescription();
+            if (description != null) {
+                try {
+                    Glide.with(this).load(description.getIconUri()).placeholder(R.drawable.song).into(binding.ivCurrentTrack);
+                    binding.setSong(new CurrentSong(description.getTitle().toString(), description.getSubtitle().toString()));
+                } catch (Exception ignored) {
+                }
             }
+        } else {
+            binding.setSong(null);
         }
     }
 

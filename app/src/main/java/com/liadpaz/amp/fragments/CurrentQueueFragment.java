@@ -18,22 +18,25 @@ import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.QueueAdapter;
 import com.liadpaz.amp.databinding.FragmentCurrentQueueBinding;
 import com.liadpaz.amp.dialogs.PlaylistsDialog;
+import com.liadpaz.amp.interfaces.ItemTouchHelperAdapter;
 import com.liadpaz.amp.utils.QueueUtil;
 
 public class CurrentQueueFragment extends Fragment {
     private static final String TAG = "QUEUE_FRAGMENT";
 
+    private boolean isChanging = false;
+
     private QueueAdapter adapter;
 
     private FragmentCurrentQueueBinding binding;
 
-    public CurrentQueueFragment() { }
+    private CurrentQueueFragment() { }
 
     @NonNull
     public static CurrentQueueFragment newInstance() { return new CurrentQueueFragment(); }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return (binding = FragmentCurrentQueueBinding.inflate(inflater, container, false)).getRoot();
     }
 
@@ -53,17 +56,29 @@ public class CurrentQueueFragment extends Fragment {
                     }
 
                     case R.id.menuQueueAddPlaylist: {
-                        new PlaylistsDialog(requireContext(), adapter.getCurrentList().get(position)).show();
+                        new PlaylistsDialog(adapter.getCurrentList().get(position)).show(getChildFragmentManager(), null);
                         break;
                     }
                 }
                 return true;
             });
             popupMenu.show();
+        }, new ItemTouchHelperAdapter() {
+            @Override
+            public void onItemMove(int fromPosition, int toPosition) {
+                isChanging = true;
+                QueueUtil.queue.postValue(adapter.getQueue());
+            }
+
+            @Override
+            public void onItemDismiss(int position) {
+                isChanging = true;
+                QueueUtil.queue.postValue(adapter.getQueue());
+            }
         });
 
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.Callback() { //ItemTouchHelper.UP | ItemTouchHelper.DOWN, ItemTouchHelper.START | ItemTouchHelper.END) {
-            boolean isSwiping = false;
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.Callback() {
+            private boolean isSwiping = false;
 
             @Override
             public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
@@ -74,16 +89,19 @@ public class CurrentQueueFragment extends Fragment {
 
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                return adapter.onItemMove(viewHolder.getAdapterPosition(), target.getAdapterPosition());
+                adapter.onItemMove(viewHolder.getAdapterPosition(), target.getAdapterPosition());
+                return true;
             }
 
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                isSwiping = true;
                 adapter.onItemDismiss(viewHolder.getAdapterPosition());
+                isSwiping = false;
             }
         });
-        binding.rvQueue.setLayoutManager(new LinearLayoutManager(getContext()));
-        binding.rvQueue.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
+        binding.rvQueue.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.rvQueue.addItemDecoration(new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));
         binding.rvQueue.setAdapter(adapter);
         itemTouchHelper.attachToRecyclerView(binding.rvQueue);
 
@@ -91,7 +109,13 @@ public class CurrentQueueFragment extends Fragment {
 
         binding.rvQueue.scrollToPosition(QueueUtil.queuePosition.getValue());
 
-        QueueUtil.queue.observe(requireActivity(), adapter::submitList);
+        QueueUtil.queue.observe(getViewLifecycleOwner(), songs -> {
+            if (!isChanging) {
+                adapter.submitList(songs);
+            } else {
+                isChanging = false;
+            }
+        });
 
         registerForContextMenu(binding.rvQueue);
     }

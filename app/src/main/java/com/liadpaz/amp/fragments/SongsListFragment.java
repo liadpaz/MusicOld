@@ -13,12 +13,18 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.SongsListAdapter;
 import com.liadpaz.amp.databinding.FragmentSongsListBinding;
 import com.liadpaz.amp.dialogs.PlaylistsDialog;
+import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.utils.QueueUtil;
+import com.liadpaz.amp.viewmodels.Song;
+
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class SongsListFragment extends Fragment {
     @SuppressWarnings("unused")
@@ -43,6 +49,7 @@ public class SongsListFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        ArrayList<Song> songs = LocalFiles.listSongsByName(requireContext());
         adapter = new SongsListAdapter(requireContext(), (v, position) -> {
             PopupMenu popupMenu = new PopupMenu(requireContext(), v);
             popupMenu.inflate(R.menu.menu_song);
@@ -59,15 +66,21 @@ public class SongsListFragment extends Fragment {
                     }
 
                     case R.id.menuAddToPlaylist: {
-                        new PlaylistsDialog(requireContext(), adapter.getCurrentList().get(position)).show();
+                        new PlaylistsDialog(adapter.getCurrentList().get(position)).show(getChildFragmentManager(), null);
                         break;
                     }
                 }
                 return true;
             });
             popupMenu.show();
+        }, v -> {
+            ArrayList<Song> queue = new ArrayList<>(songs);
+            Collections.shuffle(queue);
+            QueueUtil.queue.setValue(queue);
+            QueueUtil.setPosition(0);
+            MainActivity.getController().sendCommand(Constants.ACTION_QUEUE_POSITION, null, null);
         });
-        adapter.submitList(LocalFiles.listSongsByName(requireContext()));
+        adapter.submitList(songs);
 
         binding.rvSongs.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvSongs.addItemDecoration(new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));
