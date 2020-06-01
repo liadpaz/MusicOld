@@ -23,8 +23,6 @@ public class Song implements Parcelable {
         }
     };
 
-    private static final String TAG = "SONG";
-
     public final long songId;
     public final String songTitle;
     public final ArrayList<String> songArtists;
@@ -69,5 +67,11 @@ public class Song implements Parcelable {
         dest.writeLong(songId);
         dest.writeString(album);
         dest.writeString(albumId);
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return String.format("title: %s\nalbum: %s", songTitle, album);
     }
 }

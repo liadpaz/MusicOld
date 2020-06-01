@@ -38,6 +38,8 @@
     <string name="description_drop">הורד למטה</string>
     <string name="list_no_song">זה נראה שאין לך שירים בתיקיה הזו, לחץ על ה 3 נקודות למעלה ובחר תיקיה אחרת</string>
     <string name="preference_path">תיקיה</string>
-    <string name="preference_general">הגדרות כלליות</string>
+    <string name="preference_path_group">הגדרות מקור שירים</string>
     <string name="preference_all_path">הכל</string>
+    <string name="preference_default_path">השתמש בתיקיית ברירת המחדל</string>
+    <string name="preference_default_path_description">בחר את תיקיית ברירת המחדל כמקור השירים</string>
 </resources>

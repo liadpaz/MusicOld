@@ -1,4 +1,4 @@
-package com.liadpaz.amp.utils;
+package com.liadpaz.amp.LiveDataUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -10,12 +10,14 @@ import com.liadpaz.amp.viewmodels.Playlist;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 public class PlaylistsUtil {
     private static final String TAG = "PlaylistsUtil";
 
-    private static MutableLiveData<ArrayList<Playlist>> playlists = new MutableLiveData<>();
+    private static MutableLiveData<CopyOnWriteArrayList<Playlist>> playlists = new MutableLiveData<>(new CopyOnWriteArrayList<>());
 
     @SuppressWarnings({"ConstantConditions", "BooleanMethodIsAlwaysInverted"})
     public static boolean isPlaylistExists(String name) {
@@ -27,20 +29,20 @@ public class PlaylistsUtil {
         return false;
     }
 
-    public static void observe(@NonNull LifecycleOwner lifecycleOwner, @NonNull Observer<ArrayList<Playlist>> observer) {
+    public static void observe(@NonNull LifecycleOwner lifecycleOwner, @NonNull Observer<CopyOnWriteArrayList<Playlist>> observer) {
         playlists.observe(lifecycleOwner, observer);
     }
 
-    public static ArrayList<Playlist> getPlaylists() {
+    public static CopyOnWriteArrayList<Playlist> getPlaylists() {
         return playlists.getValue();
     }
 
-    public static void setPlaylists(@NonNull ArrayList<Playlist> playlists) {
-        PlaylistsUtil.playlists.postValue(playlists);
+    public static void setPlaylists(@NonNull List<Playlist> playlists) {
+        PlaylistsUtil.playlists.postValue(new CopyOnWriteArrayList<>(playlists));
     }
 
     public static void addPlaylist(@NonNull Playlist playlist) {
-        ArrayList<Playlist> playlists = getPlaylists();
+        List<Playlist> playlists = getPlaylists();
         playlists.add(playlist);
         Collections.reverse(playlists);
         setPlaylists(playlists);
@@ -48,7 +50,7 @@ public class PlaylistsUtil {
 
     @Nullable
     public static Playlist removePlaylist(@NonNull String name) {
-        ArrayList<Playlist> playlists = getPlaylists();
+        CopyOnWriteArrayList<Playlist> playlists = getPlaylists();
         for (Playlist playlist : playlists) {
             if (playlist.name.equals(name)) {
                 playlists.remove(playlist);

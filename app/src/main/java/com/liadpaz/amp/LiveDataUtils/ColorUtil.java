@@ -1,4 +1,4 @@
-package com.liadpaz.amp.utils;
+package com.liadpaz.amp.LiveDataUtils;
 
 import android.graphics.Color;
 

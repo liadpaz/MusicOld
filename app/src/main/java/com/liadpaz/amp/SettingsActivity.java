@@ -10,6 +10,7 @@ import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
 import com.liadpaz.amp.databinding.SettingsActivityBinding;
+import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.utils.Utilities;
 
@@ -30,15 +31,23 @@ public class SettingsActivity extends AppCompatActivity {
     public static class SettingsFragment extends PreferenceFragmentCompat {
         Preference pathPreference;
 
+        @SuppressWarnings("ConstantConditions")
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
 
-            pathPreference = findPreference("path");
             String path = LocalFiles.getPath();
+
+            pathPreference = findPreference("path");
             pathPreference.setSummary(TextUtils.isEmpty(path) ? getString(R.string.preference_all_path) : path);
             pathPreference.setOnPreferenceClickListener(preference -> {
                 startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION), REQUEST_PICK_FOLDER);
+                return true;
+            });
+            findPreference("default_path").setOnPreferenceClickListener(preference -> {
+                LocalFiles.setPath(Constants.DEFAULT_PATH);
+                pathPreference.setSummary(Constants.DEFAULT_PATH);
+                requireActivity().setResult(RESULT_OK);
                 return true;
             });
         }

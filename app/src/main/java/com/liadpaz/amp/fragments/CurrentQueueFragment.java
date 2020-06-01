@@ -19,7 +19,7 @@ import com.liadpaz.amp.adapters.QueueAdapter;
 import com.liadpaz.amp.databinding.FragmentCurrentQueueBinding;
 import com.liadpaz.amp.dialogs.PlaylistsDialog;
 import com.liadpaz.amp.interfaces.ItemTouchHelperAdapter;
-import com.liadpaz.amp.utils.QueueUtil;
+import com.liadpaz.amp.LiveDataUtils.QueueUtil;
 
 public class CurrentQueueFragment extends Fragment {
     private static final String TAG = "QUEUE_FRAGMENT";
@@ -77,14 +77,10 @@ public class CurrentQueueFragment extends Fragment {
             }
         });
 
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.Callback() {
-            private boolean isSwiping = false;
-
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.DOWN | ItemTouchHelper.UP, ItemTouchHelper.START | ItemTouchHelper.END) {
             @Override
-            public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
-                int moveFlags = ItemTouchHelper.UP | ItemTouchHelper.DOWN;
-                int swipeFlags = isSwiping || viewHolder.getAdapterPosition() == QueueUtil.queuePosition.getValue() ? 0 : (ItemTouchHelper.START | ItemTouchHelper.END);
-                return makeMovementFlags(moveFlags, swipeFlags);
+            public int getSwipeDirs(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                return viewHolder.getAdapterPosition() == QueueUtil.queuePosition.getValue() ? 0 : (ItemTouchHelper.START | ItemTouchHelper.END);
             }
 
             @Override
@@ -95,9 +91,7 @@ public class CurrentQueueFragment extends Fragment {
 
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                isSwiping = true;
                 adapter.onItemDismiss(viewHolder.getAdapterPosition());
-                isSwiping = false;
             }
         });
         binding.rvQueue.setLayoutManager(new LinearLayoutManager(requireContext()));

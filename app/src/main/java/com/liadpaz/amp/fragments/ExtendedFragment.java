@@ -22,14 +22,14 @@ import androidx.fragment.app.Fragment;
 import androidx.palette.graphics.Palette;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.liadpaz.amp.LiveDataUtils.ColorUtil;
+import com.liadpaz.amp.LiveDataUtils.QueueUtil;
+import com.liadpaz.amp.LiveDataUtils.SongsUtil;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentExtendedBinding;
 import com.liadpaz.amp.notification.OnColorChange;
-import com.liadpaz.amp.utils.ColorUtil;
 import com.liadpaz.amp.utils.Constants;
-import com.liadpaz.amp.utils.LocalFiles;
-import com.liadpaz.amp.utils.QueueUtil;
 import com.liadpaz.amp.utils.Utilities;
 
 import java.io.FileNotFoundException;
@@ -85,7 +85,7 @@ public class ExtendedFragment extends Fragment {
         binding.btnSkipPrev.setOnClickListener(v -> controller.getTransportControls().skipToPrevious());
         binding.btnPlayPause.setOnClickListener(v -> {
             if (QueueUtil.queue.getValue().size() == 0) {
-                QueueUtil.queue.setValue(LocalFiles.listSongsByName(requireContext()));
+                QueueUtil.queue.setValue(SongsUtil.getSongs());
                 Bundle bundle = new Bundle();
                 bundle.putInt(Constants.ACTION_QUEUE_POSITION, 0);
                 controller.sendCommand(Constants.ACTION_QUEUE_POSITION, bundle, null);

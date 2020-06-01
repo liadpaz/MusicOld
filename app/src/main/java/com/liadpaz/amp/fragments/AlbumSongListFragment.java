@@ -18,7 +18,7 @@ import com.liadpaz.amp.adapters.SongsListAdapter;
 import com.liadpaz.amp.databinding.FragmentAlbumSongListBinding;
 import com.liadpaz.amp.dialogs.PlaylistsDialog;
 import com.liadpaz.amp.utils.Constants;
-import com.liadpaz.amp.utils.QueueUtil;
+import com.liadpaz.amp.LiveDataUtils.QueueUtil;
 import com.liadpaz.amp.viewmodels.Album;
 import com.liadpaz.amp.viewmodels.Song;
 

@@ -12,7 +12,7 @@ import androidx.fragment.app.DialogFragment;
 
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.DialogPlaylistsBinding;
-import com.liadpaz.amp.utils.PlaylistsUtil;
+import com.liadpaz.amp.LiveDataUtils.PlaylistsUtil;
 import com.liadpaz.amp.viewmodels.Playlist;
 import com.liadpaz.amp.viewmodels.Song;
 
@@ -41,9 +41,9 @@ public class PlaylistsDialog extends DialogFragment {
         binding.spinnerPlaylists.setAdapter(new ArrayAdapter<>(getContext(), R.layout.support_simple_spinner_dropdown_item, PlaylistsUtil.getPlaylistsNames()));
         binding.btnNewPlaylist.setOnClickListener(v -> {
             if (songs == null) {
-                new NewPlaylistDialog(song).show(getChildFragmentManager(), null);
+                new NewPlaylistDialog(song).show(requireParentFragment().getChildFragmentManager(), null);
             } else {
-                new NewPlaylistDialog(songs).show(getChildFragmentManager(), null);
+                new NewPlaylistDialog(songs).show(requireParentFragment().getChildFragmentManager(), null);
             }
             dismiss();
         });

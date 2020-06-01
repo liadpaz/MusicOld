@@ -11,21 +11,19 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.liadpaz.amp.LiveDataUtils.PlaylistsUtil;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.PlaylistsAdapter;
 import com.liadpaz.amp.databinding.FragmentPlaylistsBinding;
 import com.liadpaz.amp.dialogs.EditPlaylistDialog;
 import com.liadpaz.amp.dialogs.NewPlaylistDialog;
 import com.liadpaz.amp.utils.LocalFiles;
-import com.liadpaz.amp.utils.PlaylistsUtil;
 import com.liadpaz.amp.viewmodels.Playlist;
 import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.ArrayList;
 
 public class PlaylistsFragment extends Fragment {
-    private static final String TAG = "PlaylistsFragment";
-
     private Playlist recentlyAddedPlaylist;
     private ArrayList<Playlist> playlists;
 
@@ -46,6 +44,9 @@ public class PlaylistsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         recentlyAddedPlaylist = new Playlist(getString(R.string.playlist_recently_added), LocalFiles.listSongsByLastAdded(requireContext()));
+        playlists = new ArrayList<Playlist>() {{
+            add(recentlyAddedPlaylist);
+        }};
 
         PlaylistsUtil.observe(requireActivity(), playlists -> {
             this.playlists = new ArrayList<>(playlists);
@@ -62,6 +63,8 @@ public class PlaylistsFragment extends Fragment {
             }
             return true;
         });
+
+        adapter.submitList(playlists);
 
         binding.rvPlaylists.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvPlaylists.addItemDecoration(new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));

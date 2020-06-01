@@ -11,15 +11,19 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.liadpaz.amp.LiveDataUtils.SongsUtil;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.AlbumsListAdapter;
 import com.liadpaz.amp.databinding.FragmentAlbumListBinding;
-import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.viewmodels.Album;
+import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class AlbumListFragment extends Fragment {
+    private ArrayList<Album> albums = new ArrayList<>();
+
     private FragmentAlbumListBinding binding;
 
     public AlbumListFragment() {}
@@ -35,10 +39,6 @@ public class AlbumListFragment extends Fragment {
     @SuppressWarnings("ConstantConditions")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        ArrayList<Album> albums = new ArrayList<>();
-        LocalFiles.getAlbums().forEach((albumName, albumSongs) -> albums.add(new Album(albumName, albumSongs.get(0).songArtists.get(0), albumSongs)));
-        albums.sort((album1, album2) -> album1.name.toLowerCase().compareTo(album2.name.toLowerCase()));
-
         AlbumsListAdapter adapter = new AlbumsListAdapter(getContext(), (v, position) -> {
             Fragment fragment = AlbumSongListFragment.newInstance(albums.get(position));
             requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.viewpagerFragment, fragment).addToBackStack(null).commit();
@@ -48,6 +48,21 @@ public class AlbumListFragment extends Fragment {
         binding.rvAlbums.addItemDecoration(new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL) );
         binding.rvAlbums.setAdapter(adapter);
 
-        adapter.submitList(albums);
+        SongsUtil.observe(this, songs -> {
+            albums.clear();
+            HashMap<String, ArrayList<Song>> albumsMap = new HashMap<>();
+            for (final Song song : songs) {
+                if (albumsMap.containsKey(song.album)) {
+                    albumsMap.get(song.album).add(song);
+                } else {
+                    albumsMap.put(song.album, new ArrayList<Song>() {{
+                        add(song);
+                    }});
+                }
+            }
+            albumsMap.forEach((name, albumSongs) -> albums.add(new Album(name, albumSongs.get(0).songArtists.get(0), albumSongs)));
+            albums.sort((album1, album2) -> album1.name.toLowerCase().compareTo(album2.name.toLowerCase()));
+            adapter.submitList(albums);
+        });
     }
 }

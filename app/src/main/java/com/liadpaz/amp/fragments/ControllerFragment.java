@@ -19,13 +19,13 @@ import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.liadpaz.amp.LiveDataUtils.ColorUtil;
+import com.liadpaz.amp.LiveDataUtils.QueueUtil;
+import com.liadpaz.amp.LiveDataUtils.SongsUtil;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentControllerBinding;
-import com.liadpaz.amp.utils.ColorUtil;
 import com.liadpaz.amp.utils.Constants;
-import com.liadpaz.amp.utils.LocalFiles;
-import com.liadpaz.amp.utils.QueueUtil;
 import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.CurrentSong;
 
@@ -60,7 +60,7 @@ public class ControllerFragment extends Fragment {
 
         binding.btnPlay.setOnClickListener(v -> {
             if (QueueUtil.queue.getValue().size() == 0) {
-                QueueUtil.queue.setValue(LocalFiles.listSongsByName(requireContext()));
+                QueueUtil.queue.setValue(SongsUtil.getSongs());
                 QueueUtil.setPosition(0);
                 controller.sendCommand(Constants.ACTION_QUEUE_POSITION, null, null);
             } else if (controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING) {

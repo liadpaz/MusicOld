@@ -18,7 +18,7 @@ import com.liadpaz.amp.databinding.ItemSongBinding;
 import com.liadpaz.amp.databinding.ItemSongShuffleBinding;
 import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
 import com.liadpaz.amp.utils.Constants;
-import com.liadpaz.amp.utils.QueueUtil;
+import com.liadpaz.amp.LiveDataUtils.QueueUtil;
 import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Song;
 
@@ -49,16 +49,16 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
     @Override
     public SongViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (getItemCount() == 1) {
-            return new SongViewHolder(ItemNoSongsBinding.inflate(LayoutInflater.from(context), parent, false), onMoreClickListener, onShuffleClickListener);
+            return new SongViewHolder(ItemNoSongsBinding.inflate(LayoutInflater.from(context), parent, false), onShuffleClickListener);
         } else if (viewType == TYPE_ITEM) {
-            return new SongViewHolder(ItemSongBinding.inflate(LayoutInflater.from(context), parent, false), onMoreClickListener, onShuffleClickListener);
+            return new SongViewHolder(ItemSongBinding.inflate(LayoutInflater.from(context), parent, false), onShuffleClickListener);
         }
-        return new SongViewHolder(ItemSongShuffleBinding.inflate(LayoutInflater.from(context), parent, false), onMoreClickListener, onShuffleClickListener);
+        return new SongViewHolder(ItemSongShuffleBinding.inflate(LayoutInflater.from(context), parent, false), onShuffleClickListener);
     }
 
     @Override
     public void onBindViewHolder(@NonNull SongViewHolder holder, int position) {
-        if (holder.binding instanceof ItemSongBinding) {
+        if (position != 0) {
             Song song = getItem(position - 1);
 
             ItemSongBinding binding = (ItemSongBinding)holder.binding;
@@ -68,7 +68,8 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
 
             Glide.with(context).load(Utilities.getCoverUri(song)).into(binding.ivSongCover);
 
-            holder.itemView.setOnClickListener(v -> {
+            binding.btnMore.setOnClickListener(v -> onMoreClickListener.onItemClick(v, position - 1));
+            binding.getRoot().setOnClickListener(v -> {
                 QueueUtil.queue.setValue(new ArrayList<>(getCurrentList()));
                 QueueUtil.setPosition(position - 1);
                 MainActivity.getController().sendCommand(Constants.ACTION_QUEUE_POSITION, null, null);
@@ -89,12 +90,10 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
     static class SongViewHolder extends RecyclerView.ViewHolder {
         private ViewBinding binding;
 
-        SongViewHolder(@NonNull ViewBinding binding, @NonNull OnRecyclerItemClickListener onMoreClickListener, @NonNull View.OnClickListener onClickListener) {
+        SongViewHolder(@NonNull ViewBinding binding, @NonNull View.OnClickListener onClickListener) {
             super(binding.getRoot());
             this.binding = binding;
-            if (binding instanceof ItemSongBinding) {
-                ((ItemSongBinding)this.binding).btnMore.setOnClickListener(v -> onMoreClickListener.onItemClick(v, getAdapterPosition() - 1));
-            } else if (binding instanceof ItemSongShuffleBinding) {
+            if (binding instanceof ItemSongShuffleBinding) {
                 ((ItemSongShuffleBinding)binding).getRoot().setOnClickListener(onClickListener);
             }
         }

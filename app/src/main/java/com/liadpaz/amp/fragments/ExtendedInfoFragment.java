@@ -16,8 +16,8 @@ import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentExtendedInfoBinding;
 import com.liadpaz.amp.dialogs.NewPlaylistDialog;
 import com.liadpaz.amp.dialogs.PlaylistsDialog;
-import com.liadpaz.amp.utils.ColorUtil;
-import com.liadpaz.amp.utils.QueueUtil;
+import com.liadpaz.amp.LiveDataUtils.ColorUtil;
+import com.liadpaz.amp.LiveDataUtils.QueueUtil;
 import com.liadpaz.amp.utils.Utilities;
 
 import java.util.ArrayList;

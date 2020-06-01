@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.liadpaz.amp.LiveDataUtils.QueueUtil;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.ItemQueueSongBinding;
@@ -22,7 +23,6 @@ import com.liadpaz.amp.interfaces.ItemTouchHelperAdapter;
 import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
 import com.liadpaz.amp.interfaces.OnStartDragListener;
 import com.liadpaz.amp.utils.Constants;
-import com.liadpaz.amp.utils.QueueUtil;
 import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Song;
 
@@ -31,19 +31,17 @@ import java.util.Collections;
 import java.util.List;
 
 public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder> implements ItemTouchHelperAdapter {
-    private static final String TAG = "QUEUE_ADAPTER";
-
     private ArrayList<Song> songs;
 
     private OnStartDragListener onStartDragListener;
-    private OnRecyclerItemClickListener onRecyclerItemClickListener;
+    private OnRecyclerItemClickListener onMoreClickListener;
     private ItemTouchHelperAdapter itemTouchHelperAdapter;
 
     private Context context;
 
     private int queuePosition;
 
-    public QueueAdapter(@NonNull Fragment fragment, @NonNull OnRecyclerItemClickListener onRecyclerItemClickListener, @NonNull ItemTouchHelperAdapter itemTouchHelperAdapter) {
+    public QueueAdapter(@NonNull Fragment fragment, @NonNull OnRecyclerItemClickListener onMoreClickListener, @NonNull ItemTouchHelperAdapter itemTouchHelperAdapter) {
         super(new DiffUtil.ItemCallback<Song>() {
             @Override
             public boolean areItemsTheSame(@NonNull Song oldItem, @NonNull Song newItem) { return oldItem == newItem; }
@@ -52,7 +50,7 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
             public boolean areContentsTheSame(@NonNull Song oldItem, @NonNull Song newItem) { return oldItem.equals(newItem); }
         });
         this.context = fragment.requireContext();
-        this.onRecyclerItemClickListener = onRecyclerItemClickListener;
+        this.onMoreClickListener = onMoreClickListener;
         this.itemTouchHelperAdapter = itemTouchHelperAdapter;
 
         QueueUtil.queuePosition.observe(fragment, queuePosition -> this.queuePosition = queuePosition);
@@ -65,7 +63,10 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
     @NonNull
     @Override
     public SongViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new QueueAdapter.SongViewHolder(ItemQueueSongBinding.inflate(LayoutInflater.from(context), parent, false), onRecyclerItemClickListener);
+        return new QueueAdapter.SongViewHolder(ItemQueueSongBinding.inflate(LayoutInflater.from(context), parent, false), (v, position) -> {
+            QueueUtil.setPosition(position);
+            MainActivity.getController().sendCommand(Constants.ACTION_QUEUE_POSITION, null, null);
+        }, (v, position) -> onMoreClickListener.onItemClick(v, position));
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -73,11 +74,13 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
     public void onBindViewHolder(@NonNull final SongViewHolder holder, final int position) {
         Song song = getItem(position);
 
-        holder.binding.tvSongTitle.setText(song.songTitle);
-        holder.binding.tvSongArtist.setText(Utilities.joinArtists(song.songArtists));
-        Glide.with(context).load(Utilities.getCoverUri(song)).placeholder(R.drawable.song).into(holder.binding.ivSongCover);
+        ItemQueueSongBinding binding = holder.binding;
 
-        holder.binding.btnDrag.setOnTouchListener((v, event) -> {
+        binding.tvSongTitle.setText(song.songTitle);
+        binding.tvSongArtist.setText(Utilities.joinArtists(song.songArtists));
+        Glide.with(context).load(Utilities.getCoverUri(song)).placeholder(R.drawable.song).into(binding.ivSongCover);
+
+        binding.btnDrag.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
                 onStartDragListener.onStartDrag(holder);
             }
@@ -86,13 +89,13 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
     }
 
     public void onItemDismiss(int position) {
+        Toast.makeText(context, String.format("%s %s", getItem(position).songTitle, context.getString(R.string.queue_removed)), Toast.LENGTH_SHORT).show();
         songs.remove(position);
         if (queuePosition > position) {
             QueueUtil.addToPosition(-1);
         }
         itemTouchHelperAdapter.onItemDismiss(position);
         notifyItemRemoved(position);
-        Toast.makeText(context, String.format("%s %s", getItem(position).songTitle, context.getString(R.string.queue_removed)), Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -119,18 +122,12 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
     static class SongViewHolder extends RecyclerView.ViewHolder {
         private ItemQueueSongBinding binding;
 
-        SongViewHolder(@NonNull ItemQueueSongBinding binding, OnRecyclerItemClickListener onRecyclerItemClickListener) {
+        SongViewHolder(@NonNull ItemQueueSongBinding binding, @NonNull OnRecyclerItemClickListener onItemClickListener, @NonNull OnRecyclerItemClickListener onMoreClickListener) {
             super(binding.getRoot());
-
             this.binding = binding;
 
-            itemView.setOnClickListener(v -> {
-                int position = getAdapterPosition();
-                QueueUtil.setPosition(position);
-                MainActivity.getController().sendCommand(Constants.ACTION_QUEUE_POSITION, null, null);
-            });
-
-            binding.btnMore.setOnClickListener(v -> onRecyclerItemClickListener.onItemClick(v, getAdapterPosition()));
+            itemView.setOnClickListener(v -> onItemClickListener.onItemClick(v, getAdapterPosition()));
+            binding.btnMore.setOnClickListener(v -> onMoreClickListener.onItemClick(v, getAdapterPosition()));
         }
     }
 }

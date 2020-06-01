@@ -34,7 +34,7 @@ import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.notification.MediaNotification;
 import com.liadpaz.amp.utils.Constants;
-import com.liadpaz.amp.utils.QueueUtil;
+import com.liadpaz.amp.LiveDataUtils.QueueUtil;
 import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Song;
 

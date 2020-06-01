@@ -1,6 +1,5 @@
 package com.liadpaz.amp.fragments;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -14,17 +13,16 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.liadpaz.amp.LiveDataUtils.QueueUtil;
+import com.liadpaz.amp.LiveDataUtils.SongsUtil;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.SongsListAdapter;
 import com.liadpaz.amp.databinding.FragmentSongsListBinding;
 import com.liadpaz.amp.dialogs.PlaylistsDialog;
 import com.liadpaz.amp.utils.Constants;
-import com.liadpaz.amp.utils.LocalFiles;
-import com.liadpaz.amp.utils.QueueUtil;
 import com.liadpaz.amp.viewmodels.Song;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -81,7 +79,8 @@ public class SongsListFragment extends Fragment {
             QueueUtil.setPosition(0);
             MainActivity.getController().sendCommand(Constants.ACTION_QUEUE_POSITION, null, null);
         });
-        new LoadSongsTask(this).execute();
+        binding.rvSongs.setAdapter(adapter);
+        adapter.submitList(SongsUtil.getSongs());
 
         binding.rvSongs.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvSongs.addItemDecoration(new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));
@@ -92,25 +91,5 @@ public class SongsListFragment extends Fragment {
     public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, @Nullable ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
         getActivity().getMenuInflater().inflate(R.menu.menu_song, menu);
-    }
-
-    private static class LoadSongsTask extends AsyncTask<Void, Void, ArrayList<Song>> {
-        private WeakReference<SongsListFragment> fragment;
-
-        LoadSongsTask(@NonNull SongsListFragment fragment) {
-            this.fragment = new WeakReference<>(fragment);
-        }
-
-        @Override
-        protected ArrayList<Song> doInBackground(Void... voids) {
-            return LocalFiles.listSongsByName(fragment.get().requireContext());
-        }
-
-        @Override
-        protected void onPostExecute(ArrayList<Song> songs) {
-            fragment.get().binding.rvSongs.setAdapter(fragment.get().adapter);
-            fragment.get().adapter.submitList(songs);
-//            fragment.get().binding.rvSongs.scrollToPosition(0);
-        }
     }
 }

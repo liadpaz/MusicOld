@@ -9,13 +9,15 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.liadpaz.amp.LiveDataUtils.SongsUtil;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.ArtistsListAdapter;
 import com.liadpaz.amp.databinding.FragmentArtistListBinding;
-import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.viewmodels.Artist;
+import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 /**
@@ -23,6 +25,10 @@ import java.util.ArrayList;
  * to create an instance of this fragment.
  */
 public class ArtistListFragment extends Fragment {
+    private ArrayList<Artist> artists = new ArrayList<>();
+
+    private ArtistsListAdapter adapter;
+
     private FragmentArtistListBinding binding;
 
     public ArtistListFragment() {}
@@ -38,15 +44,27 @@ public class ArtistListFragment extends Fragment {
     @SuppressWarnings("ConstantConditions")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        ArrayList<Artist> artists = new ArrayList<>();
-        LocalFiles.getArtists().forEach((artistName, artistSongs) -> artists.add(new Artist(artistName, artistSongs)));
-        artists.sort((artist1, artist2) -> artist1.name.toLowerCase().compareTo(artist2.name.toLowerCase()));
-        ArtistsListAdapter adapter = new ArtistsListAdapter(getContext(), artists);
+        binding.lvArtists.setAdapter(adapter = new ArtistsListAdapter(requireContext(), new ArrayList<>(artists)));
+        binding.lvArtists.setOnItemClickListener((parent, view1, position, id) -> requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.viewpagerFragment, ArtistSongListFragment.newInstance(artists.get(position))).addToBackStack(null).commit());
 
-        binding.lvArtists.setAdapter(adapter);
-        binding.lvArtists.setOnItemClickListener((parent, view1, position, id) -> {
-            Fragment fragment = ArtistSongListFragment.newInstance(artists.get(position));
-            requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.viewpagerFragment, fragment).addToBackStack(null).commit();
+        SongsUtil.observe(this, songs -> {
+            artists.clear();
+            HashMap<String, ArrayList<Song>> artistsMap = new HashMap<>();
+            for (final Song song : songs) {
+                for (String artist : song.songArtists) {
+                    if (artistsMap.containsKey(artist)) {
+                        artistsMap.get(artist).add(song);
+                    } else {
+                        artistsMap.put(artist, new ArrayList<Song>() {{
+                            add(song);
+                        }});
+                    }
+                }
+            }
+            artistsMap.forEach((name, artistSongs) -> artists.add(new Artist(name, artistSongs)));
+            artists.sort((artist1, artist2) -> artist1.name.toLowerCase().compareTo(artist2.name.toLowerCase()));
+            adapter.clear();
+            adapter.addAll(artists);
         });
     }
 }
