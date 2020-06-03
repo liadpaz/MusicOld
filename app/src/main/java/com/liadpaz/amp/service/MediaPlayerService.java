@@ -23,7 +23,6 @@ import android.os.Bundle;
 import android.os.ResultReceiver;
 import android.provider.MediaStore;
 import android.service.media.MediaBrowserService;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -49,9 +48,18 @@ public final class MediaPlayerService extends MediaBrowserService {
     private static final String LOG_TAG = "AmpApp.MEDIA_SESSION_LOG";
     private static final int NOTIFICATION_ID = 273;
 
+    private boolean isLooping = false;
+
     private MediaPlayer mediaPlayer;
     private MediaSession mediaSession;
     private BecomingNoisyReceiver becomingNoisyReceiver;
+    private MediaPlayer.OnCompletionListener onCompletionListener = mp -> {
+        if (!isLooping) {
+            mediaSession.getController().getTransportControls().skipToNext();
+        } else {
+            mediaSession.getController().getTransportControls().seekTo(0);
+        }
+    };
 
     private MediaMetadata.Builder metadataBuilder;
     private PlaybackState.Builder playbackBuilder;
@@ -60,8 +68,6 @@ public final class MediaPlayerService extends MediaBrowserService {
     private AudioFocusRequest audioFocusRequest;
     private AudioAttributes audioAttributes;
     private boolean resumeOnFocusGain = false;
-
-    private boolean isLooping = false;
 
     private Song currentSource;
     private int queuePosition = 0;
@@ -76,13 +82,7 @@ public final class MediaPlayerService extends MediaBrowserService {
         super.onCreate();
 
         mediaPlayer = new MediaPlayer();
-        mediaPlayer.setOnCompletionListener(mp -> {
-            if (!isLooping) {
-                mediaSession.getController().getTransportControls().skipToNext();
-            } else {
-                mediaSession.getController().getTransportControls().seekTo(0);
-            }
-        });
+        mediaPlayer.setOnCompletionListener(onCompletionListener);
 
         new MediaSession.QueueItem(new MediaDescription.Builder().build(), 0);
 
@@ -311,9 +311,8 @@ public final class MediaPlayerService extends MediaBrowserService {
             if (audioFocusRequest != null) {
                 audioManager.abandonAudioFocusRequest(audioFocusRequest);
             }
-            long start = System.currentTimeMillis();
+            mediaPlayer.reset();
             mediaPlayer = MediaPlayer.create(this, ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, (currentSource = song).songId));
-            Log.d(TAG, "setSource: " + (System.currentTimeMillis() - start));
             sendMetadata(currentSource);
         } catch (Exception ignored) {
         }
