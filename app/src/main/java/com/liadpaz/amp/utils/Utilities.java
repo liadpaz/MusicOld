@@ -19,8 +19,7 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class Utilities {
-    @SuppressWarnings("unused")
-    private static final String TAG = "UTILITIES";
+    private static final String TAG = "AmpApp.Utilities";
 
     private static final Uri albumsUri = Uri.parse("content://media/external/audio/albumart");
 

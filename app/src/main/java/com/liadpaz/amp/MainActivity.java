@@ -28,11 +28,10 @@ import com.liadpaz.amp.utils.LocalFiles;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "AmpApp.MainActivity";
+
     private static final int REQUEST_PERMISSION = 459;
     private static final int REQUEST_SETTINGS = 525;
-
-    @SuppressWarnings("unused")
-    private static final String TAG = "MAIN_ACTIVITY";
 
     private static MediaController controller;
     public ActivityMainBinding binding;

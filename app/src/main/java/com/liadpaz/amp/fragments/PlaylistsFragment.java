@@ -24,6 +24,8 @@ import com.liadpaz.amp.viewmodels.Song;
 import java.util.ArrayList;
 
 public class PlaylistsFragment extends Fragment {
+    private static final String TAG = "AmpApp.PlaylistsFragment";
+
     private Playlist recentlyAddedPlaylist;
     private ArrayList<Playlist> playlists;
 

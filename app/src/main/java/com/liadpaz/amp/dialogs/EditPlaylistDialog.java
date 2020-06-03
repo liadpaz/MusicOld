@@ -17,6 +17,8 @@ import com.liadpaz.amp.LiveDataUtils.PlaylistsUtil;
 import com.liadpaz.amp.viewmodels.Playlist;
 
 public class EditPlaylistDialog extends DialogFragment {
+    private static final String TAG = "AmpApp.EditPlaylistDialog";
+
     private Playlist playlist;
 
     public EditPlaylistDialog(@NonNull Playlist playlist) {

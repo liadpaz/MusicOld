@@ -32,7 +32,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class PlaylistAdapter extends ListAdapter<Song, PlaylistAdapter.SongViewHolder> implements ItemTouchHelperAdapter {
-    private static final String TAG = "PlaylistAdapter";
+    private static final String TAG = "AmpApp.PlaylistAdapter";
+
     private static final int TYPE_ITEM = 1;
 
     private ArrayList<Song> songs;

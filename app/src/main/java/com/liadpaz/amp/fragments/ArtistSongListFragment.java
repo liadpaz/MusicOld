@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class ArtistSongListFragment extends Fragment {
+    private static final String TAG = "AmpApp.ArtistSongListFragment";
+
     private SongsListAdapter adapter;
 
     private Artist artist;
@@ -34,6 +36,7 @@ public class ArtistSongListFragment extends Fragment {
 
     private ArtistSongListFragment(Artist artist) { this.artist = artist; }
 
+    @NonNull
     public static ArtistSongListFragment newInstance(Artist artist) { return new ArtistSongListFragment(artist); }
 
     @Override

@@ -15,13 +15,15 @@ import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.utils.Utilities;
 
 public class SettingsActivity extends AppCompatActivity {
+    private static final String TAG = "AmpApp.SettingsActivity";
+
     private static final int REQUEST_PICK_FOLDER = 44;
 
     @SuppressWarnings("ConstantConditions")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        com.liadpaz.amp.databinding.SettingsActivityBinding binding;
+        SettingsActivityBinding binding;
         setContentView((binding = SettingsActivityBinding.inflate(getLayoutInflater())).getRoot());
         getSupportFragmentManager().beginTransaction().replace(R.id.settings, new SettingsFragment()).commit();
         setSupportActionBar(binding.toolbarSettings);

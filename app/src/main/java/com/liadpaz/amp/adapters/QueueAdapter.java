@@ -31,6 +31,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder> implements ItemTouchHelperAdapter {
+    private static final String TAG = "AmpApp.QueueAdapter";
+
     private ArrayList<Song> songs;
 
     private OnStartDragListener onStartDragListener;

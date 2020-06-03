@@ -19,12 +19,9 @@ import com.liadpaz.amp.viewmodels.Song;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-
-/**
- * A simple {@link Fragment} subclass. Use the {@link ArtistListFragment#newInstance} factory method
- * to create an instance of this fragment.
- */
 public class ArtistListFragment extends Fragment {
+    private static final String TAG = "AmpApp.ArtistListFragment";
+
     private ArrayList<Artist> artists = new ArrayList<>();
 
     private ArtistsListAdapter adapter;

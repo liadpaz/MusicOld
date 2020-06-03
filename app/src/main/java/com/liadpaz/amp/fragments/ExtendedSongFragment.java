@@ -19,6 +19,7 @@ import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentExtendedSongBinding;
 
 public class ExtendedSongFragment extends Fragment {
+    private static final String TAG = "AmpApp.ExtendedSongFragment";
 
     private MediaController controller;
     private MediaController.Callback callback;

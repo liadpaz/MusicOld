@@ -15,7 +15,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 public class PlaylistsUtil {
-    private static final String TAG = "PlaylistsUtil";
+    private static final String TAG = "AmpApp.PlaylistsUtil";
 
     private static MutableLiveData<CopyOnWriteArrayList<Playlist>> playlists = new MutableLiveData<>(new CopyOnWriteArrayList<>());
 

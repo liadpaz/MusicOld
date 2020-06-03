@@ -14,6 +14,7 @@ import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.liadpaz.amp.R;
@@ -21,7 +22,8 @@ import com.liadpaz.amp.service.MediaPlayerService;
 import com.liadpaz.amp.utils.Constants;
 
 public final class MediaNotification {
-    private static final String TAG = "MEDIA_NOTIFICATION";
+    private static final String TAG = "AmpApp.MediaNotification";
+
     private static final String CHANNEL_ID = "music_channel";
 
     public MediaNotification(@NonNull Context context) {
@@ -32,6 +34,7 @@ public final class MediaNotification {
     }
 
     @SuppressWarnings("ConstantConditions")
+    @Nullable
     public static Notification.Builder from(@NonNull final Context context, @NonNull final MediaSession mediaSession) {
         MediaController controller = mediaSession.getController();
         MediaMetadata metadata = controller.getMetadata();

@@ -23,6 +23,8 @@ import com.liadpaz.amp.utils.Utilities;
 import java.util.ArrayList;
 
 public class ExtendedInfoFragment extends Fragment {
+    private static final String TAG = "AmpApp.ExtendedInfoFragment";
+
     private boolean isShowingQueue = false;
     private boolean isDark = false;
 

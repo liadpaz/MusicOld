@@ -10,6 +10,8 @@ import com.liadpaz.amp.viewmodels.Song;
 import java.util.ArrayList;
 
 public class SongsUtil {
+    private static final String TAG = "AmpApp.SongsUtil";
+
     private static MutableLiveData<ArrayList<Song>> songs = new MutableLiveData<>(new ArrayList<>());
 
     public static void observe(@NonNull LifecycleOwner lifecycleOwner, @NonNull Observer<ArrayList<Song>> observer) {

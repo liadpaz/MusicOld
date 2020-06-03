@@ -8,6 +8,8 @@ import com.liadpaz.amp.viewmodels.Song;
 import java.util.ArrayList;
 
 public class QueueUtil {
+    private static final String TAG = "AmpApp.QueueUtil";
+
     public static final MutableLiveData<ArrayList<Song>> queue = new MutableLiveData<>(new ArrayList<>());
     public static final MutableLiveData<Integer> queuePosition = new MutableLiveData<>(0);
 

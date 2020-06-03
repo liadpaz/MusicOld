@@ -27,8 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class SongsListFragment extends Fragment {
-    @SuppressWarnings("unused")
-    private static final String TAG = "SONGS_LIST_FRAGMENT";
+    private static final String TAG = "AmpApp.SongsListFragment";
 
     private SongsListAdapter adapter;
 

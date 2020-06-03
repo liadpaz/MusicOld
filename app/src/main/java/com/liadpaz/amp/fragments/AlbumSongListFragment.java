@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class AlbumSongListFragment extends Fragment {
+    private static final String TAG = "AmpApp.AlbumSongListFragment";
+
     private SongsListAdapter adapter;
 
     private Album album;

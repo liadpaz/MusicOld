@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class AlbumListFragment extends Fragment {
+    private static final String TAG = "AmpApp.AlbumListFragment";
+
     private ArrayList<Album> albums = new ArrayList<>();
 
     private FragmentAlbumListBinding binding;

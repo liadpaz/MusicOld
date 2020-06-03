@@ -23,6 +23,7 @@ import android.os.Bundle;
 import android.os.ResultReceiver;
 import android.provider.MediaStore;
 import android.service.media.MediaBrowserService;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,11 +31,11 @@ import androidx.annotation.Nullable;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
+import com.liadpaz.amp.LiveDataUtils.QueueUtil;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.notification.MediaNotification;
 import com.liadpaz.amp.utils.Constants;
-import com.liadpaz.amp.LiveDataUtils.QueueUtil;
 import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Song;
 
@@ -43,12 +44,10 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public final class MediaPlayerService extends MediaBrowserService {
-    @SuppressWarnings("unused")
-    private static final String TAG = "MUSIC_SERVICE";
-    private static final String LOG_TAG = "MEDIA_SESSION_LOG";
-    private static final int NOTIFICATION_ID = 273;
+    private static final String TAG = "AmpApp.MediaPlayerService";
 
-    private static final String CHANNEL_ID = "music_channel";
+    private static final String LOG_TAG = "AmpApp.MEDIA_SESSION_LOG";
+    private static final int NOTIFICATION_ID = 273;
 
     private MediaPlayer mediaPlayer;
     private MediaSession mediaSession;
@@ -313,8 +312,10 @@ public final class MediaPlayerService extends MediaBrowserService {
                 audioManager.abandonAudioFocusRequest(audioFocusRequest);
             }
             mediaPlayer.reset();
+            long start = System.currentTimeMillis();
             mediaPlayer.setDataSource(this, ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, (currentSource = song).songId));
             mediaPlayer.prepare();
+            Log.d(TAG, "setSource: " + (System.currentTimeMillis() - start));
             sendMetadata(currentSource);
         } catch (Exception ignored) {
         }

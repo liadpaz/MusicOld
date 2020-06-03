@@ -22,7 +22,7 @@ import com.liadpaz.amp.interfaces.ItemTouchHelperAdapter;
 import com.liadpaz.amp.LiveDataUtils.QueueUtil;
 
 public class CurrentQueueFragment extends Fragment {
-    private static final String TAG = "QUEUE_FRAGMENT";
+    private static final String TAG = "AmpApp.CurrentQueueFragment";
 
     private boolean isChanging = false;
 

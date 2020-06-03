@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.liadpaz.amp.databinding.ActivityAboutBinding;
 
 public class AboutActivity extends AppCompatActivity {
+    private static final String TAG = "AmpApp.AboutActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

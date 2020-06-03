@@ -12,19 +12,21 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewbinding.ViewBinding;
 
 import com.bumptech.glide.Glide;
+import com.liadpaz.amp.LiveDataUtils.QueueUtil;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.databinding.ItemNoSongsBinding;
 import com.liadpaz.amp.databinding.ItemSongBinding;
 import com.liadpaz.amp.databinding.ItemSongShuffleBinding;
 import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
 import com.liadpaz.amp.utils.Constants;
-import com.liadpaz.amp.LiveDataUtils.QueueUtil;
 import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.ArrayList;
 
 public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongViewHolder> {
+    private static final String TAG = "AmpApp.SongsListAdapter";
+
     private static final int TYPE_ITEM = 1;
 
     private OnRecyclerItemClickListener onMoreClickListener;

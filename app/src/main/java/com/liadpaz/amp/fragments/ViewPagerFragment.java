@@ -18,6 +18,7 @@ import com.liadpaz.amp.databinding.FragmentViewPagerBinding;
 import java.util.ArrayList;
 
 public class ViewPagerFragment extends Fragment {
+    private static final String TAG = "AmpApp.ViewPagerFragment";
 
     private FragmentViewPagerBinding binding;
 

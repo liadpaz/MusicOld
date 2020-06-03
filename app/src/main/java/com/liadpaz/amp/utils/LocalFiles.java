@@ -27,8 +27,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class LocalFiles {
-    @SuppressWarnings("unused")
-    private static final String TAG = "LOCAL_FILES";
+    private static final String TAG = "AmpApp.LocalFiles";
 
     private static final String[] PROJECTION = {Media.TITLE, Media._ID, Media.ARTIST, Media.ALBUM, Media.ALBUM_ID};
 

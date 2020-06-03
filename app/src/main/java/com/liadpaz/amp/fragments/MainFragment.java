@@ -14,6 +14,7 @@ import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentMainBinding;
 
 public class MainFragment extends Fragment {
+    private static final String TAG = "AmpApp.MainFragment";
 
     private FragmentMainBinding binding;
 

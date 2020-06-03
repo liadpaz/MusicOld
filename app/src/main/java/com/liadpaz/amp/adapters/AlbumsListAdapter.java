@@ -17,6 +17,8 @@ import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Album;
 
 public class AlbumsListAdapter extends ListAdapter<Album, AlbumsListAdapter.AlbumViewHolder> {
+    private static final String TAG = "AmpApp.AlbumsListAdapter";
+
     private Context context;
     private OnRecyclerItemClickListener onItemClickListener;
 
@@ -43,7 +45,6 @@ public class AlbumsListAdapter extends ListAdapter<Album, AlbumsListAdapter.Albu
         return new AlbumViewHolder(ItemAlbumBinding.inflate(LayoutInflater.from(context), parent, false), onItemClickListener);
     }
 
-    @SuppressWarnings("ConstantConditions")
     @Override
     public void onBindViewHolder(@NonNull AlbumViewHolder holder, int position) {
         Album album = getItem(position);
