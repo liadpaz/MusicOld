@@ -313,6 +313,7 @@ public final class MediaPlayerService extends MediaBrowserService {
             }
             mediaPlayer.reset();
             mediaPlayer = MediaPlayer.create(this, ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, (currentSource = song).songId));
+            mediaPlayer.setOnCompletionListener(onCompletionListener);
             sendMetadata(currentSource);
         } catch (Exception ignored) {
         }
