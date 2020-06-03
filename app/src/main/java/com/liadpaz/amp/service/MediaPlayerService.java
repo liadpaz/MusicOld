@@ -116,7 +116,7 @@ public final class MediaPlayerService extends MediaBrowserService {
 
                     case Constants.LOOP_EXTRA: {
                         setLooping(extras.getBoolean(Constants.LOOP_EXTRA));
-                        sendPlaybackState(mediaPlayer.getCurrentPosition());
+                        sendPlaybackState(mediaPlayer.getCurrentPosition(), mediaPlayer.isPlaying() ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED);
                     }
                 }
             }
@@ -172,7 +172,7 @@ public final class MediaPlayerService extends MediaBrowserService {
                     audioManager.abandonAudioFocusRequest(audioFocusRequest);
                 }
                 currentSource = null;
-                sendPlaybackState(mediaPlayer.getCurrentPosition());
+                sendPlaybackState(mediaPlayer.getCurrentPosition(), PlaybackState.STATE_STOPPED);
                 sendMetadata(null);
                 stopForeground(true);
             }
@@ -219,7 +219,7 @@ public final class MediaPlayerService extends MediaBrowserService {
                     if (resumeOnFocusGain) {
                         mediaPlayer.start();
                     }
-                    sendPlaybackState(mediaPlayer.getCurrentPosition());
+                    sendPlaybackState(mediaPlayer.getCurrentPosition(), mediaPlayer.isPlaying() ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED);
                 }
             }
         });
@@ -228,7 +228,7 @@ public final class MediaPlayerService extends MediaBrowserService {
         mediaSession.setMetadata(metadataBuilder.build());
 
         playbackBuilder = new PlaybackState.Builder();
-        sendPlaybackState(mediaPlayer.getCurrentPosition());
+        sendPlaybackState(mediaPlayer.getCurrentPosition(), PlaybackState.STATE_STOPPED);
 
         setSessionToken(mediaSession.getSessionToken());
 
@@ -239,20 +239,20 @@ public final class MediaPlayerService extends MediaBrowserService {
         resumeOnFocusGain = true;
         becomingNoisyReceiver.register();
         mediaPlayer.start();
-        sendPlaybackState(mediaPlayer.getCurrentPosition());
+        sendPlaybackState(mediaPlayer.getCurrentPosition(), PlaybackState.STATE_PLAYING);
         startNotification();
     }
 
     private void pause() {
         becomingNoisyReceiver.unregister();
         mediaPlayer.pause();
-        sendPlaybackState(mediaPlayer.getCurrentPosition());
+        sendPlaybackState(mediaPlayer.getCurrentPosition(), PlaybackState.STATE_PAUSED);
         startNotification();
     }
 
     private void setLooping(boolean isLooping) {
         this.isLooping = isLooping;
-        sendPlaybackState(mediaPlayer.getCurrentPosition());
+        sendPlaybackState(mediaPlayer.getCurrentPosition(), mediaPlayer.isPlaying() ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED);
         startNotification();
     }
 
@@ -265,8 +265,8 @@ public final class MediaPlayerService extends MediaBrowserService {
         }
     }
 
-    private void sendPlaybackState(int position) {
-        playbackBuilder.setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_SEEK_TO | PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS).setState(mediaPlayer.isPlaying() ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED, position, 1F);
+    private void sendPlaybackState(int position, int state) {
+        playbackBuilder.setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_SEEK_TO | PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS).setState(state, position, 1F);
         Bundle bundle = new Bundle();
         bundle.putBoolean(Constants.LOOP_EXTRA, isLooping);
         playbackBuilder.setExtras(bundle);
