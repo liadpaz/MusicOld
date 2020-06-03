@@ -2,7 +2,6 @@ package com.liadpaz.amp.adapters;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -70,12 +69,11 @@ public class PlaylistAdapter extends ListAdapter<Song, PlaylistAdapter.SongViewH
         if (viewType == TYPE_ITEM) {
             return new SongViewHolder(ItemPlaylistSongBinding.inflate(LayoutInflater.from(context), parent, false), (v, position) -> {
                 QueueUtil.queue.setValue(new ArrayList<>(songs));
-                QueueUtil.setPosition(position - 1);
-                Log.d(TAG, "onBindViewHolder: " + QueueUtil.queuePosition.getValue());
+                QueueUtil.setPosition(position);
                 MainActivity.getController().sendCommand(Constants.ACTION_QUEUE_POSITION, null, null);
-            }, onShuffleClickListener);
+            }, onShuffleClickListener, onMoreClickListener);
         }
-        return new SongViewHolder(ItemSongShuffleBinding.inflate(LayoutInflater.from(context), parent, false), null, onShuffleClickListener);
+        return new SongViewHolder(ItemSongShuffleBinding.inflate(LayoutInflater.from(context), parent, false), null, onShuffleClickListener, onMoreClickListener);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -90,8 +88,6 @@ public class PlaylistAdapter extends ListAdapter<Song, PlaylistAdapter.SongViewH
             binding.tvSongArtist.setText(Utilities.joinArtists(song.songArtists));
 
             Glide.with(context).load(Utilities.getCoverUri(song)).into(binding.ivSongCover);
-
-            binding.btnMore.setOnClickListener(v -> onMoreClickListener.onItemClick(v, position - 1));
             binding.btnDrag.setOnTouchListener((v, event) -> {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     onStartDragListener.onStartDrag(holder);
@@ -103,7 +99,6 @@ public class PlaylistAdapter extends ListAdapter<Song, PlaylistAdapter.SongViewH
 
     @Override
     public void onItemMove(int fromPosition, int toPosition) {
-        Log.d(TAG, "onItemMove: from: " + fromPosition + " to: " + toPosition);
         Collections.swap(songs, fromPosition - 1, toPosition - 1);
         itemTouchHelperAdapter.onItemMove(fromPosition - 1, toPosition - 1);
         notifyItemMoved(fromPosition, toPosition);
@@ -132,14 +127,15 @@ public class PlaylistAdapter extends ListAdapter<Song, PlaylistAdapter.SongViewH
     static class SongViewHolder extends RecyclerView.ViewHolder {
         private ViewBinding binding;
 
-        SongViewHolder(@NonNull ViewBinding binding, OnRecyclerItemClickListener onItemClick, @NonNull View.OnClickListener onShuffleClickListener) {
+        SongViewHolder(@NonNull ViewBinding binding, OnRecyclerItemClickListener onItemClick, @NonNull View.OnClickListener onShuffleClickListener, @NonNull OnRecyclerItemClickListener onMoreClickListener) {
             super(binding.getRoot());
             this.binding = binding;
 
             if (binding instanceof ItemSongShuffleBinding) {
                 ((ItemSongShuffleBinding)binding).getRoot().setOnClickListener(onShuffleClickListener);
             } else {
-                itemView.setOnClickListener(v -> onItemClick.onItemClick(v, getAdapterPosition()));
+                ((ItemPlaylistSongBinding)binding).btnMore.setOnClickListener(v -> onMoreClickListener.onItemClick(v, getAdapterPosition() - 1));
+                itemView.setOnClickListener(v -> onItemClick.onItemClick(v, getAdapterPosition() - 1));
             }
         }
     }
