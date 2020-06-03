@@ -311,10 +311,8 @@ public final class MediaPlayerService extends MediaBrowserService {
             if (audioFocusRequest != null) {
                 audioManager.abandonAudioFocusRequest(audioFocusRequest);
             }
-            mediaPlayer.reset();
             long start = System.currentTimeMillis();
-            mediaPlayer.setDataSource(this, ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, (currentSource = song).songId));
-            mediaPlayer.prepare();
+            mediaPlayer = MediaPlayer.create(this, ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, (currentSource = song).songId));
             Log.d(TAG, "setSource: " + (System.currentTimeMillis() - start));
             sendMetadata(currentSource);
         } catch (Exception ignored) {
