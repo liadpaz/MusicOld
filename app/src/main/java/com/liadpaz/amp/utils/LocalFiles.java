@@ -14,8 +14,8 @@ import androidx.lifecycle.LifecycleOwner;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.liadpaz.amp.LiveDataUtils.PlaylistsUtil;
-import com.liadpaz.amp.LiveDataUtils.SongsUtil;
+import com.liadpaz.amp.livedatautils.PlaylistsUtil;
+import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.viewmodels.Playlist;
 import com.liadpaz.amp.viewmodels.Song;
 
@@ -41,35 +41,32 @@ public class LocalFiles {
         CompletableFuture.runAsync(() -> PlaylistsUtil.setPlaylists(getPlaylists(context)));
         CompletableFuture.runAsync(() -> SongsUtil.setSongs(listSongs(context, Media.TITLE + " COLLATE NOCASE")));
 
-//        if (!lifecycleOwner.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.INITIALIZED)) {
-//            QueueUtil.queue.observe(lifecycleOwner, songs -> {
-//                ArrayList<Long> songsIdsList = songs.stream().map(song -> song.songId).collect(Collectors.toCollection(ArrayList::new));
-//                musicSharedPreferences.edit().putString(Constants.SHARED_PREFERENCES_QUEUE, new Gson().toJson(songsIdsList)).apply();
-//            });
-//            QueueUtil.queuePosition.observe(lifecycleOwner, queuePosition -> musicSharedPreferences.edit().putInt(Constants.SHARED_PREFERENCES_QUEUE, queuePosition).apply());
-//        }
+        //        if (!lifecycleOwner.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.INITIALIZED)) {
+        //            QueueUtil.queue.observe(lifecycleOwner, songs -> {
+        //                ArrayList<Long> songsIdsList = songs.stream().map(song -> song.songId).collect(Collectors.toCollection(ArrayList::new));
+        //                musicSharedPreferences.edit().putString(Constants.PREFERENCES_QUEUE, new Gson().toJson(songsIdsList)).apply();
+        //            });
+        //            QueueUtil.queuePosition.observe(lifecycleOwner, queuePosition -> musicSharedPreferences.edit().putInt(Constants.PREFERENCES_QUEUE, queuePosition).apply());
+        //        }
 
         // TODO: fix queue saving
     }
 
-    /**
-     * This function returns the music folder path, if it does not exists, it returns the default
-     * one
-     *
-     * @return The music folder path, if not exists returns the default one
-     */
     @NonNull
     public static String getPath() {
-        return musicSharedPreferences.getString(Constants.SHARED_PREFERENCES_PATH, Constants.DEFAULT_PATH);
+        return musicSharedPreferences.getString(Constants.PREFERENCES_PATH, Constants.DEFAULT_PATH);
     }
 
-    /**
-     * This function saves the path of the songs folder to the local shared preferences
-     *
-     * @param path The path of the songs folder
-     */
     public static void setPath(@NonNull String path) {
-        musicSharedPreferences.edit().putString(Constants.SHARED_PREFERENCES_PATH, path).apply();
+        musicSharedPreferences.edit().putString(Constants.PREFERENCES_PATH, path).apply();
+    }
+
+    public static boolean getShowCurrent() {
+        return musicSharedPreferences.getBoolean(Constants.PREFERENCES_SHOW_CURRENT, true);
+    }
+
+    public static void setShowCurrent(boolean showCurrent) {
+        musicSharedPreferences.edit().putBoolean(Constants.PREFERENCES_SHOW_CURRENT, showCurrent).apply();
     }
 
     @NonNull

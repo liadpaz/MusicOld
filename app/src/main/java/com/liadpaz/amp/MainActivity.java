@@ -20,9 +20,10 @@ import androidx.core.content.ContextCompat;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.liadpaz.amp.databinding.ActivityMainBinding;
 import com.liadpaz.amp.fragments.ExtendedFragment;
-import com.liadpaz.amp.fragments.MainFragment;
+import com.liadpaz.amp.fragments.MainViewPagerFragment;
 import com.liadpaz.amp.notification.MediaNotification;
 import com.liadpaz.amp.service.MediaPlayerService;
+import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -43,10 +44,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-//        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().build());
+        //        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().build());
         super.onCreate(savedInstanceState);
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         setContentView((binding = ActivityMainBinding.inflate(getLayoutInflater())).getRoot());
+        setSupportActionBar(binding.toolBarMain);
 
         mediaBrowser = new MediaBrowser(this, new ComponentName(this, MediaPlayerService.class), new MediaBrowser.ConnectionCallback() {
             @Override
@@ -55,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
                 if (!shouldInitializeView.get()) {
                     shouldInitializeView.set(true);
                 } else {
-                    initView();
+                    initializeView();
                 }
             }
         }, null);
@@ -72,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
             if (!shouldInitializeView.get()) {
                 shouldInitializeView.set(true);
             } else {
-                initView();
+                initializeView();
             }
         }
     }
@@ -84,8 +86,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void initView() {
-        getSupportFragmentManager().beginTransaction().replace(R.id.mainFragment, MainFragment.newInstance()).replace(R.id.extendedFragment, ExtendedFragment.newInstance()).commit();
+    private void initializeView() {
+        getSupportFragmentManager().beginTransaction().replace(R.id.mainFragment, MainViewPagerFragment.newInstance()).replace(R.id.extendedFragment, ExtendedFragment.newInstance()).commitNow();
+        if (getIntent() != null) {
+            if (Constants.PREFERENCES_SHOW_CURRENT.equals(getIntent().getAction()) && LocalFiles.getShowCurrent()) {
+                BottomSheetBehavior.from(binding.extendedFragment).setState(BottomSheetBehavior.STATE_EXPANDED);
+            }
+        }
     }
 
     @Override
@@ -99,22 +106,22 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.menuItemSettings: {
                 startActivityForResult(new Intent(this, SettingsActivity.class), REQUEST_SETTINGS);
-                return true;
+                break;
             }
 
             case R.id.menuItemAbout: {
                 startActivity(new Intent(this, AboutActivity.class));
-                return true;
+                break;
             }
         }
-        return false;
+        return true;
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == REQUEST_PERMISSION) {
             if (shouldInitializeView.get()) {
-                initView();
+                initializeView();
             }
         }
     }
@@ -124,6 +131,16 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_SETTINGS && resultCode == RESULT_OK) {
             recreate();
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if (intent != null && Constants.PREFERENCES_SHOW_CURRENT.equals(intent.getAction())) {
+            if (LocalFiles.getShowCurrent()) {
+                BottomSheetBehavior.from(binding.extendedFragment).setState(BottomSheetBehavior.STATE_EXPANDED);
+            }
         }
     }
 

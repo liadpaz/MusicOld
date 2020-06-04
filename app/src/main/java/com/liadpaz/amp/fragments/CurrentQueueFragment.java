@@ -19,7 +19,7 @@ import com.liadpaz.amp.adapters.QueueAdapter;
 import com.liadpaz.amp.databinding.FragmentCurrentQueueBinding;
 import com.liadpaz.amp.dialogs.PlaylistsDialog;
 import com.liadpaz.amp.interfaces.ItemTouchHelperAdapter;
-import com.liadpaz.amp.LiveDataUtils.QueueUtil;
+import com.liadpaz.amp.livedatautils.QueueUtil;
 
 public class CurrentQueueFragment extends Fragment {
     private static final String TAG = "AmpApp.CurrentQueueFragment";

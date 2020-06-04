@@ -1,4 +1,4 @@
-package com.liadpaz.amp.LiveDataUtils;
+package com.liadpaz.amp.livedatautils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

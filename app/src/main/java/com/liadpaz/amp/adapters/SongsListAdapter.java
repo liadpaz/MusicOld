@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewbinding.ViewBinding;
 
 import com.bumptech.glide.Glide;
-import com.liadpaz.amp.LiveDataUtils.QueueUtil;
+import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.databinding.ItemNoSongsBinding;
 import com.liadpaz.amp.databinding.ItemSongBinding;

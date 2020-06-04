@@ -11,7 +11,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.liadpaz.amp.LiveDataUtils.PlaylistsUtil;
+import com.liadpaz.amp.livedatautils.PlaylistsUtil;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.PlaylistsAdapter;
 import com.liadpaz.amp.databinding.FragmentPlaylistsBinding;
@@ -59,7 +59,7 @@ public class PlaylistsFragment extends Fragment {
             }
         });
 
-        adapter = new PlaylistsAdapter(requireContext(), (v, position) -> requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.viewpagerFragment, PlaylistFragment.newInstance(playlists.get(position))).addToBackStack(null).commit(), position -> {
+        adapter = new PlaylistsAdapter(requireContext(), (v, position) -> requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.mainLayout, PlaylistFragment.newInstance(playlists.get(position))).addToBackStack(null).commit(), position -> {
             if (position != 0) {
                 new EditPlaylistDialog(playlists.get(position)).show(getChildFragmentManager(), null);
             }

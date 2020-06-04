@@ -9,7 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.liadpaz.amp.LiveDataUtils.SongsUtil;
+import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.ArtistsListAdapter;
 import com.liadpaz.amp.databinding.FragmentArtistListBinding;
@@ -42,7 +42,7 @@ public class ArtistListFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         binding.lvArtists.setAdapter(adapter = new ArtistsListAdapter(requireContext(), new ArrayList<>(artists)));
-        binding.lvArtists.setOnItemClickListener((parent, view1, position, id) -> requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.viewpagerFragment, ArtistSongListFragment.newInstance(artists.get(position))).addToBackStack(null).commit());
+        binding.lvArtists.setOnItemClickListener((parent, view1, position, id) -> requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.mainLayout, ArtistSongListFragment.newInstance(artists.get(position))).addToBackStack(null).commit());
 
         SongsUtil.observe(this, songs -> {
             artists.clear();

@@ -22,9 +22,9 @@ import androidx.fragment.app.Fragment;
 import androidx.palette.graphics.Palette;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.liadpaz.amp.LiveDataUtils.ColorUtil;
-import com.liadpaz.amp.LiveDataUtils.QueueUtil;
-import com.liadpaz.amp.LiveDataUtils.SongsUtil;
+import com.liadpaz.amp.livedatautils.ColorUtil;
+import com.liadpaz.amp.livedatautils.QueueUtil;
+import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentExtendedBinding;

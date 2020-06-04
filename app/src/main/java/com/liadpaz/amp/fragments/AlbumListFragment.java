@@ -11,7 +11,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.liadpaz.amp.LiveDataUtils.SongsUtil;
+import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.AlbumsListAdapter;
 import com.liadpaz.amp.databinding.FragmentAlbumListBinding;
@@ -43,7 +43,7 @@ public class AlbumListFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         AlbumsListAdapter adapter = new AlbumsListAdapter(getContext(), (v, position) -> {
             Fragment fragment = AlbumSongListFragment.newInstance(albums.get(position));
-            requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.viewpagerFragment, fragment).addToBackStack(null).commit();
+            requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.mainLayout, fragment).addToBackStack(null).commit();
         });
 
         binding.rvAlbums.setLayoutManager(new LinearLayoutManager(requireContext()));

@@ -11,25 +11,26 @@ import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.MainViewPagerAdapter;
-import com.liadpaz.amp.databinding.FragmentViewPagerBinding;
+import com.liadpaz.amp.databinding.FragmentMainViewPagerBinding;
 
 import java.util.ArrayList;
 
-public class ViewPagerFragment extends Fragment {
+public class MainViewPagerFragment extends Fragment {
     private static final String TAG = "AmpApp.ViewPagerFragment";
 
-    private FragmentViewPagerBinding binding;
+    private FragmentMainViewPagerBinding binding;
 
-    public ViewPagerFragment() { }
+    public MainViewPagerFragment() { }
 
     @NonNull
-    public static ViewPagerFragment newInstance() { return new ViewPagerFragment(); }
+    public static MainViewPagerFragment newInstance() { return new MainViewPagerFragment(); }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return (binding = FragmentViewPagerBinding.inflate(inflater, container, false)).getRoot();
+        return (binding = FragmentMainViewPagerBinding.inflate(inflater, container, false)).getRoot();
     }
 
     @Override
@@ -45,6 +46,6 @@ public class ViewPagerFragment extends Fragment {
             add(getString(R.string.tab_albums));
         }};
 
-        new TabLayoutMediator(binding.tabLayoutMain, viewPager, ((tab, position) -> tab.setText(tabsTitle.get(position)))).attach();
+        new TabLayoutMediator(((MainActivity)requireActivity()).binding.tabLayoutMain, viewPager, ((tab, position) -> tab.setText(tabsTitle.get(position)))).attach();
     }
 }

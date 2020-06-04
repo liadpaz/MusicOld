@@ -8,6 +8,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.SwitchPreferenceCompat;
 
 import com.liadpaz.amp.databinding.SettingsActivityBinding;
 import com.liadpaz.amp.utils.Constants;
@@ -31,7 +32,8 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     public static class SettingsFragment extends PreferenceFragmentCompat {
-        Preference pathPreference;
+        private Preference pathPreference;
+        private SwitchPreferenceCompat notificationPreference;
 
         @SuppressWarnings("ConstantConditions")
         @Override
@@ -52,6 +54,13 @@ public class SettingsActivity extends AppCompatActivity {
                 requireActivity().setResult(RESULT_OK);
                 return true;
             });
+            notificationPreference = findPreference("notification");
+            notificationPreference.setChecked(LocalFiles.getShowCurrent());
+            notificationPreference.setOnPreferenceClickListener(preference -> {
+                LocalFiles.setShowCurrent(notificationPreference.isChecked());
+                return true;
+            });
+
         }
 
         @SuppressWarnings("ConstantConditions")

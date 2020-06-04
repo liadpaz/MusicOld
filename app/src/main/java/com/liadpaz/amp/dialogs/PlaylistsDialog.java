@@ -12,7 +12,7 @@ import androidx.fragment.app.DialogFragment;
 
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.DialogPlaylistsBinding;
-import com.liadpaz.amp.LiveDataUtils.PlaylistsUtil;
+import com.liadpaz.amp.livedatautils.PlaylistsUtil;
 import com.liadpaz.amp.viewmodels.Playlist;
 import com.liadpaz.amp.viewmodels.Song;
 

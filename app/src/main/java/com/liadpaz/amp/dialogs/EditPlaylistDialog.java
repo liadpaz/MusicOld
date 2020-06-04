@@ -13,7 +13,7 @@ import androidx.fragment.app.DialogFragment;
 
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.DialogEditPlaylistBinding;
-import com.liadpaz.amp.LiveDataUtils.PlaylistsUtil;
+import com.liadpaz.amp.livedatautils.PlaylistsUtil;
 import com.liadpaz.amp.viewmodels.Playlist;
 
 public class EditPlaylistDialog extends DialogFragment {

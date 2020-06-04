@@ -2,8 +2,9 @@ package com.liadpaz.amp.utils;
 
 @SuppressWarnings("WeakerAccess")
 public class Constants {
-    public final static String SHARED_PREFERENCES_PATH = "path";
-    public final static String SHARED_PREFERENCES_QUEUE = "queue";
+    public final static String PREFERENCES_PATH = "path";
+    public final static String PREFERENCES_QUEUE = "queue";
+    public final static String PREFERENCES_SHOW_CURRENT = "show_current";
 
     public final static String DEFAULT_PATH = "Music";
 

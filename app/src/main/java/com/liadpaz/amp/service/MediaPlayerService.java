@@ -30,7 +30,7 @@ import androidx.annotation.Nullable;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
-import com.liadpaz.amp.LiveDataUtils.QueueUtil;
+import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.notification.MediaNotification;
@@ -100,7 +100,7 @@ public final class MediaPlayerService extends MediaBrowserService {
         mediaPlayer.setAudioAttributes(audioAttributes);
 
         mediaSession = new MediaSession(this, LOG_TAG);
-        mediaSession.setSessionActivity(PendingIntent.getActivity(this, 10, new Intent(this, MainActivity.class), 0));
+        mediaSession.setSessionActivity(PendingIntent.getActivity(this, 10, new Intent(this, MainActivity.class).setAction(Constants.PREFERENCES_SHOW_CURRENT), 0));
 
         mediaSession.setCallback(new MediaSession.Callback() {
             @Override
@@ -311,7 +311,7 @@ public final class MediaPlayerService extends MediaBrowserService {
             if (audioFocusRequest != null) {
                 audioManager.abandonAudioFocusRequest(audioFocusRequest);
             }
-            mediaPlayer.reset();
+            mediaPlayer.stop();
             mediaPlayer = MediaPlayer.create(this, ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, (currentSource = song).songId));
             mediaPlayer.setOnCompletionListener(onCompletionListener);
             sendMetadata(currentSource);
@@ -358,13 +358,21 @@ public final class MediaPlayerService extends MediaBrowserService {
     public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUid, @Nullable Bundle rootHints) { return new BrowserRoot(getString(R.string.app_name), null); }
 
     @Override
-    public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowser.MediaItem>> result) { result.sendResult(null); }
+    public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowser.MediaItem>> result) {
+        ArrayList<MediaBrowser.MediaItem> mediaItems = new ArrayList<>();
+        for (Song song : queue) {
+            MediaDescription.Builder descriptionBuilder = new MediaDescription.Builder().setTitle(song.songTitle).setSubtitle(Utilities.joinArtists(song.songArtists)).setDescription(song.album).setIconUri(Utilities.getCoverUri(song));
+            mediaItems.add(new MediaBrowser.MediaItem(descriptionBuilder.build(), MediaBrowser.MediaItem.FLAG_PLAYABLE));
+        }
+        result.sendResult(mediaItems);
+    }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         becomingNoisyReceiver.unregister();
         mediaPlayer.release();
+        mediaPlayer = null;
         mediaSession.release();
     }
 

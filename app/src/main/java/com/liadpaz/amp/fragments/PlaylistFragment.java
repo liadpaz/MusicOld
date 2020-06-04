@@ -16,8 +16,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.liadpaz.amp.LiveDataUtils.PlaylistsUtil;
-import com.liadpaz.amp.LiveDataUtils.QueueUtil;
+import com.liadpaz.amp.livedatautils.PlaylistsUtil;
+import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.PlaylistAdapter;
