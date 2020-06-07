@@ -18,6 +18,7 @@ import com.liadpaz.amp.dialogs.NewPlaylistDialog;
 import com.liadpaz.amp.dialogs.PlaylistsDialog;
 import com.liadpaz.amp.livedatautils.ColorUtil;
 import com.liadpaz.amp.livedatautils.QueueUtil;
+import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.Utilities;
 
 import java.util.ArrayList;
@@ -44,7 +45,7 @@ public class ExtendedInfoFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         binding.btnQueue.setOnClickListener(v -> {
-            getParentFragmentManager().beginTransaction().replace(R.id.layoutFragment, isShowingQueue ? ExtendedSongFragment.newInstance() : CurrentQueueFragment.newInstance()).commit();
+            getParentFragmentManager().beginTransaction().replace(R.id.layoutFragment, isShowingQueue ? ExtendedViewPagerFragment.newInstance() : CurrentQueueFragment.newInstance()).commit();
             v.setBackgroundResource(isShowingQueue ? (isDark ? R.drawable.queue_music_not_shown_black : R.drawable.queue_music_not_shown) : R.drawable.queue_music_shown);
             isShowingQueue = !isShowingQueue;
         });
@@ -56,7 +57,7 @@ public class ExtendedInfoFragment extends Fragment {
                 switch (item.getItemId()) {
                     case R.id.menuQueueClear: {
                         QueueUtil.setQueue(new ArrayList<>());
-                        MainActivity.getController().getTransportControls().stop();
+                        MainActivity.getController().sendCommand(Constants.ACTION_RESET, null, null);
                         break;
                     }
 

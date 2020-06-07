@@ -15,13 +15,13 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.ItemQueueSongBinding;
 import com.liadpaz.amp.interfaces.ItemTouchHelperAdapter;
 import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
 import com.liadpaz.amp.interfaces.OnStartDragListener;
+import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Song;
@@ -102,7 +102,7 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
 
     @Override
     public void onItemMove(final int fromPosition, final int toPosition) {
-        QueueUtil.isChanging = true;
+        QueueUtil.setIsChanging(true);
         Collections.swap(songs, fromPosition, toPosition);
         if (queuePosition == fromPosition) {
             QueueUtil.setPosition(toPosition);

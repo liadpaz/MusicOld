@@ -1,9 +1,5 @@
 package com.liadpaz.amp.fragments;
 
-import android.media.MediaDescription;
-import android.media.MediaMetadata;
-import android.media.session.MediaController;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,52 +10,30 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
-import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentExtendedSongBinding;
+import com.liadpaz.amp.livedatautils.QueueUtil;
+import com.liadpaz.amp.utils.Utilities;
 
 public class ExtendedSongFragment extends Fragment {
     private static final String TAG = "AmpApp.ExtendedSongFragment";
 
-    private MediaController controller;
-    private MediaController.Callback callback;
+    private int position;
 
     private FragmentExtendedSongBinding binding;
 
-    public ExtendedSongFragment() { }
+    private ExtendedSongFragment(int position) { this.position = position; }
 
     @NonNull
-    public static ExtendedSongFragment newInstance() { return new ExtendedSongFragment(); }
+    public static ExtendedSongFragment newInstance(int position) { return new ExtendedSongFragment(position); }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return (binding = FragmentExtendedSongBinding.inflate(inflater, container, false)).getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        (controller = MainActivity.getController()).registerCallback(callback = new MediaController.Callback() {
-            @Override
-            public void onMetadataChanged(MediaMetadata metadata) { setMetadata(metadata); }
-        });
-
-        setMetadata(controller.getMetadata());
-    }
-
-    private void setMetadata(MediaMetadata metadata) {
-        if (metadata != null) {
-            MediaDescription description = metadata.getDescription();
-            Glide.with(this).load(description.getIconUri()).placeholder(R.drawable.song).into(binding.ivSongCover);
-        } else {
-            Glide.with(this).load((Uri)null).placeholder(R.drawable.song).into(binding.ivSongCover);
-        }
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (callback != null) {
-            controller.unregisterCallback(callback);
-        }
+        Glide.with(this).load(Utilities.getCoverUri(QueueUtil.getQueue().get(position))).placeholder(R.drawable.song).into(binding.ivSongCover);
     }
 }

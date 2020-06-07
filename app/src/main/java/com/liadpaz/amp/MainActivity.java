@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.media.browse.MediaBrowser;
 import android.media.session.MediaController;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -44,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        //        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().build());
+        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().build());
         super.onCreate(savedInstanceState);
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         setContentView((binding = ActivityMainBinding.inflate(getLayoutInflater())).getRoot());
@@ -64,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
 
         new MediaNotification(this);
 
-        LocalFiles.init(this, this);
+        LocalFiles.init(this);
 
         startService();
 

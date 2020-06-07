@@ -45,4 +45,5 @@
     <string name="preference_notification_group">הגדרות התראות</string>
     <string name="preference_notification_open_summary">פתח את מסך השיר הנוכחי בלחיצה על ההתראה</string>
     <string name="preference_notification_open_title">לחיצה על התראה</string>
+    <string name="about">אפליקציה זו נועדה לשמיעת שירים בקבצים במכשיר. לחווית המשתמש הטובה ביותר מומלץ שימוש באפליקציה לתיוג שירים כמו AutomaTag )כדי שהמידע על השירים יהיה נכון ויהיו תמונות אלבום). אם מצאת באג כלשהו בבקשה תדווח אלי.</string>
 </resources>

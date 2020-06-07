@@ -1,5 +1,7 @@
 package com.liadpaz.amp.livedatautils;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.MutableLiveData;
@@ -13,7 +15,12 @@ public class QueueUtil {
     private static final MutableLiveData<ArrayList<Song>> queue = new MutableLiveData<>(new ArrayList<>());
     private static final MutableLiveData<Integer> queuePosition = new MutableLiveData<>(-1);
     private static final String TAG = "AmpApp.QueueUtil";
-    public static boolean isChanging = false;
+    private static boolean isChanging = false;
+
+    public static void setIsChanging(boolean isChanging) {
+        Log.d(TAG, "setIsChanging: ");
+        QueueUtil.isChanging = isChanging;
+    }
 
     @SuppressWarnings("ConstantConditions")
     public static void addToEnd(@NonNull Song song) {
@@ -85,4 +92,6 @@ public class QueueUtil {
     public static void addToPosition(int add) {
         queuePosition.setValue(queuePosition.getValue() + add);
     }
+
+    public static boolean isChanging() { return isChanging; }
 }

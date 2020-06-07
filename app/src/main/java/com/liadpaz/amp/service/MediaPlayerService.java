@@ -24,7 +24,6 @@ import android.os.Bundle;
 import android.os.ResultReceiver;
 import android.provider.MediaStore;
 import android.service.media.MediaBrowserService;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -89,49 +88,53 @@ public final class MediaPlayerService extends MediaBrowserService {
 
         executor = AsyncTask.SERIAL_EXECUTOR;
 
-        mediaPlayer = new MediaPlayer();
-        mediaPlayer.setOnCompletionListener(onCompletionListener);
-
-        new MediaSession.QueueItem(new MediaDescription.Builder().build(), 0);
-
         QueueUtil.observeQueue(songs -> {
             this.queue = songs;
-            if (this.queue.size() > 0 && currentSource == null) {
+            if (queue.size() > 0 && currentSource == null) {
                 new LoadSongTask(this).executeOnExecutor(executor);
             }
         });
         QueueUtil.observePosition(queuePosition -> {
             if (queuePosition != -1) {
                 this.queuePosition = queuePosition;
-                if (!QueueUtil.isChanging) {
+                if (!QueueUtil.isChanging()) {
                     new LoadSongTask(this).executeOnExecutor(executor);
                     new PlaySongTask(this).executeOnExecutor(executor);
                 } else {
-                    QueueUtil.isChanging = false;
+                    QueueUtil.setIsChanging(false);
                 }
             }
         });
 
+        // initializes the audio manager (for audio focus requests) and the audio attributes for the media player
         audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
         audioAttributes = new AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).setUsage(AudioAttributes.USAGE_MEDIA).build();
 
-        mediaPlayer.setAudioAttributes(audioAttributes);
-
+        // initializes the media session
         mediaSession = new MediaSession(this, LOG_TAG);
         mediaSession.setSessionActivity(PendingIntent.getActivity(this, 10, new Intent(this, MainActivity.class).setAction(Constants.PREFERENCES_SHOW_CURRENT), 0));
 
         mediaSession.setCallback(new MediaSession.Callback() {
             @Override
             public void onCommand(@NonNull String command, Bundle extras, ResultReceiver cb) {
-                if (Constants.LOOP_EXTRA.equals(command)) {
-                    setLooping(extras.getBoolean(Constants.LOOP_EXTRA));
-                    sendPlaybackState(mediaPlayer.getCurrentPosition(), mediaPlayer.isPlaying() ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED);
+                switch (command) {
+                    case Constants.LOOP_EXTRA: {
+                        setLooping(extras.getBoolean(Constants.LOOP_EXTRA));
+                        sendPlaybackState(mediaPlayer.getCurrentPosition(), mediaPlayer.isPlaying() ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED);
+                        break;
+                    }
+
+                    case Constants.ACTION_RESET: {
+                        mediaPlayer.pause();
+                        sendMetadata(null);
+                        sendPlaybackState(0, PlaybackState.STATE_STOPPED);
+                        stopForeground(true);
+                    }
                 }
             }
 
             @Override
             public void onPlay() {
-                Log.d(TAG, "onPlay() called");
                 new PlaySongTask(MediaPlayerService.this).executeOnExecutor(executor);
             }
 
@@ -151,7 +154,7 @@ public final class MediaPlayerService extends MediaBrowserService {
                     audioManager.abandonAudioFocusRequest(audioFocusRequest);
                 }
                 currentSource = null;
-                sendPlaybackState(mediaPlayer.getCurrentPosition(), PlaybackState.STATE_STOPPED);
+                sendPlaybackState(0, PlaybackState.STATE_STOPPED);
                 sendMetadata(null);
                 stopForeground(true);
             }
@@ -199,19 +202,34 @@ public final class MediaPlayerService extends MediaBrowserService {
             }
         });
 
+        // initializes the metadata builder (for sending metadata to the media browser)
         metadataBuilder = new MediaMetadata.Builder();
         mediaSession.setMetadata(metadataBuilder.build());
 
+        // initializes the playback state builder (for sending playback state to the media browser)
         playbackBuilder = new PlaybackState.Builder();
-        sendPlaybackState(mediaPlayer.getCurrentPosition(), PlaybackState.STATE_STOPPED);
+        sendPlaybackState(0, PlaybackState.STATE_STOPPED);
 
+        // sets the session token of the current service
         setSessionToken(mediaSession.getSessionToken());
 
+        // register the becoming noisy receiver
         becomingNoisyReceiver = new BecomingNoisyReceiver(this, mediaSession.getController());
+
+        // initializes the media player and set the on complete listener and audio attributes
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setOnCompletionListener(onCompletionListener);
+        mediaPlayer.setAudioAttributes(audioAttributes);
     }
 
+    /**
+     * This function starts the playback and request an audio focus and registers an audio focus
+     * change listener.
+     * <p>
+     * On an event of audio focus change the function will pause/start/lower the volume depends on
+     * the new audio focus state.
+     */
     private void onPlay() {
-        Log.d(TAG, "onPlay: ");
         audioManager.requestAudioFocus(audioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).setOnAudioFocusChangeListener(focusChange -> {
             switch (focusChange) {
                 case AudioManager.AUDIOFOCUS_GAIN: {
@@ -245,6 +263,9 @@ public final class MediaPlayerService extends MediaBrowserService {
         play();
     }
 
+    /**
+     * This function starts the playback and notifies the needed listeners.
+     */
     private void play() {
         resumeOnFocusGain = true;
         becomingNoisyReceiver.register();
@@ -253,6 +274,9 @@ public final class MediaPlayerService extends MediaBrowserService {
         startNotification();
     }
 
+    /**
+     * This function pauses the playback and notifies the needed listeners.
+     */
     private void onPause() {
         becomingNoisyReceiver.unregister();
         mediaPlayer.pause();
@@ -260,12 +284,23 @@ public final class MediaPlayerService extends MediaBrowserService {
         startNotification();
     }
 
+    /**
+     * This function sets the looping state of the player to either <i>REPEAT_ONE</i> or
+     * <i>REPEAT</i> and notifies the needed listeners.
+     *
+     * @param isLooping {@code true} to <i>REPEAT_ONE</i>, otherwise {@code false}
+     */
     private void setLooping(boolean isLooping) {
         this.isLooping = isLooping;
         sendPlaybackState(mediaPlayer.getCurrentPosition(), mediaPlayer.isPlaying() ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED);
         startNotification();
     }
 
+    /**
+     * This function sends the metadata to all active {@link MediaBrowser}s.
+     *
+     * @param song the source of the metadata.
+     */
     private void sendMetadata(@Nullable Song song) {
         if (song != null) {
             metadataBuilder.putText(MediaMetadata.METADATA_KEY_TITLE, song.songTitle).putText(MediaMetadata.METADATA_KEY_ARTIST, Utilities.joinArtists(song.songArtists)).putText(MediaMetadata.METADATA_KEY_ALBUM, song.album).putString(MediaMetadata.METADATA_KEY_ART_URI, Utilities.getCoverUri(song).toString()).putLong(MediaMetadata.METADATA_KEY_DURATION, mediaPlayer.getDuration());
@@ -275,6 +310,12 @@ public final class MediaPlayerService extends MediaBrowserService {
         }
     }
 
+    /**
+     * This function send the playback to all active {@link MediaBrowser}s.
+     *
+     * @param position the position of the playback
+     * @param state    the state of the playback {@link PlaybackState}
+     */
     private void sendPlaybackState(int position, int state) {
         playbackBuilder.setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_SEEK_TO | PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS).setState(state, position, 1F);
         Bundle bundle = new Bundle();
@@ -316,20 +357,28 @@ public final class MediaPlayerService extends MediaBrowserService {
         return START_STICKY;
     }
 
+    /**
+     * This function sets the source of the {@link MediaPlayer} instance of the service.
+     *
+     * @param song the {@link Song} to set the source as.
+     */
     private void setSource(Song song) {
         try {
             if (audioFocusRequest != null) {
                 audioManager.abandonAudioFocusRequest(audioFocusRequest);
             }
-            mediaPlayer.stop();
-            mediaPlayer.release();
-            mediaPlayer = MediaPlayer.create(this, ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, (currentSource = song).songId));
-            mediaPlayer.setOnCompletionListener(onCompletionListener);
+            mediaPlayer.reset();
+            mediaPlayer.setDataSource(this, ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, (currentSource = song).songId));
+            mediaPlayer.prepare();
             sendMetadata(currentSource);
         } catch (Exception ignored) {
         }
     }
 
+    /**
+     * This function starts the notification for the service, it's taking the state of the player to
+     * show the user the correct notification.
+     */
     private void startNotification() {
         final boolean isPlaying = mediaPlayer.isPlaying();
 
@@ -387,6 +436,12 @@ public final class MediaPlayerService extends MediaBrowserService {
         mediaSession.release();
     }
 
+    /**
+     * This class is for the <i>Becoming Noisy</i> broadcast, eg. when the user hears music with
+     * earphones and the earphones disconnects.
+     * <p>
+     * It's stopping the playback when it receives that broadcast.
+     */
     private static class BecomingNoisyReceiver extends BroadcastReceiver {
         private IntentFilter noisyFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
 
@@ -422,6 +477,11 @@ public final class MediaPlayerService extends MediaBrowserService {
         }
     }
 
+    /**
+     * This class is for loading a song into the {@link MediaPlayer} instance of the Service.
+     * <p>
+     * It's doing it asynchronously to not block the main thread
+     */
     private static class LoadSongTask extends AsyncTask<Void, Void, Void> {
         private WeakReference<MediaPlayerService> service;
 
@@ -439,6 +499,11 @@ public final class MediaPlayerService extends MediaBrowserService {
         }
     }
 
+    /**
+     * This class is for playing a song from the {@link MediaPlayer} instance of the Service.
+     * <p>
+     * It's doing it asynchronously to not block the main thread.
+     */
     private static class PlaySongTask extends AsyncTask<Void, Void, Void> {
         private WeakReference<MediaPlayerService> service;
 

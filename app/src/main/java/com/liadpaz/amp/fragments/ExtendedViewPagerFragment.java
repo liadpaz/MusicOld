@@ -8,13 +8,18 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.viewpager2.widget.ViewPager2;
 
+import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.ExtendedViewPagerAdapter;
 import com.liadpaz.amp.databinding.FragmentExtendedViewPagerBinding;
 import com.liadpaz.amp.livedatautils.QueueUtil;
 
 public class ExtendedViewPagerFragment extends Fragment {
     private static final String TAG = "AmpApp.ExtendedViewPagerFragment";
+
+    private ExtendedViewPagerAdapter adapter;
+    private ViewPager2.OnPageChangeCallback callback;
 
     private boolean isCreated = false;
 
@@ -32,13 +37,42 @@ public class ExtendedViewPagerFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        binding.extendedViewPager.setAdapter(new ExtendedViewPagerAdapter(this));
+        adapter = new ExtendedViewPagerAdapter(this);
+        binding.extendedViewPager.setAdapter(adapter);
         QueueUtil.observePosition(getViewLifecycleOwner(), queuePosition -> {
             if (!isCreated) {
                 isCreated = true;
-                QueueUtil.isChanging = true;
+                binding.extendedViewPager.setCurrentItem(queuePosition, false);
+            } else {
+                binding.extendedViewPager.setCurrentItem(queuePosition);
             }
-            binding.extendedViewPager.setCurrentItem(queuePosition);
         });
+        QueueUtil.observeQueue(getViewLifecycleOwner(), songs -> {
+            if (songs.size() == 0) {
+                getParentFragmentManager().beginTransaction().replace(R.id.layoutFragment, NoSongFragment.newInstance()).commit();
+            } else {
+                binding.extendedViewPager.setAdapter(adapter = new ExtendedViewPagerAdapter(this));
+            }
+        });
+        binding.extendedViewPager.registerOnPageChangeCallback(callback = new ViewPager2.OnPageChangeCallback() {
+            private boolean firstTime = true;
+
+            @Override
+            public void onPageSelected(int position) {
+                if (firstTime) {
+                    firstTime = false;
+                } else {
+                    QueueUtil.setPosition(position);
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (callback != null) {
+            binding.extendedViewPager.unregisterOnPageChangeCallback(callback);
+        }
     }
 }

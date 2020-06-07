@@ -62,8 +62,7 @@ public final class MediaNotification {
                                                                 .addAction(new Notification.Action.Builder(Icon.createWithResource(context, R.drawable.skip_next), null, skipToNextIntent).build())
                                                                 .setStyle(new Notification.MediaStyle().setShowActionsInCompactView(1, 2, 3).setMediaSession(mediaSession.getSessionToken()))
                                                                 .setSmallIcon(R.drawable.ic_launcher_foreground);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ignored) {
             return null;
         }
     }

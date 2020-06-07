@@ -22,12 +22,12 @@ import androidx.fragment.app.Fragment;
 import androidx.palette.graphics.Palette;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.liadpaz.amp.livedatautils.ColorUtil;
-import com.liadpaz.amp.livedatautils.QueueUtil;
-import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentExtendedBinding;
+import com.liadpaz.amp.livedatautils.ColorUtil;
+import com.liadpaz.amp.livedatautils.QueueUtil;
+import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.Utilities;
 
@@ -137,7 +137,7 @@ public class ExtendedFragment extends Fragment {
                 } else if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
                     if (isUp) {
                         // show the controller fragment
-                        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedSongFragment.newInstance()).commitNow();
+                        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedViewPagerFragment.newInstance()).commitNow();
                         requireActivity().getWindow().setStatusBarColor(requireActivity().getColor(R.color.colorPrimaryDark));
                         binding.infoFragment.setAlpha(1);
                         isUp = false;
@@ -155,7 +155,7 @@ public class ExtendedFragment extends Fragment {
             }
         });
 
-        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedSongFragment.newInstance()).commit();
+        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedViewPagerFragment.newInstance()).commit();
     }
 
     @Override
@@ -172,6 +172,7 @@ public class ExtendedFragment extends Fragment {
         if (state == null) {
             binding.btnPlayPause.setBackgroundResource(R.drawable.play);
             binding.btnRepeat.setBackgroundResource(R.drawable.repeat);
+            shouldSeek = false;
         } else {
             currentPosition = state.getPosition();
             if (state.getState() == PlaybackState.STATE_PLAYING) {
@@ -231,6 +232,8 @@ public class ExtendedFragment extends Fragment {
             binding.tvTimeElapsed.setText(Utilities.formatTime(0));
             binding.tvTotalTime.setText(Utilities.formatTime(0));
             binding.extendedFragment.setBackgroundColor(Color.parseColor("#555555"));
+            requireActivity().getWindow().setStatusBarColor(defaultColor = Color.parseColor("#101820"));
+            shouldSeek = false;
         }
     }
 
@@ -262,5 +265,9 @@ public class ExtendedFragment extends Fragment {
         if (callback != null) {
             controller.unregisterCallback(callback);
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
     }
 }

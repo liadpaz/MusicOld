@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
+import com.liadpaz.amp.fragments.ExtendedSongFragment;
 import com.liadpaz.amp.livedatautils.QueueUtil;
 
 public class ExtendedViewPagerAdapter extends FragmentStateAdapter {
@@ -15,7 +16,7 @@ public class ExtendedViewPagerAdapter extends FragmentStateAdapter {
     @NonNull
     @Override
     public Fragment createFragment(int position) {
-        return null; //ExtendedSongFragment.newInstance(position);
+        return ExtendedSongFragment.newInstance(position);
     }
 
     @Override
