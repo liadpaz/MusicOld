@@ -9,15 +9,14 @@ import androidx.lifecycle.Observer;
 import com.liadpaz.amp.viewmodels.Playlist;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Collectors;
 
 public class PlaylistsUtil {
     private static final String TAG = "AmpApp.PlaylistsUtil";
 
-    private static MutableLiveData<CopyOnWriteArrayList<Playlist>> playlists = new MutableLiveData<>(new CopyOnWriteArrayList<>());
+    private static MutableLiveData<ConcurrentLinkedDeque<Playlist>> playlists = new MutableLiveData<>(new ConcurrentLinkedDeque<>());
 
     @SuppressWarnings({"ConstantConditions", "BooleanMethodIsAlwaysInverted"})
     public static boolean isPlaylistExists(String name) {
@@ -29,42 +28,33 @@ public class PlaylistsUtil {
         return false;
     }
 
-    public static void observe(@NonNull LifecycleOwner lifecycleOwner, @NonNull Observer<CopyOnWriteArrayList<Playlist>> observer) {
+    public static void observe(@NonNull LifecycleOwner lifecycleOwner, @NonNull Observer<ConcurrentLinkedDeque<Playlist>> observer) {
         playlists.observe(lifecycleOwner, observer);
     }
 
-    public static CopyOnWriteArrayList<Playlist> getPlaylists() {
+    @SuppressWarnings("ConstantConditions")
+    @NonNull
+    public static ConcurrentLinkedDeque<Playlist> getPlaylists() {
         return playlists.getValue();
     }
 
-    public static void setPlaylists(@NonNull List<Playlist> playlists) {
-        PlaylistsUtil.playlists.postValue(new CopyOnWriteArrayList<>(playlists));
+    public static void setPlaylists(@NonNull Queue<Playlist> playlists) {
+        PlaylistsUtil.playlists.postValue(new ConcurrentLinkedDeque<>(playlists));
     }
 
     public static void addPlaylist(@NonNull Playlist playlist) {
-        List<Playlist> playlists = getPlaylists();
-        playlists.add(playlist);
-        Collections.reverse(playlists);
+        ConcurrentLinkedDeque<Playlist> playlists = getPlaylists();
+        playlists.addFirst(playlist);
         setPlaylists(playlists);
     }
 
     @Nullable
     public static Playlist removePlaylist(@NonNull String name) {
-        CopyOnWriteArrayList<Playlist> playlists = getPlaylists();
+        ConcurrentLinkedDeque<Playlist> playlists = getPlaylists();
         for (Playlist playlist : playlists) {
             if (playlist.name.equals(name)) {
                 playlists.remove(playlist);
                 setPlaylists(playlists);
-                return playlist;
-            }
-        }
-        return null;
-    }
-
-    @Nullable
-    public static Playlist getPlaylistByName(@NonNull String name) {
-        for (Playlist playlist : getPlaylists()) {
-            if (name.equals(playlist.name)) {
                 return playlist;
             }
         }

@@ -86,11 +86,9 @@ public class ExtendedFragment extends Fragment {
 
         binding.btnSkipPrev.setOnClickListener(v -> controller.getTransportControls().skipToPrevious());
         binding.btnPlayPause.setOnClickListener(v -> {
-            if (QueueUtil.queue.getValue().size() == 0) {
-                QueueUtil.queue.setValue(SongsUtil.getSongs());
-                Bundle bundle = new Bundle();
-                bundle.putInt(Constants.ACTION_QUEUE_POSITION, 0);
-                controller.sendCommand(Constants.ACTION_QUEUE_POSITION, bundle, null);
+            if (QueueUtil.getQueueSize() == 0) {
+                QueueUtil.setQueue(SongsUtil.getSongs());
+                QueueUtil.setPosition(0);
             } else if (controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING) {
                 controller.getTransportControls().pause();
             } else {

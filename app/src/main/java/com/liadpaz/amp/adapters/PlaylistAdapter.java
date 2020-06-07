@@ -15,14 +15,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewbinding.ViewBinding;
 
 import com.bumptech.glide.Glide;
-import com.liadpaz.amp.livedatautils.QueueUtil;
-import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.databinding.ItemPlaylistSongBinding;
 import com.liadpaz.amp.databinding.ItemSongShuffleBinding;
 import com.liadpaz.amp.interfaces.ItemTouchHelperAdapter;
 import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
 import com.liadpaz.amp.interfaces.OnStartDragListener;
-import com.liadpaz.amp.utils.Constants;
+import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Song;
 
@@ -68,9 +66,8 @@ public class PlaylistAdapter extends ListAdapter<Song, PlaylistAdapter.SongViewH
     public SongViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (viewType == TYPE_ITEM) {
             return new SongViewHolder(ItemPlaylistSongBinding.inflate(LayoutInflater.from(context), parent, false), (v, position) -> {
-                QueueUtil.queue.setValue(new ArrayList<>(songs));
+                QueueUtil.setQueue(new ArrayList<>(songs));
                 QueueUtil.setPosition(position);
-                MainActivity.getController().sendCommand(Constants.ACTION_QUEUE_POSITION, null, null);
             }, onShuffleClickListener, onMoreClickListener);
         }
         return new SongViewHolder(ItemSongShuffleBinding.inflate(LayoutInflater.from(context), parent, false), null, onShuffleClickListener, onMoreClickListener);

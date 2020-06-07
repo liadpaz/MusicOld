@@ -19,10 +19,12 @@ import android.media.browse.MediaBrowser;
 import android.media.session.MediaController;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.ResultReceiver;
 import android.provider.MediaStore;
 import android.service.media.MediaBrowserService;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,16 +32,18 @@ import androidx.annotation.Nullable;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
-import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
+import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.notification.MediaNotification;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Song;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 public final class MediaPlayerService extends MediaBrowserService {
@@ -61,6 +65,8 @@ public final class MediaPlayerService extends MediaBrowserService {
         }
     };
 
+    private Executor executor;
+
     private MediaMetadata.Builder metadataBuilder;
     private PlaybackState.Builder playbackBuilder;
 
@@ -74,25 +80,37 @@ public final class MediaPlayerService extends MediaBrowserService {
     private ArrayList<Song> queue = new ArrayList<>();
 
     private void setQueuePosition(int position) {
-        QueueUtil.setPosition(queuePosition = position);
+        QueueUtil.setPosition(position);
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
 
+        executor = AsyncTask.SERIAL_EXECUTOR;
+
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnCompletionListener(onCompletionListener);
 
         new MediaSession.QueueItem(new MediaDescription.Builder().build(), 0);
 
-        QueueUtil.queue.observeForever(songs -> {
+        QueueUtil.observeQueue(songs -> {
             this.queue = songs;
             if (this.queue.size() > 0 && currentSource == null) {
-                setSource(queue.get(0));
+                new LoadSongTask(this).executeOnExecutor(executor);
             }
         });
-        QueueUtil.queuePosition.observeForever(queuePosition -> this.queuePosition = queuePosition);
+        QueueUtil.observePosition(queuePosition -> {
+            if (queuePosition != -1) {
+                this.queuePosition = queuePosition;
+                if (!QueueUtil.isChanging) {
+                    new LoadSongTask(this).executeOnExecutor(executor);
+                    new PlaySongTask(this).executeOnExecutor(executor);
+                } else {
+                    QueueUtil.isChanging = false;
+                }
+            }
+        });
 
         audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
         audioAttributes = new AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).setUsage(AudioAttributes.USAGE_MEDIA).build();
@@ -105,62 +123,23 @@ public final class MediaPlayerService extends MediaBrowserService {
         mediaSession.setCallback(new MediaSession.Callback() {
             @Override
             public void onCommand(@NonNull String command, Bundle extras, ResultReceiver cb) {
-                switch (command) {
-                    case Constants.ACTION_QUEUE_POSITION: {
-                        if (queue.size() > 0) {
-                            setSource(queue.get(queuePosition));
-                            onPlay();
-                        }
-                        break;
-                    }
-
-                    case Constants.LOOP_EXTRA: {
-                        setLooping(extras.getBoolean(Constants.LOOP_EXTRA));
-                        sendPlaybackState(mediaPlayer.getCurrentPosition(), mediaPlayer.isPlaying() ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED);
-                    }
+                if (Constants.LOOP_EXTRA.equals(command)) {
+                    setLooping(extras.getBoolean(Constants.LOOP_EXTRA));
+                    sendPlaybackState(mediaPlayer.getCurrentPosition(), mediaPlayer.isPlaying() ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED);
                 }
             }
 
             @Override
             public void onPlay() {
-                audioManager.requestAudioFocus(audioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).setOnAudioFocusChangeListener(focusChange -> {
-                    switch (focusChange) {
-                        case AudioManager.AUDIOFOCUS_GAIN: {
-                            if (resumeOnFocusGain) {
-                                resumeOnFocusGain = false;
-                                mediaPlayer.setVolume(1F, 1F);
-                                play();
-                            }
-                            break;
-                        }
-
-                        case AudioManager.AUDIOFOCUS_LOSS: {
-                            resumeOnFocusGain = false;
-                            pause();
-                            break;
-                        }
-
-                        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK: {
-                            mediaPlayer.setVolume(0.2F, 0.2F);
-                            break;
-                        }
-
-                        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT: {
-                            resumeOnFocusGain = mediaPlayer.isPlaying();
-                            pause();
-                            break;
-                        }
-                    }
-                }).setAudioAttributes(audioAttributes).build());
-                mediaPlayer.setVolume(1F, 1F);
-                play();
+                Log.d(TAG, "onPlay() called");
+                new PlaySongTask(MediaPlayerService.this).executeOnExecutor(executor);
             }
 
             @Override
             public void onPause() {
-                pause();
-                audioManager.abandonAudioFocusRequest(audioFocusRequest);
+                MediaPlayerService.this.onPause();
                 resumeOnFocusGain = false;
+                audioManager.abandonAudioFocusRequest(audioFocusRequest);
             }
 
             @Override
@@ -182,13 +161,11 @@ public final class MediaPlayerService extends MediaBrowserService {
             public void onSkipToNext() {
                 if (mediaSession.getController().getPlaybackState().getState() != PlaybackState.STATE_NONE) {
                     if (queue.size() > 0) {
-                        if (++queuePosition == queue.size()) {
-                            setQueuePosition(queuePosition = 0);
+                        if (queuePosition == queue.size() - 1) {
+                            setQueuePosition(0);
                         } else {
-                            setQueuePosition(queuePosition);
+                            setQueuePosition(queuePosition + 1);
                         }
-                        setSource(queue.get(queuePosition));
-                        onPlay();
                     }
                 }
             }
@@ -200,13 +177,11 @@ public final class MediaPlayerService extends MediaBrowserService {
                     if (TimeUnit.MILLISECONDS.toSeconds(mediaPlayer.getCurrentPosition()) > 2) {
                         onSeekTo(0);
                     } else if (queue.size() > 0) {
-                        if (--queuePosition == -1) {
-                            setQueuePosition(queuePosition = queue.size() - 1);
+                        if (queuePosition == 0) {
+                            setQueuePosition(queue.size() - 1);
                         } else {
-                            setQueuePosition(queuePosition);
+                            setQueuePosition(queuePosition - 1);
                         }
-                        setSource(queue.get(queuePosition));
-                        onPlay();
                     }
                 }
             }
@@ -235,6 +210,41 @@ public final class MediaPlayerService extends MediaBrowserService {
         becomingNoisyReceiver = new BecomingNoisyReceiver(this, mediaSession.getController());
     }
 
+    private void onPlay() {
+        Log.d(TAG, "onPlay: ");
+        audioManager.requestAudioFocus(audioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).setOnAudioFocusChangeListener(focusChange -> {
+            switch (focusChange) {
+                case AudioManager.AUDIOFOCUS_GAIN: {
+                    if (resumeOnFocusGain) {
+                        resumeOnFocusGain = false;
+                        mediaPlayer.setVolume(1F, 1F);
+                        play();
+                    }
+                    break;
+                }
+
+                case AudioManager.AUDIOFOCUS_LOSS: {
+                    resumeOnFocusGain = false;
+                    onPause();
+                    break;
+                }
+
+                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK: {
+                    mediaPlayer.setVolume(0.2F, 0.2F);
+                    break;
+                }
+
+                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT: {
+                    resumeOnFocusGain = mediaPlayer.isPlaying();
+                    onPause();
+                    break;
+                }
+            }
+        }).setAudioAttributes(audioAttributes).build());
+        mediaPlayer.setVolume(1F, 1F);
+        play();
+    }
+
     private void play() {
         resumeOnFocusGain = true;
         becomingNoisyReceiver.register();
@@ -243,7 +253,7 @@ public final class MediaPlayerService extends MediaBrowserService {
         startNotification();
     }
 
-    private void pause() {
+    private void onPause() {
         becomingNoisyReceiver.unregister();
         mediaPlayer.pause();
         sendPlaybackState(mediaPlayer.getCurrentPosition(), PlaybackState.STATE_PAUSED);
@@ -312,6 +322,7 @@ public final class MediaPlayerService extends MediaBrowserService {
                 audioManager.abandonAudioFocusRequest(audioFocusRequest);
             }
             mediaPlayer.stop();
+            mediaPlayer.release();
             mediaPlayer = MediaPlayer.create(this, ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, (currentSource = song).songId));
             mediaPlayer.setOnCompletionListener(onCompletionListener);
             sendMetadata(currentSource);
@@ -408,6 +419,37 @@ public final class MediaPlayerService extends MediaBrowserService {
                 context.unregisterReceiver(this);
                 registered = false;
             }
+        }
+    }
+
+    private static class LoadSongTask extends AsyncTask<Void, Void, Void> {
+        private WeakReference<MediaPlayerService> service;
+
+        LoadSongTask(@NonNull MediaPlayerService service) {
+            this.service = new WeakReference<>(service);
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                service.get().setSource(service.get().queue.get(service.get().queuePosition));
+            } catch (Exception ignored) {
+            }
+            return null;
+        }
+    }
+
+    private static class PlaySongTask extends AsyncTask<Void, Void, Void> {
+        private WeakReference<MediaPlayerService> service;
+
+        PlaySongTask(@NonNull MediaPlayerService service) {
+            this.service = new WeakReference<>(service);
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            service.get().onPlay();
+            return null;
         }
     }
 }

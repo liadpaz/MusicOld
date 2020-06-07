@@ -12,12 +12,10 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.SongsListAdapter;
 import com.liadpaz.amp.databinding.FragmentArtistSongListBinding;
 import com.liadpaz.amp.dialogs.PlaylistsDialog;
-import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.viewmodels.Artist;
 import com.liadpaz.amp.viewmodels.Song;
@@ -75,9 +73,8 @@ public class ArtistSongListFragment extends Fragment {
         }, v -> {
             ArrayList<Song> queue = new ArrayList<>(artist.songs);
             Collections.shuffle(queue);
-            QueueUtil.queue.setValue(queue);
+            QueueUtil.setQueue(queue);
             QueueUtil.setPosition(0);
-            MainActivity.getController().sendCommand(Constants.ACTION_QUEUE_POSITION, null, null);
         });
         adapter.submitList(artist.songs);
 

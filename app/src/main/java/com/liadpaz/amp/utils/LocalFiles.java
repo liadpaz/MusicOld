@@ -15,12 +15,15 @@ import androidx.lifecycle.LifecycleOwner;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.liadpaz.amp.livedatautils.PlaylistsUtil;
+import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.viewmodels.Playlist;
 import com.liadpaz.amp.viewmodels.Song;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -106,8 +109,8 @@ public class LocalFiles {
     }
 
     @NonNull
-    private static ArrayList<Playlist> getPlaylists(@NonNull Context context) {
-        ArrayList<Playlist> playlists = new ArrayList<>();
+    private static Queue<Playlist> getPlaylists(@NonNull Context context) {
+        Queue<Playlist> playlists = new ArrayDeque<>();
         playlistsSharedPreferences.getAll().forEach((name, songsIds) -> {
             ArrayList<Long> songsIdsList = new Gson().fromJson(songsIds.toString(), new TypeToken<ArrayList<Long>>() {}.getType());
             playlists.add(new Playlist(name, songsIdsList.stream().filter(id -> isSongExists(context, id)).map(id -> getSongById(context, id)).collect(Collectors.toCollection(ArrayList::new))));
@@ -115,7 +118,7 @@ public class LocalFiles {
         return playlists;
     }
 
-    public static void setPlaylists(@NonNull List<Playlist> playlists) {
+    public static void setPlaylists(@NonNull Queue<Playlist> playlists) {
         SharedPreferences.Editor editor = playlistsSharedPreferences.edit().clear();
         for (Playlist playlist : playlists) {
             ArrayList<Long> songsIdsList = playlist.songs.stream().map(song -> song.songId).collect(Collectors.toCollection(ArrayList::new));

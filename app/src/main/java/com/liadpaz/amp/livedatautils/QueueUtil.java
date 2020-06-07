@@ -1,22 +1,64 @@
 package com.liadpaz.amp.livedatautils;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 
 import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.ArrayList;
 
 public class QueueUtil {
+    private static final MutableLiveData<ArrayList<Song>> queue = new MutableLiveData<>(new ArrayList<>());
+    private static final MutableLiveData<Integer> queuePosition = new MutableLiveData<>(-1);
     private static final String TAG = "AmpApp.QueueUtil";
-
-    public static final MutableLiveData<ArrayList<Song>> queue = new MutableLiveData<>(new ArrayList<>());
-    public static final MutableLiveData<Integer> queuePosition = new MutableLiveData<>(0);
+    public static boolean isChanging = false;
 
     @SuppressWarnings("ConstantConditions")
     public static void addToEnd(@NonNull Song song) {
         ArrayList<Song> songs = queue.getValue();
         songs.add(song);
+        queue.postValue(songs);
+    }
+
+    public static void observePosition(@NonNull Observer<Integer> observer) {
+        queuePosition.observeForever(observer);
+    }
+
+    public static void observePosition(@NonNull LifecycleOwner owner, @NonNull Observer<Integer> observer) {
+        queuePosition.observe(owner, observer);
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    public static int getQueueSize() {
+        return queue.getValue().size();
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    public static int getPosition() {
+        return queuePosition.getValue();
+    }
+
+    public static void setPosition(int position) {
+        queuePosition.postValue(position);
+    }
+
+    public static void observeQueue(@NonNull LifecycleOwner owner, @NonNull Observer<ArrayList<Song>> observer) {
+        queue.observe(owner, observer);
+    }
+
+    public static void observeQueue(@NonNull Observer<ArrayList<Song>> observer) {
+        queue.observeForever(observer);
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    @NonNull
+    public static ArrayList<Song> getQueue() {
+        return queue.getValue();
+    }
+
+    public static void setQueue(@NonNull ArrayList<Song> songs) {
         queue.postValue(songs);
     }
 
@@ -42,9 +84,5 @@ public class QueueUtil {
     @SuppressWarnings("ConstantConditions")
     public static void addToPosition(int add) {
         queuePosition.setValue(queuePosition.getValue() + add);
-    }
-
-    public static void setPosition(int position) {
-        queuePosition.postValue(position);
     }
 }

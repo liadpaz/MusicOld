@@ -40,7 +40,6 @@ public class CurrentQueueFragment extends Fragment {
         return (binding = FragmentCurrentQueueBinding.inflate(inflater, container, false)).getRoot();
     }
 
-    @SuppressWarnings("ConstantConditions")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         adapter = new QueueAdapter(this, (v, position) -> {
@@ -49,7 +48,7 @@ public class CurrentQueueFragment extends Fragment {
             popupMenu.setOnMenuItemClickListener(item -> {
                 switch (item.getItemId()) {
                     case R.id.menuQueueRemove: {
-                        if (position != QueueUtil.queuePosition.getValue()) {
+                        if (position != QueueUtil.getPosition()) {
                             adapter.onItemDismiss(position);
                         }
                         break;
@@ -67,20 +66,20 @@ public class CurrentQueueFragment extends Fragment {
             @Override
             public void onItemMove(int fromPosition, int toPosition) {
                 isChanging = true;
-                QueueUtil.queue.postValue(adapter.getQueue());
+                QueueUtil.setQueue(adapter.getQueue());
             }
 
             @Override
             public void onItemDismiss(int position) {
                 isChanging = true;
-                QueueUtil.queue.postValue(adapter.getQueue());
+                QueueUtil.setQueue(adapter.getQueue());
             }
         });
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.DOWN | ItemTouchHelper.UP, ItemTouchHelper.START | ItemTouchHelper.END) {
             @Override
             public int getSwipeDirs(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
-                return viewHolder.getAdapterPosition() == QueueUtil.queuePosition.getValue() ? 0 : (ItemTouchHelper.START | ItemTouchHelper.END);
+                return viewHolder.getAdapterPosition() == QueueUtil.getPosition() ? 0 : (ItemTouchHelper.START | ItemTouchHelper.END);
             }
 
             @Override
@@ -101,9 +100,9 @@ public class CurrentQueueFragment extends Fragment {
 
         adapter.setOnStartDragListener(itemTouchHelper::startDrag);
 
-        binding.rvQueue.scrollToPosition(QueueUtil.queuePosition.getValue());
+        binding.rvQueue.scrollToPosition(QueueUtil.getPosition());
 
-        QueueUtil.queue.observe(getViewLifecycleOwner(), songs -> {
+        QueueUtil.observeQueue(getViewLifecycleOwner(), songs -> {
             if (!isChanging) {
                 adapter.submitList(songs);
             } else {

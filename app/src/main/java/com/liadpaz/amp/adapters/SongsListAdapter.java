@@ -12,13 +12,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewbinding.ViewBinding;
 
 import com.bumptech.glide.Glide;
-import com.liadpaz.amp.livedatautils.QueueUtil;
-import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.databinding.ItemNoSongsBinding;
 import com.liadpaz.amp.databinding.ItemSongBinding;
 import com.liadpaz.amp.databinding.ItemSongShuffleBinding;
 import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
-import com.liadpaz.amp.utils.Constants;
+import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Song;
 
@@ -72,9 +70,8 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
 
             binding.btnMore.setOnClickListener(v -> onMoreClickListener.onItemClick(v, position - 1));
             binding.getRoot().setOnClickListener(v -> {
-                QueueUtil.queue.setValue(new ArrayList<>(getCurrentList()));
+                QueueUtil.setQueue(new ArrayList<>(getCurrentList()));
                 QueueUtil.setPosition(position - 1);
-                MainActivity.getController().sendCommand(Constants.ACTION_QUEUE_POSITION, null, null);
             });
         }
     }

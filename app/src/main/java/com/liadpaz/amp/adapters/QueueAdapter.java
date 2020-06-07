@@ -55,7 +55,7 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
         this.onMoreClickListener = onMoreClickListener;
         this.itemTouchHelperAdapter = itemTouchHelperAdapter;
 
-        QueueUtil.queuePosition.observe(fragment, queuePosition -> this.queuePosition = queuePosition);
+        QueueUtil.observePosition(fragment, queuePosition -> this.queuePosition = queuePosition);
     }
 
     public void setOnStartDragListener(@NonNull OnStartDragListener onStartDragListener) {
@@ -102,6 +102,7 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
 
     @Override
     public void onItemMove(final int fromPosition, final int toPosition) {
+        QueueUtil.isChanging = true;
         Collections.swap(songs, fromPosition, toPosition);
         if (queuePosition == fromPosition) {
             QueueUtil.setPosition(toPosition);

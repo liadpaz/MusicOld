@@ -16,9 +16,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.liadpaz.amp.livedatautils.PlaylistsUtil;
-import com.liadpaz.amp.livedatautils.QueueUtil;
-import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.PlaylistAdapter;
 import com.liadpaz.amp.adapters.SongsListAdapter;
@@ -26,7 +23,8 @@ import com.liadpaz.amp.databinding.FragmentPlaylistBinding;
 import com.liadpaz.amp.dialogs.PlaylistsDialog;
 import com.liadpaz.amp.interfaces.ItemTouchHelperAdapter;
 import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
-import com.liadpaz.amp.utils.Constants;
+import com.liadpaz.amp.livedatautils.PlaylistsUtil;
+import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.viewmodels.Playlist;
 import com.liadpaz.amp.viewmodels.Song;
 
@@ -95,9 +93,8 @@ public class PlaylistFragment extends Fragment {
         View.OnClickListener onShuffleClickListener = v -> {
             ArrayList<Song> queue = new ArrayList<>(playlist.songs);
             Collections.shuffle(queue);
-            QueueUtil.queue.setValue(queue);
+            QueueUtil.setQueue(queue);
             QueueUtil.setPosition(0);
-            MainActivity.getController().sendCommand(Constants.ACTION_QUEUE_POSITION, null, null);
         };
 
         if (playlist.name.equals(getString(R.string.playlist_recently_added))) {

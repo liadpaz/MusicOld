@@ -41,7 +41,6 @@ public class ExtendedInfoFragment extends Fragment {
         return (binding = FragmentExtendedInfoBinding.inflate(inflater, container, false)).getRoot();
     }
 
-    @SuppressWarnings("ConstantConditions")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         binding.btnQueue.setOnClickListener(v -> {
@@ -56,18 +55,18 @@ public class ExtendedInfoFragment extends Fragment {
             popupMenu.setOnMenuItemClickListener(item -> {
                 switch (item.getItemId()) {
                     case R.id.menuQueueClear: {
-                        QueueUtil.queue.postValue(new ArrayList<>());
+                        QueueUtil.setQueue(new ArrayList<>());
                         MainActivity.getController().getTransportControls().stop();
                         break;
                     }
 
                     case R.id.menuQueueSavePlaylist: {
-                        new NewPlaylistDialog(QueueUtil.queue.getValue()).show(getChildFragmentManager(), null);
+                        new NewPlaylistDialog(QueueUtil.getQueue()).show(getChildFragmentManager(), null);
                         break;
                     }
 
                     case R.id.menuQueueAddPlaylist: {
-                        new PlaylistsDialog(QueueUtil.queue.getValue()).show(getChildFragmentManager(), null);
+                        new PlaylistsDialog(QueueUtil.getQueue()).show(getChildFragmentManager(), null);
                         break;
                     }
                 }
