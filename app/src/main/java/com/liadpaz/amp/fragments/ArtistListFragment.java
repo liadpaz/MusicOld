@@ -19,9 +19,12 @@ import com.liadpaz.amp.viewmodels.Song;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class ArtistListFragment extends Fragment {
-    private static final String TAG = "AmpApp.ArtistListFragment";
 
+/**
+ * A simple {@link Fragment} subclass. Use the {@link ArtistListFragment#newInstance} factory method
+ * to create an instance of this fragment.
+ */
+public class ArtistListFragment extends Fragment {
     private ArrayList<Artist> artists = new ArrayList<>();
 
     private ArtistsListAdapter adapter;
@@ -42,7 +45,7 @@ public class ArtistListFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         binding.lvArtists.setAdapter(adapter = new ArtistsListAdapter(requireContext(), new ArrayList<>(artists)));
-        binding.lvArtists.setOnItemClickListener((parent, view1, position, id) -> requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.mainLayout, ArtistSongListFragment.newInstance(artists.get(position))).addToBackStack(null).commit());
+        binding.lvArtists.setOnItemClickListener((parent, view1, position, id) -> requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.mainFragment, ArtistSongListFragment.newInstance(artists.get(position))).addToBackStack(null).commit());
 
         SongsUtil.observe(this, songs -> {
             artists.clear();

@@ -22,12 +22,13 @@ import androidx.fragment.app.Fragment;
 import androidx.palette.graphics.Palette;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.liadpaz.amp.MainActivity;
-import com.liadpaz.amp.R;
-import com.liadpaz.amp.databinding.FragmentExtendedBinding;
 import com.liadpaz.amp.livedatautils.ColorUtil;
 import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.livedatautils.SongsUtil;
+import com.liadpaz.amp.MainActivity;
+import com.liadpaz.amp.R;
+import com.liadpaz.amp.databinding.FragmentExtendedBinding;
+import com.liadpaz.amp.notification.OnColorChange;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.Utilities;
 
@@ -35,18 +36,15 @@ import java.io.FileNotFoundException;
 import java.util.concurrent.CompletableFuture;
 
 public class ExtendedFragment extends Fragment {
-    private static final String TAG = "AmpApp.ExtendedFragment";
-
+    private static OnColorChange onColorChangeController;
+    private static OnColorChange onColorChangeInfo;
     private Handler handler;
     private Runnable runnable;
     private boolean shouldSeek = false;
-
     private MediaController controller;
     private MediaController.Callback callback;
-
     private long duration = 0;
     private double currentPosition = 0;
-
     @ColorInt
     private int defaultColor;
     private boolean isUp = false;
@@ -98,9 +96,11 @@ public class ExtendedFragment extends Fragment {
         binding.btnSkipNext.setOnClickListener(v -> controller.getTransportControls().skipToNext());
         binding.btnRepeat.setOnClickListener(v -> {
             if (controller.getPlaybackState().getExtras().containsKey(Constants.LOOP_EXTRA)) {
-                Bundle bundle = new Bundle();
-                bundle.putBoolean(Constants.LOOP_EXTRA, !controller.getPlaybackState().getExtras().getBoolean(Constants.LOOP_EXTRA));
-                controller.sendCommand(Constants.LOOP_EXTRA, bundle, null);
+                if (controller.getPlaybackState().getExtras().containsKey(Constants.LOOP_EXTRA)) {
+                    Bundle bundle = new Bundle();
+                    bundle.putBoolean(Constants.LOOP_EXTRA, !controller.getPlaybackState().getExtras().getBoolean(Constants.LOOP_EXTRA));
+                    controller.sendCommand(Constants.LOOP_EXTRA, bundle, null);
+                }
             }
         });
 
@@ -172,7 +172,6 @@ public class ExtendedFragment extends Fragment {
         if (state == null) {
             binding.btnPlayPause.setBackgroundResource(R.drawable.play);
             binding.btnRepeat.setBackgroundResource(R.drawable.repeat);
-            shouldSeek = false;
         } else {
             currentPosition = state.getPosition();
             if (state.getState() == PlaybackState.STATE_PLAYING) {
@@ -205,12 +204,11 @@ public class ExtendedFragment extends Fragment {
                 }).thenAccept(bitmap -> {
                     if (bitmap != null) {
                         Palette.from(bitmap).generate(palette -> {
-                            int colorDominant = palette.getDominantColor(Color.WHITE);
-                            defaultColor = colorDominant;
+                            defaultColor = palette.getDominantColor(Color.WHITE);
                             if (isUp) {
                                 requireActivity().getWindow().setStatusBarColor(defaultColor);
                             }
-                            GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{colorDominant, Color.BLACK});
+                            GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{defaultColor, Color.BLACK});
                             binding.extendedFragment.setBackground(gradientDrawable);
                             ColorUtil.setColor(defaultColor);
                         });
@@ -265,9 +263,5 @@ public class ExtendedFragment extends Fragment {
         if (callback != null) {
             controller.unregisterCallback(callback);
         }
-    }
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
     }
 }

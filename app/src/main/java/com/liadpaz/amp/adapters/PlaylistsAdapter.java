@@ -19,8 +19,6 @@ import com.liadpaz.amp.viewmodels.Playlist;
 import java.util.function.Function;
 
 public class PlaylistsAdapter extends ListAdapter<Playlist, PlaylistsAdapter.PlaylistViewHolder> {
-    private static final String TAG = "AmpApp.PlaylistsAdapter";
-
     private Context context;
     private OnRecyclerItemClickListener onClickListener;
     private Function<Integer, Boolean> onLongClickListener;

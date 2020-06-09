@@ -9,12 +9,13 @@ import androidx.lifecycle.Observer;
 import com.liadpaz.amp.viewmodels.Playlist;
 
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Collectors;
 
 public class PlaylistsUtil {
-    private static final String TAG = "AmpApp.PlaylistsUtil";
+    private static final String TAG = "PlaylistsUtil";
 
     private static MutableLiveData<ConcurrentLinkedDeque<Playlist>> playlists = new MutableLiveData<>(new ConcurrentLinkedDeque<>());
 
@@ -28,13 +29,11 @@ public class PlaylistsUtil {
         return false;
     }
 
-    public static void observe(@NonNull LifecycleOwner lifecycleOwner, @NonNull Observer<ConcurrentLinkedDeque<Playlist>> observer) {
+    public static void observe(@NonNull LifecycleOwner lifecycleOwner, @NonNull Observer<Queue<Playlist>> observer) {
         playlists.observe(lifecycleOwner, observer);
     }
 
-    @SuppressWarnings("ConstantConditions")
-    @NonNull
-    public static ConcurrentLinkedDeque<Playlist> getPlaylists() {
+    public static Deque<Playlist> getPlaylists() {
         return playlists.getValue();
     }
 
@@ -43,18 +42,28 @@ public class PlaylistsUtil {
     }
 
     public static void addPlaylist(@NonNull Playlist playlist) {
-        ConcurrentLinkedDeque<Playlist> playlists = getPlaylists();
+        Deque<Playlist> playlists = getPlaylists();
         playlists.addFirst(playlist);
         setPlaylists(playlists);
     }
 
     @Nullable
     public static Playlist removePlaylist(@NonNull String name) {
-        ConcurrentLinkedDeque<Playlist> playlists = getPlaylists();
+        Queue<Playlist> playlists = getPlaylists();
         for (Playlist playlist : playlists) {
             if (playlist.name.equals(name)) {
                 playlists.remove(playlist);
                 setPlaylists(playlists);
+                return playlist;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    public static Playlist getPlaylistByName(@NonNull String name) {
+        for (Playlist playlist : getPlaylists()) {
+            if (name.equals(playlist.name)) {
                 return playlist;
             }
         }

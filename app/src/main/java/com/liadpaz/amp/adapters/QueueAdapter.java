@@ -15,14 +15,12 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.ItemQueueSongBinding;
 import com.liadpaz.amp.interfaces.ItemTouchHelperAdapter;
 import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
 import com.liadpaz.amp.interfaces.OnStartDragListener;
 import com.liadpaz.amp.livedatautils.QueueUtil;
-import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Song;
 
@@ -31,8 +29,6 @@ import java.util.Collections;
 import java.util.List;
 
 public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder> implements ItemTouchHelperAdapter {
-    private static final String TAG = "AmpApp.QueueAdapter";
-
     private ArrayList<Song> songs;
 
     private OnStartDragListener onStartDragListener;
@@ -65,10 +61,7 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
     @NonNull
     @Override
     public SongViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new QueueAdapter.SongViewHolder(ItemQueueSongBinding.inflate(LayoutInflater.from(context), parent, false), (v, position) -> {
-            QueueUtil.setPosition(position);
-            MainActivity.getController().sendCommand(Constants.ACTION_QUEUE_POSITION, null, null);
-        }, (v, position) -> onMoreClickListener.onItemClick(v, position));
+        return new QueueAdapter.SongViewHolder(ItemQueueSongBinding.inflate(LayoutInflater.from(context), parent, false), (v, position) -> QueueUtil.setPosition(position), (v, position) -> onMoreClickListener.onItemClick(v, position));
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -102,7 +95,6 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
 
     @Override
     public void onItemMove(final int fromPosition, final int toPosition) {
-        QueueUtil.setIsChanging(true);
         Collections.swap(songs, fromPosition, toPosition);
         if (queuePosition == fromPosition) {
             QueueUtil.setPosition(toPosition);

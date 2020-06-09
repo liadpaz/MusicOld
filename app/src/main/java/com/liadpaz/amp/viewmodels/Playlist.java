@@ -12,18 +12,16 @@ import java.util.Arrays;
 public class Playlist implements Parcelable {
     public static final Creator<Playlist> CREATOR = new Creator<Playlist>() {
         @Override
-        @NonNull
         public Playlist createFromParcel(Parcel in) {
             return new Playlist(in);
         }
 
         @Override
-        @NonNull
         public Playlist[] newArray(int size) {
             return new Playlist[size];
         }
     };
-    private static final String TAG = "AmpApp.Playlist";
+
     public final String name;
     public final ArrayList<Song> songs;
 

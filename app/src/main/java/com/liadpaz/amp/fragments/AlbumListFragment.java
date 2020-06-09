@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class AlbumListFragment extends Fragment {
-    private static final String TAG = "AmpApp.AlbumListFragment";
-
     private ArrayList<Album> albums = new ArrayList<>();
 
     private FragmentAlbumListBinding binding;
@@ -43,7 +41,7 @@ public class AlbumListFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         AlbumsListAdapter adapter = new AlbumsListAdapter(getContext(), (v, position) -> {
             Fragment fragment = AlbumSongListFragment.newInstance(albums.get(position));
-            requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.mainLayout, fragment).addToBackStack(null).commit();
+            requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.mainFragment, fragment).addToBackStack(null).commit();
         });
 
         binding.rvAlbums.setLayoutManager(new LinearLayoutManager(requireContext()));

@@ -28,7 +28,7 @@ public class ExtendedSongFragment extends Fragment {
     public static ExtendedSongFragment newInstance(int position) { return new ExtendedSongFragment(position); }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return (binding = FragmentExtendedSongBinding.inflate(inflater, container, false)).getRoot();
     }
 

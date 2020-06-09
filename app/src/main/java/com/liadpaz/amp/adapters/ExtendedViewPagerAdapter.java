@@ -8,6 +8,7 @@ import com.liadpaz.amp.fragments.ExtendedSongFragment;
 import com.liadpaz.amp.livedatautils.QueueUtil;
 
 public class ExtendedViewPagerAdapter extends FragmentStateAdapter {
+    private static final String TAG = "AmpApp.ExtendedViewPagerAdapter";
 
     public ExtendedViewPagerAdapter(@NonNull Fragment fragment) {
         super(fragment);

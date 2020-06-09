@@ -29,8 +29,6 @@ import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.CurrentSong;
 
 public class ControllerFragment extends Fragment {
-    private static final String TAG = "AmpApp.ControllerFragment";
-
     private MediaController controller;
     private MediaController.Callback callback;
 

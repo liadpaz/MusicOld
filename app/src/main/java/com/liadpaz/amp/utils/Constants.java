@@ -9,8 +9,6 @@ public class Constants {
 
     public final static String DEFAULT_PATH = "Music";
 
-    public final static String ACTION_QUEUE_POSITION = "queue_position";
-
     public final static String ACTION = "action";
     public final static String ACTION_PLAY = "play";
     public final static String ACTION_PAUSE = "pause";

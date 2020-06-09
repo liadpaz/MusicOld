@@ -12,7 +12,6 @@ import android.graphics.drawable.Drawable;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
-import android.media.MediaDescription;
 import android.media.MediaMetadata;
 import android.media.MediaPlayer;
 import android.media.browse.MediaBrowser;
@@ -47,33 +46,30 @@ import java.util.concurrent.TimeUnit;
 
 public final class MediaPlayerService extends MediaBrowserService {
     private static final String TAG = "AmpApp.MediaPlayerService";
-
-    private static final String LOG_TAG = "AmpApp.MEDIA_SESSION_LOG";
+    private static final String LOG_TAG = "AmpApp.MediaSessionLog";
     private static final int NOTIFICATION_ID = 273;
 
-    private boolean isLooping = false;
+    // task executor instance
+    private Executor TASK_EXECUTOR;
 
+    // mediaplayer, media session and becoming noisy receiver instances
     private MediaPlayer mediaPlayer;
     private MediaSession mediaSession;
     private BecomingNoisyReceiver becomingNoisyReceiver;
-    private MediaPlayer.OnCompletionListener onCompletionListener = mp -> {
-        if (!isLooping) {
-            mediaSession.getController().getTransportControls().skipToNext();
-        } else {
-            mediaSession.getController().getTransportControls().seekTo(0);
-        }
-    };
 
-    private Executor executor;
-
+    // media session playback state/metadata variables
     private MediaMetadata.Builder metadataBuilder;
     private PlaybackState.Builder playbackBuilder;
 
+    // audio focus related variables
     private AudioManager audioManager;
     private AudioFocusRequest audioFocusRequest;
     private AudioAttributes audioAttributes;
     private boolean resumeOnFocusGain = false;
 
+    private boolean isLooping = false;
+
+    // media sources variables
     private Song currentSource;
     private int queuePosition = 0;
     private ArrayList<Song> queue = new ArrayList<>();
@@ -86,22 +82,25 @@ public final class MediaPlayerService extends MediaBrowserService {
     public void onCreate() {
         super.onCreate();
 
-        executor = AsyncTask.SERIAL_EXECUTOR;
+        // initialize the task executor
+        TASK_EXECUTOR = AsyncTask.SERIAL_EXECUTOR;
 
+        // observe to queue and queue position changes and act accordingly
         QueueUtil.observeQueue(songs -> {
-            this.queue = songs;
+            queue = songs;
             if (queue.size() > 0 && currentSource == null) {
-                new LoadSongTask(this).executeOnExecutor(executor);
+                new LoadSongTask(this).executeOnExecutor(TASK_EXECUTOR);
+                new PlaySongTask(this).executeOnExecutor(TASK_EXECUTOR);
             }
         });
         QueueUtil.observePosition(queuePosition -> {
             if (queuePosition != -1) {
                 this.queuePosition = queuePosition;
-                if (!QueueUtil.isChanging()) {
-                    new LoadSongTask(this).executeOnExecutor(executor);
-                    new PlaySongTask(this).executeOnExecutor(executor);
+                if (QueueUtil.isChanging) {
+                    QueueUtil.isChanging = false;
                 } else {
-                    QueueUtil.setIsChanging(false);
+                    new LoadSongTask(this).executeOnExecutor(TASK_EXECUTOR);
+                    new PlaySongTask(this).executeOnExecutor(TASK_EXECUTOR);
                 }
             }
         });
@@ -112,8 +111,7 @@ public final class MediaPlayerService extends MediaBrowserService {
 
         // initializes the media session
         mediaSession = new MediaSession(this, LOG_TAG);
-        mediaSession.setSessionActivity(PendingIntent.getActivity(this, 10, new Intent(this, MainActivity.class).setAction(Constants.PREFERENCES_SHOW_CURRENT), 0));
-
+        mediaSession.setSessionActivity(PendingIntent.getActivity(this, 10, new Intent(this, MainActivity.class).putExtra(Constants.PREFERENCES_SHOW_CURRENT, 0), PendingIntent.FLAG_UPDATE_CURRENT));
         mediaSession.setCallback(new MediaSession.Callback() {
             @Override
             public void onCommand(@NonNull String command, Bundle extras, ResultReceiver cb) {
@@ -129,20 +127,19 @@ public final class MediaPlayerService extends MediaBrowserService {
                         sendMetadata(null);
                         sendPlaybackState(0, PlaybackState.STATE_STOPPED);
                         stopForeground(true);
+                        break;
                     }
                 }
             }
 
             @Override
             public void onPlay() {
-                new PlaySongTask(MediaPlayerService.this).executeOnExecutor(executor);
+                new PlaySongTask(MediaPlayerService.this).executeOnExecutor(TASK_EXECUTOR);
             }
 
             @Override
             public void onPause() {
-                MediaPlayerService.this.onPause();
-                resumeOnFocusGain = false;
-                audioManager.abandonAudioFocusRequest(audioFocusRequest);
+                new PauseSongTask(MediaPlayerService.this).executeOnExecutor(TASK_EXECUTOR);
             }
 
             @Override
@@ -218,7 +215,13 @@ public final class MediaPlayerService extends MediaBrowserService {
 
         // initializes the media player and set the on complete listener and audio attributes
         mediaPlayer = new MediaPlayer();
-        mediaPlayer.setOnCompletionListener(onCompletionListener);
+        mediaPlayer.setOnCompletionListener(mp -> {
+            if (!isLooping) {
+                mediaSession.getController().getTransportControls().skipToNext();
+            } else {
+                mediaSession.getController().getTransportControls().seekTo(0);
+            }
+        });
         mediaPlayer.setAudioAttributes(audioAttributes);
     }
 
@@ -234,16 +237,20 @@ public final class MediaPlayerService extends MediaBrowserService {
             switch (focusChange) {
                 case AudioManager.AUDIOFOCUS_GAIN: {
                     if (resumeOnFocusGain) {
-                        resumeOnFocusGain = false;
-                        mediaPlayer.setVolume(1F, 1F);
-                        play();
+                        synchronized (this) {
+                            resumeOnFocusGain = false;
+                            mediaPlayer.setVolume(1F, 1F);
+                            play();
+                        }
                     }
                     break;
                 }
 
                 case AudioManager.AUDIOFOCUS_LOSS: {
-                    resumeOnFocusGain = false;
-                    onPause();
+                    synchronized (this) {
+                        resumeOnFocusGain = false;
+                    }
+                    pause();
                     break;
                 }
 
@@ -253,8 +260,10 @@ public final class MediaPlayerService extends MediaBrowserService {
                 }
 
                 case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT: {
-                    resumeOnFocusGain = mediaPlayer.isPlaying();
-                    onPause();
+                    synchronized (this) {
+                        resumeOnFocusGain = mediaPlayer.isPlaying();
+                    }
+                    pause();
                     break;
                 }
             }
@@ -267,7 +276,9 @@ public final class MediaPlayerService extends MediaBrowserService {
      * This function starts the playback and notifies the needed listeners.
      */
     private void play() {
-        resumeOnFocusGain = true;
+        synchronized (this) {
+            resumeOnFocusGain = true;
+        }
         becomingNoisyReceiver.register();
         mediaPlayer.start();
         sendPlaybackState(mediaPlayer.getCurrentPosition(), PlaybackState.STATE_PLAYING);
@@ -275,9 +286,20 @@ public final class MediaPlayerService extends MediaBrowserService {
     }
 
     /**
-     * This function pauses the playback and notifies the needed listeners.
+     * This function abandons audio focus and pauses the playback.
      */
     private void onPause() {
+        if (audioFocusRequest != null) {
+            audioManager.abandonAudioFocusRequest(audioFocusRequest);
+        }
+        resumeOnFocusGain = false;
+        pause();
+    }
+
+    /**
+     * This function pauses the playback and notifies the needed listeners.
+     */
+    private void pause() {
         becomingNoisyReceiver.unregister();
         mediaPlayer.pause();
         sendPlaybackState(mediaPlayer.getCurrentPosition(), PlaybackState.STATE_PAUSED);
@@ -314,7 +336,8 @@ public final class MediaPlayerService extends MediaBrowserService {
      * This function send the playback to all active {@link MediaBrowser}s.
      *
      * @param position the position of the playback
-     * @param state    the state of the playback {@link PlaybackState}
+     * @param state    the state of the playback
+     * @see PlaybackState
      */
     private void sendPlaybackState(int position, int state) {
         playbackBuilder.setActions(PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE | PlaybackState.ACTION_SEEK_TO | PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS).setState(state, position, 1F);
@@ -418,21 +441,17 @@ public final class MediaPlayerService extends MediaBrowserService {
     public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUid, @Nullable Bundle rootHints) { return new BrowserRoot(getString(R.string.app_name), null); }
 
     @Override
-    public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowser.MediaItem>> result) {
-        ArrayList<MediaBrowser.MediaItem> mediaItems = new ArrayList<>();
-        for (Song song : queue) {
-            MediaDescription.Builder descriptionBuilder = new MediaDescription.Builder().setTitle(song.songTitle).setSubtitle(Utilities.joinArtists(song.songArtists)).setDescription(song.album).setIconUri(Utilities.getCoverUri(song));
-            mediaItems.add(new MediaBrowser.MediaItem(descriptionBuilder.build(), MediaBrowser.MediaItem.FLAG_PLAYABLE));
-        }
-        result.sendResult(mediaItems);
-    }
+    public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowser.MediaItem>> result) { result.sendResult(null); }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (audioFocusRequest != null) {
+            audioManager.abandonAudioFocusRequest(audioFocusRequest);
+        }
         becomingNoisyReceiver.unregister();
+        mediaPlayer.reset();
         mediaPlayer.release();
-        mediaPlayer = null;
         mediaSession.release();
     }
 
@@ -491,10 +510,7 @@ public final class MediaPlayerService extends MediaBrowserService {
 
         @Override
         protected Void doInBackground(Void... voids) {
-            try {
-                service.get().setSource(service.get().queue.get(service.get().queuePosition));
-            } catch (Exception ignored) {
-            }
+            service.get().setSource(service.get().queue.get(service.get().queuePosition));
             return null;
         }
     }
@@ -514,6 +530,25 @@ public final class MediaPlayerService extends MediaBrowserService {
         @Override
         protected Void doInBackground(Void... voids) {
             service.get().onPlay();
+            return null;
+        }
+    }
+
+    /**
+     * This class is for playing a song from the {@link MediaPlayer} instance of the Service.
+     * <p>
+     * It's doing it asynchronously to not block the main thread.
+     */
+    private static class PauseSongTask extends AsyncTask<Void, Void, Void> {
+        private WeakReference<MediaPlayerService> service;
+
+        PauseSongTask(@NonNull MediaPlayerService service) {
+            this.service = new WeakReference<>(service);
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            service.get().onPause();
             return null;
         }
     }

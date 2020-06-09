@@ -25,7 +25,7 @@ public class ExtendedViewPagerFragment extends Fragment {
 
     private FragmentExtendedViewPagerBinding binding;
 
-    public ExtendedViewPagerFragment() {}
+    private ExtendedViewPagerFragment() {}
 
     @NonNull
     public static ExtendedViewPagerFragment newInstance() { return new ExtendedViewPagerFragment(); }
@@ -39,12 +39,12 @@ public class ExtendedViewPagerFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         adapter = new ExtendedViewPagerAdapter(this);
         binding.extendedViewPager.setAdapter(adapter);
-        QueueUtil.observePosition(getViewLifecycleOwner(), queuePosition -> {
+        QueueUtil.observePosition(getViewLifecycleOwner(), position -> {
             if (!isCreated) {
                 isCreated = true;
-                binding.extendedViewPager.setCurrentItem(queuePosition, false);
+                binding.extendedViewPager.setCurrentItem(position, false);
             } else {
-                binding.extendedViewPager.setCurrentItem(queuePosition);
+                binding.extendedViewPager.setCurrentItem(position);
             }
         });
         QueueUtil.observeQueue(getViewLifecycleOwner(), songs -> {

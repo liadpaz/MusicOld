@@ -22,12 +22,11 @@ import com.liadpaz.amp.viewmodels.Playlist;
 import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class PlaylistsFragment extends Fragment {
-    private static final String TAG = "AmpApp.PlaylistsFragment";
-
     private Playlist recentlyAddedPlaylist;
-    private ArrayList<Playlist> playlists;
+    private List<Playlist> playlists;
 
     private PlaylistsAdapter adapter;
 
@@ -59,14 +58,12 @@ public class PlaylistsFragment extends Fragment {
             }
         });
 
-        adapter = new PlaylistsAdapter(requireContext(), (v, position) -> requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.mainLayout, PlaylistFragment.newInstance(playlists.get(position))).addToBackStack(null).commit(), position -> {
+        adapter = new PlaylistsAdapter(requireContext(), (v, position) -> requireActivity().getSupportFragmentManager().beginTransaction().replace(R.id.mainFragment, PlaylistFragment.newInstance(playlists.get(position))).addToBackStack(null).commit(), position -> {
             if (position != 0) {
                 new EditPlaylistDialog(playlists.get(position)).show(getChildFragmentManager(), null);
             }
             return true;
         });
-
-        adapter.submitList(playlists);
 
         binding.rvPlaylists.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvPlaylists.addItemDecoration(new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));

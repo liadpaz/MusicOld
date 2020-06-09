@@ -1,7 +1,5 @@
 package com.liadpaz.amp.livedatautils;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.MutableLiveData;
@@ -12,34 +10,31 @@ import com.liadpaz.amp.viewmodels.Song;
 import java.util.ArrayList;
 
 public class QueueUtil {
+    private static final String TAG = "AmpApp.QueueUtil";
+
     private static final MutableLiveData<ArrayList<Song>> queue = new MutableLiveData<>(new ArrayList<>());
     private static final MutableLiveData<Integer> queuePosition = new MutableLiveData<>(-1);
-    private static final String TAG = "AmpApp.QueueUtil";
-    private static boolean isChanging = false;
-
-    public static void setIsChanging(boolean isChanging) {
-        Log.d(TAG, "setIsChanging: ");
-        QueueUtil.isChanging = isChanging;
-    }
+    public static boolean isChanging = false;
 
     @SuppressWarnings("ConstantConditions")
-    public static void addToEnd(@NonNull Song song) {
-        ArrayList<Song> songs = queue.getValue();
-        songs.add(song);
-        queue.postValue(songs);
+    public static int getQueueSize() {
+        return queue.getValue().size();
+    }
+
+    public static void observePosition(@NonNull LifecycleOwner lifecycleOwner, @NonNull Observer<Integer> observer) {
+        queuePosition.observe(lifecycleOwner, observer);
     }
 
     public static void observePosition(@NonNull Observer<Integer> observer) {
         queuePosition.observeForever(observer);
     }
 
-    public static void observePosition(@NonNull LifecycleOwner owner, @NonNull Observer<Integer> observer) {
-        queuePosition.observe(owner, observer);
+    public static void observeQueue(@NonNull Observer<ArrayList<Song>> observer) {
+        queue.observeForever(observer);
     }
 
-    @SuppressWarnings("ConstantConditions")
-    public static int getQueueSize() {
-        return queue.getValue().size();
+    public static void observeQueue(@NonNull LifecycleOwner lifecycleOwner, @NonNull Observer<ArrayList<Song>> observer) {
+        queue.observe(lifecycleOwner, observer);
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -51,21 +46,18 @@ public class QueueUtil {
         queuePosition.postValue(position);
     }
 
-    public static void observeQueue(@NonNull LifecycleOwner owner, @NonNull Observer<ArrayList<Song>> observer) {
-        queue.observe(owner, observer);
-    }
-
-    public static void observeQueue(@NonNull Observer<ArrayList<Song>> observer) {
-        queue.observeForever(observer);
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    @NonNull
     public static ArrayList<Song> getQueue() {
         return queue.getValue();
     }
 
-    public static void setQueue(@NonNull ArrayList<Song> songs) {
+    public static void setQueue(@NonNull ArrayList<Song> queue) {
+        QueueUtil.queue.postValue(queue);
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    public static void addToEnd(@NonNull Song song) {
+        ArrayList<Song> songs = queue.getValue();
+        songs.add(song);
         queue.postValue(songs);
     }
 
@@ -80,7 +72,7 @@ public class QueueUtil {
     public static void addToNext(@NonNull Song song) {
         ArrayList<Song> songs = queue.getValue();
         if (songs.size() == 0) {
-            queue.setValue(new ArrayList<Song>() {{
+            queue.postValue(new ArrayList<Song>() {{
                 add(song);
             }});
         } else {
@@ -90,8 +82,6 @@ public class QueueUtil {
 
     @SuppressWarnings("ConstantConditions")
     public static void addToPosition(int add) {
-        queuePosition.setValue(queuePosition.getValue() + add);
+        queuePosition.postValue(queuePosition.getValue() + add);
     }
-
-    public static boolean isChanging() { return isChanging; }
 }

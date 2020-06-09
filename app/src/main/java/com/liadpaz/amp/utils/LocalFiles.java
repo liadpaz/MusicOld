@@ -10,11 +10,11 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.liadpaz.amp.livedatautils.PlaylistsUtil;
-import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.viewmodels.Playlist;
 import com.liadpaz.amp.viewmodels.Song;
@@ -32,41 +32,43 @@ public class LocalFiles {
 
     private static final String[] PROJECTION = {Media.TITLE, Media._ID, Media.ARTIST, Media.ALBUM, Media.ALBUM_ID};
 
-    private static boolean isInitialized = false;
-
     private static SharedPreferences musicSharedPreferences;
     private static SharedPreferences playlistsSharedPreferences;
 
-    public static void init(@NonNull Context context) {
+    public static void init(@NonNull Context context, @NonNull LifecycleOwner lifecycleOwner) {
         LocalFiles.musicSharedPreferences = context.getSharedPreferences("Music.Data", 0);
         LocalFiles.playlistsSharedPreferences = context.getSharedPreferences("Music.Playlists", 0);
 
         CompletableFuture.runAsync(() -> PlaylistsUtil.setPlaylists(getPlaylists(context)));
         CompletableFuture.runAsync(() -> SongsUtil.setSongs(listSongs(context, Media.TITLE + " COLLATE NOCASE")));
 
-        if (!isInitialized) {
-            QueueUtil.observeQueue(songs -> CompletableFuture.runAsync(() -> {
-                ArrayList<Long> songsIdsList = songs.stream().map(song -> song.songId).collect(Collectors.toCollection(ArrayList::new));
-                musicSharedPreferences.edit().putString(Constants.PREFERENCES_QUEUE, new Gson().toJson(songsIdsList)).apply();
-            }));
-            QueueUtil.observePosition(position -> musicSharedPreferences.edit().putInt(Constants.PREFERENCES_QUEUE_POSITION, position).apply());
-            isInitialized = true;
-            CompletableFuture.runAsync(() -> {
-                ArrayList<Song> songs = getQueueFromLocal(context);
-                if (QueueUtil.getQueueSize() == 0) {
-                    QueueUtil.setQueue(songs);
-                    QueueUtil.setPosition(musicSharedPreferences.getInt(Constants.PREFERENCES_QUEUE_POSITION, 0));
-                }
-            });
-        }
+        //        if (!lifecycleOwner.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.INITIALIZED)) {
+        //            QueueUtil.queue.observe(lifecycleOwner, songs -> {
+        //                ArrayList<Long> songsIdsList = songs.stream().map(song -> song.songId).collect(Collectors.toCollection(ArrayList::new));
+        //                musicSharedPreferences.edit().putString(Constants.SHARED_PREFERENCES_QUEUE, new Gson().toJson(songsIdsList)).apply();
+        //            });
+        //            QueueUtil.queuePosition.observe(lifecycleOwner, queuePosition -> musicSharedPreferences.edit().putInt(Constants.SHARED_PREFERENCES_QUEUE, queuePosition).apply());
+        //        }
 
+        // TODO: fix queue saving
     }
 
+    /**
+     * This function returns the music folder path, if it does not exists, it returns the default
+     * one
+     *
+     * @return The music folder path, if not exists returns the default one
+     */
     @NonNull
     public static String getPath() {
         return musicSharedPreferences.getString(Constants.PREFERENCES_PATH, Constants.DEFAULT_PATH);
     }
 
+    /**
+     * This function saves the path of the songs folder to the local shared preferences
+     *
+     * @param path The path of the songs folder
+     */
     public static void setPath(@NonNull String path) {
         musicSharedPreferences.edit().putString(Constants.PREFERENCES_PATH, path).apply();
     }
@@ -178,16 +180,11 @@ public class LocalFiles {
         }
     }
 
-    @NonNull
-    private static ArrayList<Song> getQueueFromLocal(@NonNull Context context) {
-        ArrayList<Song> songs = new ArrayList<>();
-        ArrayList<Long> songsIdsList = new Gson().fromJson(musicSharedPreferences.getString(Constants.PREFERENCES_QUEUE, "[]"), new TypeToken<ArrayList<Long>>() {}.getType());
-        for (long id : songsIdsList) {
-            Song song = getSongById(context, id);
-            if (song != null) {
-                songs.add(song);
-            }
-        }
-        return songs;
-    }
+    //    @NonNull
+    //    public ArrayList<Song> getQueueFromLocal(@NonNull Context context) {
+    //        ArrayList<Long> songsIdsList = new Gson().fromJson(musicSharedPreferences.getString(Constants.SHARED_PREFERENCES_QUEUE, "[]"), new TypeToken<ArrayList<Long>>() {}.getType());
+    //        for (long id : songsIdsList) {
+    //         if ()
+    //        }
+    //    }
 }

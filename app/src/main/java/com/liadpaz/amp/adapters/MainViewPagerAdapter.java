@@ -12,7 +12,6 @@ import com.liadpaz.amp.fragments.PlaylistsFragment;
 import com.liadpaz.amp.fragments.SongsListFragment;
 
 public class MainViewPagerAdapter extends FragmentStateAdapter {
-    private static final String TAG = "AmpApp.MainViewPagerAdapter";
 
     public MainViewPagerAdapter(@NonNull FragmentManager fragmentManager, @NonNull Lifecycle lifecycle) {
         super(fragmentManager, lifecycle);

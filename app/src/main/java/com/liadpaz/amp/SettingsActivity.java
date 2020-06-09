@@ -16,15 +16,13 @@ import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.utils.Utilities;
 
 public class SettingsActivity extends AppCompatActivity {
-    private static final String TAG = "AmpApp.SettingsActivity";
-
     private static final int REQUEST_PICK_FOLDER = 44;
 
     @SuppressWarnings("ConstantConditions")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SettingsActivityBinding binding;
+        com.liadpaz.amp.databinding.SettingsActivityBinding binding;
         setContentView((binding = SettingsActivityBinding.inflate(getLayoutInflater())).getRoot());
         getSupportFragmentManager().beginTransaction().replace(R.id.settings, new SettingsFragment()).commit();
         setSupportActionBar(binding.toolbarSettings);
@@ -35,12 +33,14 @@ public class SettingsActivity extends AppCompatActivity {
         private Preference pathPreference;
         private SwitchPreferenceCompat notificationPreference;
 
+        private String path;
+
         @SuppressWarnings("ConstantConditions")
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
 
-            String path = LocalFiles.getPath();
+            path = LocalFiles.getPath();
 
             pathPreference = findPreference("path");
             pathPreference.setSummary(TextUtils.isEmpty(path) ? getString(R.string.preference_all_path) : path);
@@ -51,7 +51,7 @@ public class SettingsActivity extends AppCompatActivity {
             findPreference("default_path").setOnPreferenceClickListener(preference -> {
                 LocalFiles.setPath(Constants.DEFAULT_PATH);
                 pathPreference.setSummary(Constants.DEFAULT_PATH);
-                requireActivity().setResult(RESULT_OK);
+                requireActivity().setResult(path.equals(Constants.DEFAULT_PATH) ? RESULT_CANCELED : RESULT_OK);
                 return true;
             });
             notificationPreference = findPreference("notification");
@@ -60,7 +60,6 @@ public class SettingsActivity extends AppCompatActivity {
                 LocalFiles.setShowCurrent(notificationPreference.isChecked());
                 return true;
             });
-
         }
 
         @SuppressWarnings("ConstantConditions")
@@ -71,7 +70,7 @@ public class SettingsActivity extends AppCompatActivity {
                 if (!LocalFiles.getPath().equals(path)) {
                     LocalFiles.setPath(path);
                     pathPreference.setSummary(TextUtils.isEmpty(path) ? getString(R.string.preference_all_path) : path);
-                    requireActivity().setResult(RESULT_OK);
+                    requireActivity().setResult(SettingsFragment.this.path.equals(path) ? RESULT_CANCELED : RESULT_OK);
                 }
             }
         }

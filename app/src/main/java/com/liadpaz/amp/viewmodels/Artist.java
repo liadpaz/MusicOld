@@ -21,7 +21,7 @@ public class Artist implements Parcelable {
             return new Artist[size];
         }
     };
-    private static final String TAG = "AmpApp.Artist";
+
     public final String name;
     public final ArrayList<Song> songs;
 

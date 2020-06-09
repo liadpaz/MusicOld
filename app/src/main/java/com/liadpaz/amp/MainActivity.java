@@ -7,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.media.browse.MediaBrowser;
 import android.media.session.MediaController;
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,7 +14,6 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
@@ -45,9 +43,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().build());
+//        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().build());
         super.onCreate(savedInstanceState);
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         setContentView((binding = ActivityMainBinding.inflate(getLayoutInflater())).getRoot());
         setSupportActionBar(binding.toolBarMain);
 
@@ -65,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
 
         new MediaNotification(this);
 
-        LocalFiles.init(this);
+        LocalFiles.init(this, this);
 
         startService();
 
@@ -90,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
     private void initializeView() {
         getSupportFragmentManager().beginTransaction().replace(R.id.mainFragment, MainViewPagerFragment.newInstance()).replace(R.id.extendedFragment, ExtendedFragment.newInstance()).commitNow();
         if (getIntent() != null) {
-            if (Constants.PREFERENCES_SHOW_CURRENT.equals(getIntent().getAction()) && LocalFiles.getShowCurrent()) {
+            if (getIntent().hasExtra(Constants.PREFERENCES_SHOW_CURRENT) && LocalFiles.getShowCurrent()) {
                 BottomSheetBehavior.from(binding.extendedFragment).setState(BottomSheetBehavior.STATE_EXPANDED);
             }
         }
@@ -107,15 +104,15 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.menuItemSettings: {
                 startActivityForResult(new Intent(this, SettingsActivity.class), REQUEST_SETTINGS);
-                break;
+                return true;
             }
 
             case R.id.menuItemAbout: {
                 startActivity(new Intent(this, AboutActivity.class));
-                break;
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     @Override
@@ -138,8 +135,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        if (intent != null && Constants.PREFERENCES_SHOW_CURRENT.equals(intent.getAction())) {
-            if (LocalFiles.getShowCurrent()) {
+        if (intent != null) {
+            if (intent.hasExtra(Constants.PREFERENCES_SHOW_CURRENT) && LocalFiles.getShowCurrent()) {
                 BottomSheetBehavior.from(binding.extendedFragment).setState(BottomSheetBehavior.STATE_EXPANDED);
             }
         }

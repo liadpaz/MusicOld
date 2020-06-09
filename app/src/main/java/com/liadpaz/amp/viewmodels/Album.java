@@ -10,18 +10,16 @@ import java.util.ArrayList;
 public class Album implements Parcelable {
     public static final Creator<Album> CREATOR = new Creator<Album>() {
         @Override
-        @NonNull
         public Album createFromParcel(Parcel in) {
             return new Album(in);
         }
 
         @Override
-        @NonNull
         public Album[] newArray(int size) {
             return new Album[size];
         }
     };
-    private static final String TAG = "AmpApp.Album";
+
     public final String name;
     public final String artist;
     public final ArrayList<Song> songs;

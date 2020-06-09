@@ -19,8 +19,6 @@ import com.liadpaz.amp.viewmodels.Song;
 import java.util.ArrayList;
 
 public class PlaylistsDialog extends DialogFragment {
-    private static final String TAG = "AmpApp.PlaylistsDialog";
-
     private Song song;
     private ArrayList<Song> songs;
 

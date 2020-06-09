@@ -9,8 +9,6 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 
 public class ColorUtil {
-    private static final String TAG = "AmpApp.ColorUtil";
-
     private static MutableLiveData<Integer> color = new MutableLiveData<>(Color.BLACK);
 
     public static void observe(@NonNull LifecycleOwner lifecycleOwner, @NonNull Observer<Integer> observer) {

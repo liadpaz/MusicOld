@@ -22,14 +22,14 @@ public class Song implements Parcelable {
             return new Song[size];
         }
     };
-    private static final String TAG = "AmpApp.Song";
+
     public final long songId;
     public final String songTitle;
     public final ArrayList<String> songArtists;
     public final String album;
     public final String albumId;
 
-    public Song(long songId, @NonNull String songTitle, @NonNull ArrayList<String> songArtists, @NonNull String album, @NonNull String albumId) {
+    public Song(long songId, @NonNull String songTitle,@NonNull ArrayList<String> songArtists,@NonNull String album,@NonNull String albumId) {
         this.songId = songId;
         this.songTitle = songTitle;
         this.songArtists = songArtists;

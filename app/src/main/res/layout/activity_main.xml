@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -19,31 +18,11 @@
             android:minHeight="?attr/actionBarSize"
             android:theme="?attr/actionBarTheme" />
 
-        <FrameLayout
-            android:id="@+id/mainLayout"
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/mainFragment"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                tools:ignore="UselessParent">
-
-                <com.google.android.material.tabs.TabLayout
-                    android:id="@+id/tabLayoutMain"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@color/colorPrimary" />
-
-                <androidx.fragment.app.FragmentContainerView
-                    android:id="@+id/mainFragment"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginBottom="72dp" />
-
-            </LinearLayout>
-        </FrameLayout>
+            android:layout_height="match_parent"
+            android:layout_marginBottom="72dp" />
     </LinearLayout>
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout

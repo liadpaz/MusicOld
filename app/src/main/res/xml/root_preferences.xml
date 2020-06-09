@@ -1,12 +1,14 @@
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <PreferenceCategory android:title="@string/preference_path_group">
+
         <Preference
             android:key="path"
-            android:title="@string/preference_path" />
+            app:title="@string/preference_path" />
         <Preference
             android:key="default_path"
             android:summary="@string/preference_default_path_description"
-            android:title="@string/preference_default_path" />
+            app:title="@string/preference_default_path" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/preference_notification_group">

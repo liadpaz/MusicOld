@@ -11,7 +11,6 @@ import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.tabs.TabLayoutMediator;
-import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.MainViewPagerAdapter;
 import com.liadpaz.amp.databinding.FragmentMainViewPagerBinding;
@@ -19,7 +18,6 @@ import com.liadpaz.amp.databinding.FragmentMainViewPagerBinding;
 import java.util.ArrayList;
 
 public class MainViewPagerFragment extends Fragment {
-    private static final String TAG = "AmpApp.ViewPagerFragment";
 
     private FragmentMainViewPagerBinding binding;
 
@@ -46,6 +44,6 @@ public class MainViewPagerFragment extends Fragment {
             add(getString(R.string.tab_albums));
         }};
 
-        new TabLayoutMediator(((MainActivity)requireActivity()).binding.tabLayoutMain, viewPager, ((tab, position) -> tab.setText(tabsTitle.get(position)))).attach();
+        new TabLayoutMediator(binding.tabLayoutMain, viewPager, ((tab, position) -> tab.setText(tabsTitle.get(position)))).attach();
     }
 }

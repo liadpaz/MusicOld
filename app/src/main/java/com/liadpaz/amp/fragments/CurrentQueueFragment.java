@@ -22,7 +22,7 @@ import com.liadpaz.amp.interfaces.ItemTouchHelperAdapter;
 import com.liadpaz.amp.livedatautils.QueueUtil;
 
 public class CurrentQueueFragment extends Fragment {
-    private static final String TAG = "AmpApp.CurrentQueueFragment";
+    private static final String TAG = "QUEUE_FRAGMENT";
 
     private boolean isChanging = false;
 
@@ -40,6 +40,7 @@ public class CurrentQueueFragment extends Fragment {
         return (binding = FragmentCurrentQueueBinding.inflate(inflater, container, false)).getRoot();
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         adapter = new QueueAdapter(this, (v, position) -> {
@@ -71,7 +72,6 @@ public class CurrentQueueFragment extends Fragment {
 
             @Override
             public void onItemDismiss(int position) {
-                isChanging = true;
                 QueueUtil.setQueue(adapter.getQueue());
             }
         });
@@ -84,6 +84,7 @@ public class CurrentQueueFragment extends Fragment {
 
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                QueueUtil.isChanging = true;
                 adapter.onItemMove(viewHolder.getAdapterPosition(), target.getAdapterPosition());
                 return true;
             }

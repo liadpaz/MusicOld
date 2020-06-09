@@ -16,7 +16,6 @@ import com.liadpaz.amp.viewmodels.Artist;
 import java.util.List;
 
 public class ArtistsListAdapter extends ArrayAdapter<Artist> {
-    private static final String TAG = "AmpApp.ArtistsListAdapter";
 
     public ArtistsListAdapter(@NonNull Context context, @NonNull List<Artist> artists) {
         super(context, R.layout.item_artist, artists);

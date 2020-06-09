@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class PlaylistFragment extends Fragment {
-    private static final String TAG = "AmpApp.PlaylistFragment";
+    private static final String TAG = "PlaylistFragment";
 
     private boolean isChanging;
 

@@ -49,11 +49,20 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
     @Override
     public SongViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (getItemCount() == 1) {
-            return new SongViewHolder(ItemNoSongsBinding.inflate(LayoutInflater.from(context), parent, false), onShuffleClickListener);
+            return new SongViewHolder(ItemNoSongsBinding.inflate(LayoutInflater.from(context), parent, false), onShuffleClickListener, onMoreClickListener, (v, position) -> {
+                QueueUtil.setQueue(new ArrayList<>(getCurrentList()));
+                QueueUtil.setPosition(position);
+            });
         } else if (viewType == TYPE_ITEM) {
-            return new SongViewHolder(ItemSongBinding.inflate(LayoutInflater.from(context), parent, false), onShuffleClickListener);
+            return new SongViewHolder(ItemSongBinding.inflate(LayoutInflater.from(context), parent, false), onShuffleClickListener, onMoreClickListener, (v, position) -> {
+                QueueUtil.setQueue(new ArrayList<>(getCurrentList()));
+                QueueUtil.setPosition(position);
+            });
         }
-        return new SongViewHolder(ItemSongShuffleBinding.inflate(LayoutInflater.from(context), parent, false), onShuffleClickListener);
+        return new SongViewHolder(ItemSongShuffleBinding.inflate(LayoutInflater.from(context), parent, false), onShuffleClickListener, onMoreClickListener, (v, position) -> {
+            QueueUtil.setQueue(new ArrayList<>(getCurrentList()));
+            QueueUtil.setPosition(position);
+        });
     }
 
     @Override
@@ -67,12 +76,6 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
             binding.tvSongArtist.setText(Utilities.joinArtists(song.songArtists));
 
             Glide.with(context).load(Utilities.getCoverUri(song)).into(binding.ivSongCover);
-
-            binding.btnMore.setOnClickListener(v -> onMoreClickListener.onItemClick(v, position - 1));
-            binding.getRoot().setOnClickListener(v -> {
-                QueueUtil.setQueue(new ArrayList<>(getCurrentList()));
-                QueueUtil.setPosition(position - 1);
-            });
         }
     }
 
@@ -89,11 +92,14 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
     static class SongViewHolder extends RecyclerView.ViewHolder {
         private ViewBinding binding;
 
-        SongViewHolder(@NonNull ViewBinding binding, @NonNull View.OnClickListener onClickListener) {
+        SongViewHolder(@NonNull ViewBinding binding, @NonNull View.OnClickListener onClickListener, @NonNull OnRecyclerItemClickListener onMoreClickListener, @NonNull OnRecyclerItemClickListener onItemClickListener) {
             super(binding.getRoot());
             this.binding = binding;
             if (binding instanceof ItemSongShuffleBinding) {
                 ((ItemSongShuffleBinding)binding).getRoot().setOnClickListener(onClickListener);
+            } else {
+                itemView.setOnClickListener(v -> onItemClickListener.onItemClick(v, getAdapterPosition() - 1));
+                ((ItemSongBinding)binding).btnMore.setOnClickListener(v -> onMoreClickListener.onItemClick(v, getAdapterPosition() - 1));
             }
         }
     }

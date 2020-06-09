@@ -22,8 +22,7 @@ import com.liadpaz.amp.service.MediaPlayerService;
 import com.liadpaz.amp.utils.Constants;
 
 public final class MediaNotification {
-    private static final String TAG = "AmpApp.MediaNotification";
-
+    private static final String TAG = "MEDIA_NOTIFICATION";
     private static final String CHANNEL_ID = "music_channel";
 
     public MediaNotification(@NonNull Context context) {
@@ -62,7 +61,8 @@ public final class MediaNotification {
                                                                 .addAction(new Notification.Action.Builder(Icon.createWithResource(context, R.drawable.skip_next), null, skipToNextIntent).build())
                                                                 .setStyle(new Notification.MediaStyle().setShowActionsInCompactView(1, 2, 3).setMediaSession(mediaSession.getSessionToken()))
                                                                 .setSmallIcon(R.drawable.ic_launcher_foreground);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
