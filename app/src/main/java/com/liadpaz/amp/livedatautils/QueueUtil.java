@@ -1,5 +1,7 @@
 package com.liadpaz.amp.livedatautils;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.MutableLiveData;
@@ -35,6 +37,14 @@ public class QueueUtil {
 
     public static void observeQueue(@NonNull LifecycleOwner lifecycleOwner, @NonNull Observer<ArrayList<Song>> observer) {
         queue.observe(lifecycleOwner, observer);
+    }
+
+    public static void removePositionObserver(@NonNull Observer<Integer> observer) {
+        queuePosition.removeObserver(observer);
+    }
+
+    public static void removeQueueObserver(@NonNull Observer<ArrayList<Song>> observer) {
+        queue.removeObserver(observer);
     }
 
     @SuppressWarnings("ConstantConditions")

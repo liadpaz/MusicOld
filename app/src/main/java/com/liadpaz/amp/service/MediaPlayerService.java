@@ -23,9 +23,11 @@ import android.os.Bundle;
 import android.os.ResultReceiver;
 import android.provider.MediaStore;
 import android.service.media.MediaBrowserService;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.Observer;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
@@ -46,7 +48,7 @@ import java.util.concurrent.TimeUnit;
 
 public final class MediaPlayerService extends MediaBrowserService {
     private static final String TAG = "AmpApp.MediaPlayerService";
-    private static final String LOG_TAG = "AmpApp.MediaSessionLog";
+    private static final String LOG_TAG = "AmpApp2.MediaSessionLog";
     private static final int NOTIFICATION_ID = 273;
 
     // task executor instance
@@ -71,8 +73,12 @@ public final class MediaPlayerService extends MediaBrowserService {
 
     // media sources variables
     private Song currentSource;
-    private int queuePosition = 0;
+    private int queuePosition = -1;
     private ArrayList<Song> queue = new ArrayList<>();
+
+    // observers
+    private Observer<ArrayList<Song>> observerQueue;
+    private Observer<Integer> observerPosition;
 
     private void setQueuePosition(int position) {
         QueueUtil.setPosition(position);
@@ -86,15 +92,18 @@ public final class MediaPlayerService extends MediaBrowserService {
         TASK_EXECUTOR = AsyncTask.SERIAL_EXECUTOR;
 
         // observe to queue and queue position changes and act accordingly
-        QueueUtil.observeQueue(songs -> {
+        QueueUtil.observeQueue(observerQueue = songs -> {
+            Log.d(TAG, "onCreate: queue changed");
             queue = songs;
             if (queue.size() > 0 && currentSource == null) {
                 new LoadSongTask(this).executeOnExecutor(TASK_EXECUTOR);
                 new PlaySongTask(this).executeOnExecutor(TASK_EXECUTOR);
             }
         });
-        QueueUtil.observePosition(queuePosition -> {
+        QueueUtil.observePosition(observerPosition = queuePosition -> {
+            Log.d(TAG, "onCreate: " + this.queuePosition);
             if (queuePosition != -1) {
+                Log.d(TAG, "onCreate: position changed");
                 this.queuePosition = queuePosition;
                 if (QueueUtil.isChanging) {
                     QueueUtil.isChanging = false;
@@ -153,7 +162,6 @@ public final class MediaPlayerService extends MediaBrowserService {
                 currentSource = null;
                 sendPlaybackState(0, PlaybackState.STATE_STOPPED);
                 sendMetadata(null);
-                stopForeground(true);
             }
 
             @SuppressWarnings("ConstantConditions")
@@ -268,7 +276,6 @@ public final class MediaPlayerService extends MediaBrowserService {
                 }
             }
         }).setAudioAttributes(audioAttributes).build());
-        mediaPlayer.setVolume(1F, 1F);
         play();
     }
 
@@ -276,13 +283,16 @@ public final class MediaPlayerService extends MediaBrowserService {
      * This function starts the playback and notifies the needed listeners.
      */
     private void play() {
-        synchronized (this) {
-            resumeOnFocusGain = true;
+        if (mediaPlayer != null) {
+            mediaPlayer.setVolume(1F, 1F);
+            synchronized (this) {
+                resumeOnFocusGain = true;
+            }
+            becomingNoisyReceiver.register();
+            mediaPlayer.start();
+            sendPlaybackState(mediaPlayer.getCurrentPosition(), PlaybackState.STATE_PLAYING);
+            startNotification();
         }
-        becomingNoisyReceiver.register();
-        mediaPlayer.start();
-        sendPlaybackState(mediaPlayer.getCurrentPosition(), PlaybackState.STATE_PLAYING);
-        startNotification();
     }
 
     /**
@@ -301,9 +311,11 @@ public final class MediaPlayerService extends MediaBrowserService {
      */
     private void pause() {
         becomingNoisyReceiver.unregister();
-        mediaPlayer.pause();
-        sendPlaybackState(mediaPlayer.getCurrentPosition(), PlaybackState.STATE_PAUSED);
-        startNotification();
+        if (mediaPlayer != null) {
+            mediaPlayer.pause();
+            sendPlaybackState(mediaPlayer.getCurrentPosition(), PlaybackState.STATE_PAUSED);
+            startNotification();
+        }
     }
 
     /**
@@ -446,6 +458,7 @@ public final class MediaPlayerService extends MediaBrowserService {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.d(TAG, "onDestroy: destroying");
         if (audioFocusRequest != null) {
             audioManager.abandonAudioFocusRequest(audioFocusRequest);
         }
@@ -453,6 +466,15 @@ public final class MediaPlayerService extends MediaBrowserService {
         mediaPlayer.reset();
         mediaPlayer.release();
         mediaSession.release();
+        if (observerPosition != null) {
+            QueueUtil.removePositionObserver(observerPosition);
+        }
+        if (observerQueue != null) {
+            QueueUtil.removeQueueObserver(observerQueue);
+        }
+        QueueUtil.setPosition(-1);
+        QueueUtil.setQueue(new ArrayList<>());
+        stopForeground(true);
     }
 
     /**
@@ -510,7 +532,10 @@ public final class MediaPlayerService extends MediaBrowserService {
 
         @Override
         protected Void doInBackground(Void... voids) {
-            service.get().setSource(service.get().queue.get(service.get().queuePosition));
+            try {
+                service.get().setSource(service.get().queue.get(service.get().queuePosition));
+            } catch (Exception ignored) {
+            }
             return null;
         }
     }

@@ -61,7 +61,7 @@ public class ExtendedViewPagerFragment extends Fragment {
             public void onPageSelected(int position) {
                 if (firstTime) {
                     firstTime = false;
-                } else {
+                } else if (binding.extendedViewPager.getCurrentItem() != QueueUtil.getPosition()) {
                     QueueUtil.setPosition(position);
                 }
             }
