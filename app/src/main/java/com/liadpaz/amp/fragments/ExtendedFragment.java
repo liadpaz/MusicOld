@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.SeekBar;
 
 import androidx.annotation.ColorInt;
@@ -22,14 +23,15 @@ import androidx.fragment.app.Fragment;
 import androidx.palette.graphics.Palette;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.liadpaz.amp.livedatautils.ColorUtil;
-import com.liadpaz.amp.livedatautils.QueueUtil;
-import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentExtendedBinding;
+import com.liadpaz.amp.livedatautils.ColorUtil;
+import com.liadpaz.amp.livedatautils.QueueUtil;
+import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.notification.OnColorChange;
 import com.liadpaz.amp.utils.Constants;
+import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.utils.Utilities;
 
 import java.io.FileNotFoundException;
@@ -123,7 +125,7 @@ public class ExtendedFragment extends Fragment {
         setMetadata(controller.getMetadata());
         setPlayback(controller.getPlaybackState());
 
-        BottomSheetBehavior.from(((MainActivity)requireActivity()).binding.extendedFragment).addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+        BottomSheetBehavior.from(getBottomSheetView()).addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
                 if (newState == BottomSheetBehavior.STATE_EXPANDED) {
@@ -133,6 +135,9 @@ public class ExtendedFragment extends Fragment {
                         requireActivity().getWindow().setStatusBarColor(defaultColor);
                         binding.infoFragment.setAlpha(1);
                         isUp = true;
+                        if (LocalFiles.getScreenOn()) {
+                            requireActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                        }
                     }
                 } else if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
                     if (isUp) {
@@ -142,6 +147,7 @@ public class ExtendedFragment extends Fragment {
                         binding.infoFragment.setAlpha(1);
                         isUp = false;
                     }
+                    requireActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                 }
             }
 
@@ -156,6 +162,10 @@ public class ExtendedFragment extends Fragment {
         });
 
         getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedViewPagerFragment.newInstance()).commit();
+    }
+
+    private View getBottomSheetView() {
+        return ((MainActivity)requireActivity()).binding.extendedFragment;
     }
 
     @Override

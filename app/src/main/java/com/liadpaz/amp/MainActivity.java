@@ -1,6 +1,7 @@
 package com.liadpaz.amp;
 
 import android.Manifest;
+import android.app.SearchManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -10,6 +11,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.SearchView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,12 +23,18 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.liadpaz.amp.databinding.ActivityMainBinding;
 import com.liadpaz.amp.fragments.ExtendedFragment;
 import com.liadpaz.amp.fragments.MainViewPagerFragment;
+import com.liadpaz.amp.fragments.SearchFragment;
+import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.notification.MediaNotification;
 import com.liadpaz.amp.service.MediaPlayerService;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
+import com.liadpaz.amp.viewmodels.Song;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "AmpApp.MainActivity";
@@ -94,9 +102,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Override
     public boolean onCreateOptionsMenu(@NonNull Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        SearchManager searchManager = (SearchManager)getSystemService(SEARCH_SERVICE);
+        SearchView searchView = (SearchView)menu.findItem(R.id.menuSearch).getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+
         return true;
     }
 
@@ -139,6 +153,8 @@ public class MainActivity extends AppCompatActivity {
         if (intent != null) {
             if (intent.hasExtra(Constants.PREFERENCES_SHOW_CURRENT) && LocalFiles.getShowCurrent()) {
                 BottomSheetBehavior.from(binding.extendedFragment).setState(BottomSheetBehavior.STATE_EXPANDED);
+            } else {
+                handleIntent(intent);
             }
         }
     }
@@ -149,6 +165,22 @@ public class MainActivity extends AppCompatActivity {
         finish();
         overridePendingTransition(0, 0);
         startActivity(getIntent());
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    private void handleIntent(@Nullable Intent intent) {
+        if (intent != null && Intent.ACTION_SEARCH.equals(intent.getAction()) && intent.hasExtra(SearchManager.QUERY)) {
+            query(intent.getStringExtra(SearchManager.QUERY));
+        }
+    }
+
+    private void query(@NonNull String queryString) {
+        String loweredQueryString = queryString.toLowerCase();
+        List<Song> queriedSongs = SongsUtil.getSongs().parallelStream().filter(song -> song.songTitle.toLowerCase().contains(loweredQueryString) || song.songArtists.stream().anyMatch(artist -> artist.toLowerCase().contains(loweredQueryString)) || song.album.toLowerCase().contains(loweredQueryString)).collect(Collectors.toCollection(ArrayList::new));
+        if (queriedSongs.size() == 0) {
+            queriedSongs.add(null);
+        }
+        getSupportFragmentManager().beginTransaction().replace(R.id.mainFragment, SearchFragment.newInstance(queryString, queriedSongs)).addToBackStack(null).commit();
     }
 
     @Override

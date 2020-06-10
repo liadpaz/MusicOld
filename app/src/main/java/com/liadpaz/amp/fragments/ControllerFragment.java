@@ -89,7 +89,7 @@ public class ControllerFragment extends Fragment {
             }
         });
 
-        binding.getRoot().setOnClickListener(v -> BottomSheetBehavior.from(((MainActivity)requireActivity()).binding.extendedFragment).setState(BottomSheetBehavior.STATE_EXPANDED));
+        binding.getRoot().setOnClickListener(v -> BottomSheetBehavior.from(getBottomSheetView()).setState(BottomSheetBehavior.STATE_EXPANDED));
     }
 
     private void setPlayback(PlaybackState state) {
@@ -112,6 +112,10 @@ public class ControllerFragment extends Fragment {
         } else {
             binding.setSong(null);
         }
+    }
+
+    private View getBottomSheetView() {
+        return ((MainActivity)requireActivity()).binding.extendedFragment;
     }
 
     @Override

@@ -7,14 +7,21 @@
             app:title="@string/preference_path" />
         <Preference
             android:key="default_path"
-            android:summary="@string/preference_default_path_description"
+            android:summary="@string/preference_default_path_summary"
             app:title="@string/preference_default_path" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/preference_notification_group">
-        <SwitchPreferenceCompat
+        <SwitchPreference
             android:key="notification"
             android:summary="@string/preference_notification_open_summary"
             android:title="@string/preference_notification_open_title" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/preference_display_group">
+        <SwitchPreference
+            android:key="screen_on"
+            android:summary="@string/preference_screen_on_summary"
+            android:title="@string/preference_screen_on_title" />
     </PreferenceCategory>
 </PreferenceScreen>

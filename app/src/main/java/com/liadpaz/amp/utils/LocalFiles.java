@@ -55,9 +55,9 @@ public class LocalFiles {
 
     /**
      * This function returns the music folder path, if it does not exists, it returns the default
-     * one
+     * one.
      *
-     * @return The music folder path, if not exists returns the default one
+     * @return The music folder path, if not exists returns the default one.
      */
     @NonNull
     public static String getPath() {
@@ -65,20 +65,48 @@ public class LocalFiles {
     }
 
     /**
-     * This function saves the path of the songs folder to the local shared preferences
+     * This function saves the path of the songs folder to the local shared preferences.
      *
-     * @param path The path of the songs folder
+     * @param path The path of the songs folder.
      */
-    public static void setPath(@NonNull String path) {
+    public static void setPath(@NonNull final String path) {
         musicSharedPreferences.edit().putString(Constants.PREFERENCES_PATH, path).apply();
     }
 
+    /**
+     * This function returns the show current song screen on notification click flag.
+     *
+     * @return true to show current song screen on notification click, otherwise false.
+     */
     public static boolean getShowCurrent() {
         return musicSharedPreferences.getBoolean(Constants.PREFERENCES_SHOW_CURRENT, true);
     }
 
-    public static void setShowCurrent(boolean showCurrent) {
+    /**
+     * This function sets the show current song screen on notification click flag.
+     *
+     * @param showCurrent true to show current song screen on notification click flag, otherwise false.
+     */
+    public static void setShowCurrent(final boolean showCurrent) {
         musicSharedPreferences.edit().putBoolean(Constants.PREFERENCES_SHOW_CURRENT, showCurrent).apply();
+    }
+
+    /**
+     * This function returns the keep screen on when the current song screen is shown flag.
+     *
+     * @return true to keep screen on when the current song screen is shown, otherwise false.
+     */
+    public static boolean getScreenOn() {
+        return musicSharedPreferences.getBoolean(Constants.PREFERENCES_SCREEN_ON, false);
+    }
+
+    /**
+     * This function sets the keep screen on when the current song screen is shown flag.
+     *
+     * @param screenOn true to keep screen on when the current song screen is shown, otherwise false.
+     */
+    public static void setScreenOn(final boolean screenOn) {
+        musicSharedPreferences.edit().putBoolean(Constants.PREFERENCES_SCREEN_ON, screenOn).apply();
     }
 
     @NonNull

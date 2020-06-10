@@ -101,7 +101,6 @@ public final class MediaPlayerService extends MediaBrowserService {
             }
         });
         QueueUtil.observePosition(observerPosition = queuePosition -> {
-            Log.d(TAG, "onCreate: " + this.queuePosition);
             if (queuePosition != -1) {
                 Log.d(TAG, "onCreate: position changed");
                 this.queuePosition = queuePosition;
@@ -299,9 +298,6 @@ public final class MediaPlayerService extends MediaBrowserService {
      * This function abandons audio focus and pauses the playback.
      */
     private void onPause() {
-        if (audioFocusRequest != null) {
-            audioManager.abandonAudioFocusRequest(audioFocusRequest);
-        }
         resumeOnFocusGain = false;
         pause();
     }

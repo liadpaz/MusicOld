@@ -41,9 +41,16 @@
     <string name="preference_path_group">הגדרות מקור שירים</string>
     <string name="preference_all_path">הכל</string>
     <string name="preference_default_path">השתמש בתיקיית ברירת המחדל</string>
-    <string name="preference_default_path_description">בחר את תיקיית ברירת המחדל כמקור השירים</string>
+    <string name="preference_default_path_summary">בחר את תיקיית ברירת המחדל כמקור השירים</string>
     <string name="preference_notification_group">הגדרות התראות</string>
     <string name="preference_notification_open_summary">פתח את מסך השיר הנוכחי בלחיצה על ההתראה</string>
     <string name="preference_notification_open_title">לחיצה על התראה</string>
     <string name="about">אפליקציה זו נועדה לשמיעת שירים בקבצים במכשיר. לחווית המשתמש הטובה ביותר מומלץ שימוש באפליקציה לתיוג שירים כמו AutomaTag )כדי שהמידע על השירים יהיה נכון ויהיו תמונות אלבום). אם מצאת באג כלשהו בבקשה תדווח אלי.</string>
+    <string name="preference_display_group">הגדרות תצוגה</string>
+    <string name="preference_screen_on_title">מסך דולק</string>
+    <string name="preference_screen_on_summary">השאר מסך דולק כאשר מוצג השיר הנוכחי</string>
+    <string name="menu_search">חיפוש</string>
+    <string name="search_hint">חפש שירים</string>
+    <string name="search_result">"מראה תוצאות של החיפוש: %1$s"</string>
+    <string name="list_no_song_query">לא נמצאו שירים התואמים את החיפוש שלך.\nחפש שוב עם מילות חיפוש אחרות.</string>
 </resources>

@@ -41,9 +41,16 @@
     <string name="preference_path_group">Source Settings</string>
     <string name="preference_all_path">All</string>
     <string name="preference_default_path">Use Default Folder</string>
-    <string name="preference_default_path_description">Choose the default folder as the music source</string>
+    <string name="preference_default_path_summary">Choose the default folder as the music source</string>
     <string name="preference_notification_group">Notification Settings</string>
     <string name="preference_notification_open_title">Notification Click</string>
     <string name="preference_notification_open_summary">Open current song screen when clicking the notification</string>
-    <string name="about">This app is for playing music from local files on device. For best user experience use a mp3 tag app like AutomaTag (to have correct metadata of songs and album arts). If you find any bug please report them to me.</string>
+    <string name="about">This app is for playing music from local files on device. For best user experience use a mp3 tag app like AutomaTag (to have correct metadata of songs and album arts). If you find any bugs please report them to me.</string>
+    <string name="preference_display_group">Display Settings</string>
+    <string name="preference_screen_on_title">Screen On</string>
+    <string name="preference_screen_on_summary">Keep screen on when displaying current song</string>
+    <string name="menu_search">Search</string>
+    <string name="search_hint">Search for songs</string>
+    <string name="search_result">Showing results for the search: %1$s</string>
+    <string name="list_no_song_query">Couldn\'t find any songs matching your search keyword.\nTry again with a different keyword.</string>
 </resources>

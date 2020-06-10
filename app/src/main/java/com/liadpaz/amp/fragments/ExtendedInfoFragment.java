@@ -76,7 +76,7 @@ public class ExtendedInfoFragment extends Fragment {
 
             popupMenu.show();
         });
-        binding.ivDrop.setOnClickListener(v -> BottomSheetBehavior.from(((MainActivity)requireActivity()).binding.extendedFragment).setState(BottomSheetBehavior.STATE_COLLAPSED));
+        binding.ivDrop.setOnClickListener(v -> BottomSheetBehavior.from(getBottomSheetView()).setState(BottomSheetBehavior.STATE_COLLAPSED));
 
         ColorUtil.observe(this, color -> {
             if (isDark = Utilities.isColorBright(color)) {
@@ -89,5 +89,9 @@ public class ExtendedInfoFragment extends Fragment {
                 binding.ivDrop.setImageResource(R.drawable.arrow_down);
             }
         });
+    }
+
+    private View getBottomSheetView() {
+        return ((MainActivity)requireActivity()).binding.extendedFragment;
     }
 }

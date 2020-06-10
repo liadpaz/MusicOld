@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,6 +22,7 @@ import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongViewHolder> {
     private static final String TAG = "AmpApp.SongsListAdapter";
@@ -49,20 +51,14 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
     @Override
     public SongViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (getItemCount() == 1) {
-            return new SongViewHolder(ItemNoSongsBinding.inflate(LayoutInflater.from(context), parent, false), onShuffleClickListener, onMoreClickListener, (v, position) -> {
-                QueueUtil.setQueue(new ArrayList<>(getCurrentList()));
-                QueueUtil.setPosition(position);
-            });
+            return new SongViewHolder(ItemNoSongsBinding.inflate(LayoutInflater.from(context), parent, false), onShuffleClickListener, onMoreClickListener, (v, position) -> {});
         } else if (viewType == TYPE_ITEM) {
             return new SongViewHolder(ItemSongBinding.inflate(LayoutInflater.from(context), parent, false), onShuffleClickListener, onMoreClickListener, (v, position) -> {
                 QueueUtil.setQueue(new ArrayList<>(getCurrentList()));
                 QueueUtil.setPosition(position);
             });
         }
-        return new SongViewHolder(ItemSongShuffleBinding.inflate(LayoutInflater.from(context), parent, false), onShuffleClickListener, onMoreClickListener, (v, position) -> {
-            QueueUtil.setQueue(new ArrayList<>(getCurrentList()));
-            QueueUtil.setPosition(position);
-        });
+        return new SongViewHolder(ItemSongShuffleBinding.inflate(LayoutInflater.from(context), parent, false), onShuffleClickListener, onMoreClickListener, (v, position) -> {});
     }
 
     @Override
@@ -89,6 +85,11 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
         return super.getItemCount() + 1;
     }
 
+    @Override
+    public void submitList(@Nullable List<Song> list) {
+        super.submitList(list != null ? new ArrayList<>(list) : null);
+    }
+
     static class SongViewHolder extends RecyclerView.ViewHolder {
         private ViewBinding binding;
 
@@ -97,7 +98,7 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
             this.binding = binding;
             if (binding instanceof ItemSongShuffleBinding) {
                 ((ItemSongShuffleBinding)binding).getRoot().setOnClickListener(onClickListener);
-            } else {
+            } else if (binding instanceof ItemSongBinding) {
                 itemView.setOnClickListener(v -> onItemClickListener.onItemClick(v, getAdapterPosition() - 1));
                 ((ItemSongBinding)binding).btnMore.setOnClickListener(v -> onMoreClickListener.onItemClick(v, getAdapterPosition() - 1));
             }

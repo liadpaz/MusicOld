@@ -70,7 +70,7 @@ public class PlaylistAdapter extends ListAdapter<Song, PlaylistAdapter.SongViewH
                 QueueUtil.setPosition(position - 1);
             }, onShuffleClickListener);
         }
-        return new SongViewHolder(ItemSongShuffleBinding.inflate(LayoutInflater.from(context), parent, false), null, onShuffleClickListener);
+        return new SongViewHolder(ItemSongShuffleBinding.inflate(LayoutInflater.from(context), parent, false), (v, position) -> {}, onShuffleClickListener);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -127,7 +127,7 @@ public class PlaylistAdapter extends ListAdapter<Song, PlaylistAdapter.SongViewH
     static class SongViewHolder extends RecyclerView.ViewHolder {
         private ViewBinding binding;
 
-        SongViewHolder(@NonNull ViewBinding binding, OnRecyclerItemClickListener onItemClick, @NonNull View.OnClickListener onShuffleClickListener) {
+        SongViewHolder(@NonNull ViewBinding binding, @NonNull OnRecyclerItemClickListener onItemClick, @NonNull View.OnClickListener onShuffleClickListener) {
             super(binding.getRoot());
             this.binding = binding;
 

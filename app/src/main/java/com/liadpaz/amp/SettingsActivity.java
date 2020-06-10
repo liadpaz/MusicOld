@@ -8,7 +8,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
-import androidx.preference.SwitchPreferenceCompat;
+import androidx.preference.SwitchPreference;
 
 import com.liadpaz.amp.databinding.SettingsActivityBinding;
 import com.liadpaz.amp.utils.Constants;
@@ -31,7 +31,8 @@ public class SettingsActivity extends AppCompatActivity {
 
     public static class SettingsFragment extends PreferenceFragmentCompat {
         private Preference pathPreference;
-        private SwitchPreferenceCompat notificationPreference;
+        private SwitchPreference notificationPreference;
+        private SwitchPreference screenOnPreference;
 
         private String path;
 
@@ -58,6 +59,12 @@ public class SettingsActivity extends AppCompatActivity {
             notificationPreference.setChecked(LocalFiles.getShowCurrent());
             notificationPreference.setOnPreferenceClickListener(preference -> {
                 LocalFiles.setShowCurrent(notificationPreference.isChecked());
+                return true;
+            });
+            screenOnPreference = findPreference("screen_on");
+            screenOnPreference.setChecked(LocalFiles.getScreenOn());
+            screenOnPreference.setOnPreferenceClickListener(preference -> {
+                LocalFiles.setScreenOn(screenOnPreference.isChecked());
                 return true;
             });
         }
