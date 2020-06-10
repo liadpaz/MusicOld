@@ -453,8 +453,9 @@ public final class MediaPlayerService extends MediaBrowserService {
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
         Log.d(TAG, "onDestroy: destroying");
+        sendMetadata(null);
+        sendPlaybackState(0, PlaybackState.STATE_STOPPED);
         if (audioFocusRequest != null) {
             audioManager.abandonAudioFocusRequest(audioFocusRequest);
         }
@@ -464,13 +465,14 @@ public final class MediaPlayerService extends MediaBrowserService {
         mediaSession.release();
         if (observerPosition != null) {
             QueueUtil.removePositionObserver(observerPosition);
+            observerPosition = null;
         }
         if (observerQueue != null) {
             QueueUtil.removeQueueObserver(observerQueue);
+            observerQueue = null;
         }
         QueueUtil.setPosition(-1);
         QueueUtil.setQueue(new ArrayList<>());
-        stopForeground(true);
     }
 
     /**
