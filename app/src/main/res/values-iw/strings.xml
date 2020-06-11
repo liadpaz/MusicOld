@@ -14,7 +14,7 @@
     <string name="tab_playlists">פלייליסטים</string>
     <string name="menu_queue_remove_from">הסר מהתור</string>
     <string name="menu_queue_add_to_playlist">הוסף לפלייליסט</string>
-    <string name="queue_removed">הוסר מהתור</string>
+    <string name="queue_removed">%1$s הוסר מהתור</string>
     <string name="menu_play_next">נגן הבא בתור</string>
     <string name="description_queue">הצג את התור</string>
     <string name="description_more">עוד</string>

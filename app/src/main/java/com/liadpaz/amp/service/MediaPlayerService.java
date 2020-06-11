@@ -93,7 +93,6 @@ public final class MediaPlayerService extends MediaBrowserService {
 
         // observe to queue and queue position changes and act accordingly
         QueueUtil.observeQueue(observerQueue = songs -> {
-            Log.d(TAG, "onCreate: queue changed");
             queue = songs;
             if (queue.size() > 0 && currentSource == null) {
                 new LoadSongTask(this).executeOnExecutor(TASK_EXECUTOR);
@@ -102,7 +101,6 @@ public final class MediaPlayerService extends MediaBrowserService {
         });
         QueueUtil.observePosition(observerPosition = queuePosition -> {
             if (queuePosition != -1) {
-                Log.d(TAG, "onCreate: position changed");
                 this.queuePosition = queuePosition;
                 if (QueueUtil.isChanging) {
                     QueueUtil.isChanging = false;

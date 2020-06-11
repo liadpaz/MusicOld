@@ -40,7 +40,6 @@ public class CurrentQueueFragment extends Fragment {
         return (binding = FragmentCurrentQueueBinding.inflate(inflater, container, false)).getRoot();
     }
 
-    @SuppressWarnings("ConstantConditions")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         adapter = new QueueAdapter(this, (v, position) -> {
@@ -66,7 +65,6 @@ public class CurrentQueueFragment extends Fragment {
         }, new ItemTouchHelperAdapter() {
             @Override
             public void onItemMove(int fromPosition, int toPosition) {
-                isChanging = true;
                 QueueUtil.setQueue(adapter.getQueue());
             }
 
@@ -84,7 +82,6 @@ public class CurrentQueueFragment extends Fragment {
 
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                QueueUtil.isChanging = true;
                 adapter.onItemMove(viewHolder.getAdapterPosition(), target.getAdapterPosition());
                 return true;
             }

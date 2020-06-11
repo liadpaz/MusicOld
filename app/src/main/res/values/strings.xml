@@ -14,7 +14,7 @@
     <string name="tab_playlists">Playlists</string>
     <string name="menu_queue_remove_from">Remove From Queue</string>
     <string name="menu_queue_add_to_playlist">Add to Playlist</string>
-    <string name="queue_removed">removed from the queue</string>
+    <string name="queue_removed">%1$s removed from the queue</string>
     <string name="menu_play_next">Play Next</string>
     <string name="description_queue">Show Queue</string>
     <string name="description_more">More</string>
