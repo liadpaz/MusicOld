@@ -14,7 +14,7 @@
     <string name="tab_playlists">פלייליסטים</string>
     <string name="menu_queue_remove_from">הסר מהתור</string>
     <string name="menu_queue_add_to_playlist">הוסף לפלייליסט</string>
-    <string name="queue_removed">%1$s הוסר מהתור</string>
+    <string name="queue_removed">%s הוסר מהתור</string>
     <string name="menu_play_next">נגן הבא בתור</string>
     <string name="description_queue">הצג את התור</string>
     <string name="description_more">עוד</string>
@@ -51,6 +51,9 @@
     <string name="preference_screen_on_summary">השאר מסך דולק כאשר מוצג השיר הנוכחי</string>
     <string name="menu_search">חיפוש</string>
     <string name="search_hint">חפש שירים</string>
-    <string name="search_result">"מראה תוצאות של החיפוש: %1$s"</string>
+    <string name="search_result">מראה תוצאות ל: %s</string>
     <string name="list_no_song_query">לא נמצאו שירים התואמים את החיפוש שלך.\nחפש שוב עם מילות חיפוש אחרות.</string>
+    <string name="battery_optimization_title">ייעול בטריה</string>
+    <string name="battery_optimization_message">לחווית משתמש הטובה ביותר, מומלץ להוריד את ייעול הבטריה לאפליקציה זו.</string>
+    <string name="battery_optimization_optimize">ייעל</string>
 </resources>

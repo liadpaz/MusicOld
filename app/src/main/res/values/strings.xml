@@ -14,7 +14,7 @@
     <string name="tab_playlists">Playlists</string>
     <string name="menu_queue_remove_from">Remove From Queue</string>
     <string name="menu_queue_add_to_playlist">Add to Playlist</string>
-    <string name="queue_removed">%1$s removed from the queue</string>
+    <string name="queue_removed">%s removed from the queue</string>
     <string name="menu_play_next">Play Next</string>
     <string name="description_queue">Show Queue</string>
     <string name="description_more">More</string>
@@ -51,6 +51,9 @@
     <string name="preference_screen_on_summary">Keep screen on when displaying current song</string>
     <string name="menu_search">Search</string>
     <string name="search_hint">Search for songs</string>
-    <string name="search_result">Showing results for the search: %1$s</string>
+    <string name="search_result">Showing results for: %s</string>
     <string name="list_no_song_query">Couldn\'t find any songs matching your search keyword.\nTry again with a different keyword.</string>
+    <string name="battery_optimization_title">Battery Optimization</string>
+    <string name="battery_optimization_message">For best user experience, you should disable battery optimizations for this app.</string>
+    <string name="battery_optimization_optimize">Optimize</string>
 </resources>

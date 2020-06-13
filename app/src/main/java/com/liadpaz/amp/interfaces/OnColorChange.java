@@ -1,4 +1,4 @@
-package com.liadpaz.amp.notification;
+package com.liadpaz.amp.interfaces;
 
 import androidx.annotation.ColorInt;
 

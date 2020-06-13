@@ -7,6 +7,7 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:navigationBarColor">@android:color/background_dark</item>
+        <item name="textAllCaps">false</item>
     </style>
 
 </resources>

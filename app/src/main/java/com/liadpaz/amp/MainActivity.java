@@ -1,6 +1,7 @@
 package com.liadpaz.amp;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.SearchManager;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -8,6 +9,8 @@ import android.content.pm.PackageManager;
 import android.media.browse.MediaBrowser;
 import android.media.session.MediaController;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -87,18 +90,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startService() {
+        startService(new Intent(this, MediaPlayerService.class));
         if (!mediaBrowser.isConnected()) {
-            startService(new Intent(this, MediaPlayerService.class));
             mediaBrowser.connect();
         }
     }
 
+    @SuppressWarnings("ConstantConditions")
     private void initializeView() {
-        getSupportFragmentManager().beginTransaction().replace(R.id.mainFragment, MainViewPagerFragment.newInstance()).replace(R.id.extendedFragment, ExtendedFragment.newInstance()).commitNow();
+        getSupportFragmentManager().beginTransaction().replace(R.id.mainFragment, MainViewPagerFragment.newInstance()).replace(R.id.extendedFragment, ExtendedFragment.newInstance()).commitNowAllowingStateLoss();
         if (getIntent() != null) {
             if (getIntent().hasExtra(Constants.PREFERENCES_SHOW_CURRENT) && LocalFiles.getShowCurrent()) {
                 BottomSheetBehavior.from(binding.extendedFragment).setState(BottomSheetBehavior.STATE_EXPANDED);
             }
+        }
+        if (!((PowerManager)getSystemService(POWER_SERVICE)).isIgnoringBatteryOptimizations(getPackageName())) {
+            new AlertDialog.Builder(this).setTitle(R.string.battery_optimization_title).setMessage(R.string.battery_optimization_message).setPositiveButton(R.string.battery_optimization_optimize, (dialog, which) -> startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))).show();
         }
     }
 
@@ -107,9 +114,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(@NonNull Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
 
-        SearchManager searchManager = (SearchManager)getSystemService(SEARCH_SERVICE);
-        SearchView searchView = (SearchView)menu.findItem(R.id.menuSearch).getActionView();
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        ((SearchView)menu.findItem(R.id.menuSearch).getActionView()).setSearchableInfo(((SearchManager)getSystemService(SEARCH_SERVICE)).getSearchableInfo(getComponentName()));
 
         return true;
     }
@@ -141,9 +146,10 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_SETTINGS && resultCode == RESULT_OK) {
             recreate();
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
         }
     }
 
@@ -167,6 +173,12 @@ public class MainActivity extends AppCompatActivity {
         startActivity(getIntent());
     }
 
+    /**
+     * This function handles the query intent.
+     *
+     * @param intent An {@link Intent} with {@code Intent.ACTION_SEARCH} as its action and a {@code
+     *               SearchManager.QUERY} extra as the query parameter.
+     */
     @SuppressWarnings("ConstantConditions")
     private void handleIntent(@Nullable Intent intent) {
         if (intent != null && Intent.ACTION_SEARCH.equals(intent.getAction()) && intent.hasExtra(SearchManager.QUERY)) {
@@ -174,13 +186,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * This function queries the list of songs corresponds to the query string.
+     *
+     * @param queryString The query string.
+     */
     private void query(@NonNull String queryString) {
         String loweredQueryString = queryString.toLowerCase();
         List<Song> queriedSongs = SongsUtil.getSongs().parallelStream().filter(song -> song.songTitle.toLowerCase().contains(loweredQueryString) || song.songArtists.stream().anyMatch(artist -> artist.toLowerCase().contains(loweredQueryString)) || song.album.toLowerCase().contains(loweredQueryString)).collect(Collectors.toCollection(ArrayList::new));
         if (queriedSongs.size() == 0) {
             queriedSongs.add(null);
         }
-        getSupportFragmentManager().beginTransaction().replace(R.id.mainFragment, SearchFragment.newInstance(queryString, queriedSongs)).addToBackStack(null).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.mainFragment, SearchFragment.newInstance(queryString, queriedSongs)).addToBackStack(null).commitAllowingStateLoss();
     }
 
     @Override

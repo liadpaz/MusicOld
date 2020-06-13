@@ -29,7 +29,6 @@ import com.liadpaz.amp.databinding.FragmentExtendedBinding;
 import com.liadpaz.amp.livedatautils.ColorUtil;
 import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.livedatautils.SongsUtil;
-import com.liadpaz.amp.notification.OnColorChange;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.utils.Utilities;
@@ -38,8 +37,8 @@ import java.io.FileNotFoundException;
 import java.util.concurrent.CompletableFuture;
 
 public class ExtendedFragment extends Fragment {
-    private static OnColorChange onColorChangeController;
-    private static OnColorChange onColorChangeInfo;
+    private static final String TAG = "AmpApp.ExtendedFragment";
+
     private Handler handler;
     private Runnable runnable;
     private boolean shouldSeek = false;
@@ -131,7 +130,7 @@ public class ExtendedFragment extends Fragment {
                 if (newState == BottomSheetBehavior.STATE_EXPANDED) {
                     if (!isUp) {
                         // show the info fragment
-                        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ExtendedInfoFragment.newInstance()).commitNow();
+                        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ExtendedInfoFragment.newInstance()).commitNowAllowingStateLoss();
                         requireActivity().getWindow().setStatusBarColor(defaultColor);
                         binding.infoFragment.setAlpha(1);
                         isUp = true;
@@ -142,7 +141,7 @@ public class ExtendedFragment extends Fragment {
                 } else if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
                     if (isUp) {
                         // show the controller fragment
-                        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedViewPagerFragment.newInstance()).commitNow();
+                        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedViewPagerFragment.newInstance()).commitNowAllowingStateLoss();
                         requireActivity().getWindow().setStatusBarColor(requireActivity().getColor(R.color.colorPrimaryDark));
                         binding.infoFragment.setAlpha(1);
                         isUp = false;
