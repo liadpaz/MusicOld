@@ -42,8 +42,10 @@ public class ExtendedFragment extends Fragment {
     private Handler handler;
     private Runnable runnable;
     private boolean shouldSeek = false;
+
     private MediaController controller;
     private MediaController.Callback callback;
+
     private long duration = 0;
     private double currentPosition = 0;
     @ColorInt
@@ -52,7 +54,7 @@ public class ExtendedFragment extends Fragment {
 
     private FragmentExtendedBinding binding;
 
-    public ExtendedFragment() { }
+    private ExtendedFragment() { }
 
     @NonNull
     public static ExtendedFragment newInstance() { return new ExtendedFragment(); }

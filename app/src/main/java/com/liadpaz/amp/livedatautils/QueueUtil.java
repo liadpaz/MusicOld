@@ -1,7 +1,5 @@
 package com.liadpaz.amp.livedatautils;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.MutableLiveData;
@@ -10,13 +8,22 @@ import androidx.lifecycle.Observer;
 import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class QueueUtil {
     private static final String TAG = "AmpApp.QueueUtil";
 
     private static final MutableLiveData<ArrayList<Song>> queue = new MutableLiveData<>(new ArrayList<>());
     private static final MutableLiveData<Integer> queuePosition = new MutableLiveData<>(-1);
-    public static boolean isChanging = false;
+    private static final AtomicBoolean isChanging = new AtomicBoolean(false);
+
+    public static boolean getIsChanging() {
+        return isChanging.get();
+    }
+
+    public static void setIsChanging(final boolean isChanging) {
+        QueueUtil.isChanging.set(isChanging);
+    }
 
     @SuppressWarnings("ConstantConditions")
     public static int getQueueSize() {

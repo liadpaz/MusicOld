@@ -49,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 public final class MediaPlayerService extends MediaBrowserService {
     private static final String TAG = "AmpApp.MediaPlayerService";
     private static final String LOG_TAG = "AmpApp2.MediaSessionLog";
+
     private static final int NOTIFICATION_ID = 273;
 
     // task executor instance
@@ -98,12 +99,15 @@ public final class MediaPlayerService extends MediaBrowserService {
                 new LoadSongTask(this).executeOnExecutor(TASK_EXECUTOR);
                 new PlaySongTask(this).executeOnExecutor(TASK_EXECUTOR);
             }
+            if (QueueUtil.getIsChanging()) {
+                QueueUtil.setIsChanging(false);
+            }
         });
         QueueUtil.observePosition(observerPosition = queuePosition -> {
             if (queuePosition != -1) {
                 this.queuePosition = queuePosition;
-                if (QueueUtil.isChanging) {
-                    QueueUtil.isChanging = false;
+                if (QueueUtil.getIsChanging()) {
+                    QueueUtil.setIsChanging(false);
                 } else {
                     new LoadSongTask(this).executeOnExecutor(TASK_EXECUTOR);
                     new PlaySongTask(this).executeOnExecutor(TASK_EXECUTOR);
