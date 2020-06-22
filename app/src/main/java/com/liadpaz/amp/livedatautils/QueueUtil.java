@@ -1,5 +1,7 @@
 package com.liadpaz.amp.livedatautils;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.MutableLiveData;
@@ -8,6 +10,7 @@ import androidx.lifecycle.Observer;
 import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class QueueUtil {
@@ -22,6 +25,7 @@ public class QueueUtil {
     }
 
     public static void setIsChanging(final boolean isChanging) {
+        Log.d(TAG, "setIsChanging() called with: isChanging = [" + isChanging + "]");
         QueueUtil.isChanging.set(isChanging);
     }
 
@@ -60,15 +64,15 @@ public class QueueUtil {
     }
 
     public static void setPosition(int position) {
-        queuePosition.postValue(position);
+        queuePosition.setValue(position);
     }
 
     public static ArrayList<Song> getQueue() {
         return queue.getValue();
     }
 
-    public static void setQueue(@NonNull ArrayList<Song> queue) {
-        QueueUtil.queue.postValue(queue);
+    public static void setQueue(@NonNull List<Song> queue) {
+        QueueUtil.queue.setValue(new ArrayList<>(queue));
     }
 
     @SuppressWarnings("ConstantConditions")

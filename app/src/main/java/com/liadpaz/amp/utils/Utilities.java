@@ -17,6 +17,8 @@ import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Utilities {
     @SuppressWarnings("unused")
@@ -67,6 +69,22 @@ public class Utilities {
         return String.format("%s:%s", minutesTime, seconds);
     }
 
+    @NonNull
+    public static ArrayList<String> getArtistsFromSong(@NonNull String title, @NonNull String artistsString) {
+        ArrayList<String> artists = new ArrayList<>();
+        Matcher matcher = Pattern.compile("([^ &,]([^,&])*[^ ,&]+)").matcher(artistsString);
+        while (matcher.find()) {
+            artists.add(matcher.group());
+        }
+
+//        int openBracketIndex;
+//        int closeBracketIndex;
+//        if ((openBracketIndex = title.indexOf('(')) != -1 && (closeBracketIndex = title.indexOf(')')) != -1 && openBracketIndex < closeBracketIndex) {
+//
+//        }
+        return artists;
+    }
+
     @SuppressWarnings("ConstantConditions")
     public static Bitmap getBitmapFromVectorDrawable(@NonNull Context context, int drawableId) {
         Drawable drawable = ContextCompat.getDrawable(context, drawableId);
@@ -74,7 +92,6 @@ public class Utilities {
         Canvas canvas = new Canvas(bitmap);
         drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
         drawable.draw(canvas);
-
         return bitmap;
     }
 }

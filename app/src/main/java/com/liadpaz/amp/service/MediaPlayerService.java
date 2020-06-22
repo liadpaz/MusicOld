@@ -18,7 +18,6 @@ import android.media.browse.MediaBrowser;
 import android.media.session.MediaController;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.ResultReceiver;
 import android.provider.MediaStore;
@@ -27,6 +26,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 import androidx.lifecycle.Observer;
 
 import com.bumptech.glide.Glide;
@@ -40,10 +40,10 @@ import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Song;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public final class MediaPlayerService extends MediaBrowserService {
@@ -90,14 +90,14 @@ public final class MediaPlayerService extends MediaBrowserService {
         super.onCreate();
 
         // initialize the task executor
-        TASK_EXECUTOR = AsyncTask.SERIAL_EXECUTOR;
+        TASK_EXECUTOR = Executors.newSingleThreadExecutor();
 
         // observe to queue and queue position changes and act accordingly
         QueueUtil.observeQueue(observerQueue = songs -> {
             queue = songs;
-            if (queue.size() > 0 && currentSource == null) {
-                new LoadSongTask(this).executeOnExecutor(TASK_EXECUTOR);
-                new PlaySongTask(this).executeOnExecutor(TASK_EXECUTOR);
+            if (queue.size() > 0 && currentSource == null && queuePosition != -1) {
+                TASK_EXECUTOR.execute(() -> setSource(queue.get(queuePosition)));
+                TASK_EXECUTOR.execute(this::onPlay);
             }
             if (QueueUtil.getIsChanging()) {
                 QueueUtil.setIsChanging(false);
@@ -109,8 +109,8 @@ public final class MediaPlayerService extends MediaBrowserService {
                 if (QueueUtil.getIsChanging()) {
                     QueueUtil.setIsChanging(false);
                 } else {
-                    new LoadSongTask(this).executeOnExecutor(TASK_EXECUTOR);
-                    new PlaySongTask(this).executeOnExecutor(TASK_EXECUTOR);
+                    TASK_EXECUTOR.execute(() -> setSource(queue.get(queuePosition)));
+                    TASK_EXECUTOR.execute(this::onPlay);
                 }
             }
         });
@@ -144,12 +144,12 @@ public final class MediaPlayerService extends MediaBrowserService {
 
             @Override
             public void onPlay() {
-                new PlaySongTask(MediaPlayerService.this).executeOnExecutor(TASK_EXECUTOR);
+                TASK_EXECUTOR.execute(MediaPlayerService.this::onPlay);
             }
 
             @Override
             public void onPause() {
-                new PauseSongTask(MediaPlayerService.this).executeOnExecutor(TASK_EXECUTOR);
+                TASK_EXECUTOR.execute(MediaPlayerService.this::onPause);
             }
 
             @Override
@@ -232,6 +232,10 @@ public final class MediaPlayerService extends MediaBrowserService {
             }
         });
         mediaPlayer.setAudioAttributes(audioAttributes);
+        mediaPlayer.setOnErrorListener((mp, what, extra) -> {
+            Log.d(TAG, "MediaPlayer Error:\nwhat = " + what + "\nextra = " + extra);
+            return false;
+        });
     }
 
     /**
@@ -395,6 +399,7 @@ public final class MediaPlayerService extends MediaBrowserService {
      *
      * @param song the {@link Song} to set the source as.
      */
+    @WorkerThread
     private void setSource(Song song) {
         try {
             if (audioFocusRequest != null) {
@@ -404,7 +409,9 @@ public final class MediaPlayerService extends MediaBrowserService {
             mediaPlayer.setDataSource(this, ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, (currentSource = song).songId));
             mediaPlayer.prepare();
             sendMetadata(currentSource);
-        } catch (Exception ignored) {
+            Log.d(TAG, "setSource: " + song.songTitle);
+        } catch (Exception e) {
+            Log.e(TAG, "setSource: ", e);
         }
     }
 
@@ -515,66 +522,6 @@ public final class MediaPlayerService extends MediaBrowserService {
                 context.unregisterReceiver(this);
                 registered = false;
             }
-        }
-    }
-
-    /**
-     * This class is for loading a song into the {@link MediaPlayer} instance of the Service.
-     * <p>
-     * It's doing it asynchronously to not block the main thread
-     */
-    private static class LoadSongTask extends AsyncTask<Void, Void, Void> {
-        private WeakReference<MediaPlayerService> service;
-
-        LoadSongTask(@NonNull MediaPlayerService service) {
-            this.service = new WeakReference<>(service);
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-            try {
-                service.get().setSource(service.get().queue.get(service.get().queuePosition));
-            } catch (Exception ignored) {
-            }
-            return null;
-        }
-    }
-
-    /**
-     * This class is for playing a song from the {@link MediaPlayer} instance of the Service.
-     * <p>
-     * It's doing it asynchronously to not block the main thread.
-     */
-    private static class PlaySongTask extends AsyncTask<Void, Void, Void> {
-        private WeakReference<MediaPlayerService> service;
-
-        PlaySongTask(@NonNull MediaPlayerService service) {
-            this.service = new WeakReference<>(service);
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-            service.get().onPlay();
-            return null;
-        }
-    }
-
-    /**
-     * This class is for playing a song from the {@link MediaPlayer} instance of the Service.
-     * <p>
-     * It's doing it asynchronously to not block the main thread.
-     */
-    private static class PauseSongTask extends AsyncTask<Void, Void, Void> {
-        private WeakReference<MediaPlayerService> service;
-
-        PauseSongTask(@NonNull MediaPlayerService service) {
-            this.service = new WeakReference<>(service);
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-            service.get().onPause();
-            return null;
         }
     }
 }

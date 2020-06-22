@@ -57,13 +57,14 @@
             app:layout_constraintEnd_toStartOf="@+id/btnPlay"
             app:layout_constraintStart_toEndOf="@+id/ivCurrentTrack" />
 
-        <Button
+        <ImageButton
             android:id="@+id/btnPlay"
             android:layout_width="42dp"
             android:layout_height="42dp"
             android:layout_marginEnd="8dp"
-            android:background="@drawable/play"
-            android:foreground="?attr/selectableItemBackground"
+            android:background="@null"
+            android:src="@drawable/play"
+            android:tintMode="multiply"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

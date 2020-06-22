@@ -24,9 +24,9 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         com.liadpaz.amp.databinding.SettingsActivityBinding binding;
         setContentView((binding = SettingsActivityBinding.inflate(getLayoutInflater())).getRoot());
-        getSupportFragmentManager().beginTransaction().replace(R.id.settings, new SettingsFragment()).commit();
         setSupportActionBar(binding.toolbarSettings);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportFragmentManager().beginTransaction().replace(R.id.settings, new SettingsFragment()).commit();
     }
 
     public static class SettingsFragment extends PreferenceFragmentCompat {

@@ -126,7 +126,7 @@ public class ExtendedFragment extends Fragment {
         setMetadata(controller.getMetadata());
         setPlayback(controller.getPlaybackState());
 
-        BottomSheetBehavior.from(getBottomSheetView()).addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+        BottomSheetBehavior.from(((MainActivity)requireActivity()).binding.extendedFragment).addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
                 if (newState == BottomSheetBehavior.STATE_EXPANDED) {
@@ -165,10 +165,6 @@ public class ExtendedFragment extends Fragment {
         getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedViewPagerFragment.newInstance()).commit();
     }
 
-    private View getBottomSheetView() {
-        return ((MainActivity)requireActivity()).binding.extendedFragment;
-    }
-
     @Override
     public void onResume() {
         super.onResume();
@@ -181,19 +177,19 @@ public class ExtendedFragment extends Fragment {
     @SuppressWarnings("ConstantConditions")
     private void setPlayback(PlaybackState state) {
         if (state == null) {
-            binding.btnPlayPause.setBackgroundResource(R.drawable.play);
-            binding.btnRepeat.setBackgroundResource(R.drawable.repeat);
+            binding.btnPlayPause.setImageResource(R.drawable.play);
+            binding.btnRepeat.setImageResource(R.drawable.repeat_all);
         } else {
             currentPosition = state.getPosition();
             if (state.getState() == PlaybackState.STATE_PLAYING) {
-                binding.btnPlayPause.setBackgroundResource(R.drawable.pause);
+                binding.btnPlayPause.setImageResource(R.drawable.pause);
                 updateSeekBar();
                 shouldSeek = true;
             } else {
-                binding.btnPlayPause.setBackgroundResource(R.drawable.play);
+                binding.btnPlayPause.setImageResource(R.drawable.play);
                 shouldSeek = false;
             }
-            binding.btnRepeat.setBackgroundResource(state.getExtras().getBoolean(Constants.LOOP_EXTRA) ? R.drawable.repeat_one : R.drawable.repeat);
+            binding.btnRepeat.setImageResource(state.getExtras().getBoolean(Constants.LOOP_EXTRA) ? R.drawable.repeat_one : R.drawable.repeat_all);
         }
     }
 

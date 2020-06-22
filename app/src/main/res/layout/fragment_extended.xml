@@ -6,8 +6,8 @@
     android:id="@+id/extendedFragment"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="#555555"
+    android:orientation="vertical"
     tools:context=".fragments.ExtendedFragment">
 
     <androidx.fragment.app.FragmentContainerView
@@ -20,110 +20,119 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginBottom="8dp"
-        android:layout_weight="1" />
+        android:layout_weight="1">
+
+    </androidx.fragment.app.FragmentContainerView>
+
+    <TextView
+        android:id="@+id/tvSongTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="8dp"
+        android:layout_marginBottom="8dp"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:singleLine="true"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvSongArtist"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="8dp"
+        android:layout_marginBottom="8dp"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:singleLine="true"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toTopOf="@+id/sbSongProgress"
+        app:layout_constraintEnd_toEndOf="@+id/sbSongProgress"
+        app:layout_constraintStart_toStartOf="@+id/sbSongProgress" />
+
+    <SeekBar
+        android:id="@+id/sbSongProgress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toTopOf="@+id/sbSongProgress"
-            app:layout_constraintEnd_toEndOf="@+id/sbSongProgress"
-            app:layout_constraintStart_toStartOf="@+id/sbSongProgress">
-
-            <TextView
-                android:id="@+id/tvSongTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="8dp"
-                android:layout_marginBottom="8dp"
-                android:ellipsize="marquee"
-                android:singleLine="true"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvSongArtist"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="8dp"
-                android:layout_marginBottom="8dp"
-                android:ellipsize="marquee"
-                android:singleLine="true"
-                android:textSize="18sp"
-                app:layout_constraintBottom_toTopOf="@+id/sbSongProgress"
-                app:layout_constraintEnd_toEndOf="@+id/sbSongProgress"
-                app:layout_constraintStart_toStartOf="@+id/sbSongProgress" />
-
-        </LinearLayout>
-
-        <SeekBar
-            android:id="@+id/sbSongProgress"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            app:layout_constraintBottom_toTopOf="@+id/tvTotalTime"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
-
         <TextView
             android:id="@+id/tvTimeElapsed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="16dp"
             app:layout_constraintBottom_toTopOf="@+id/btnPlayPause"
-            app:layout_constraintStart_toStartOf="@+id/sbSongProgress"
-            app:layout_constraintTop_toBottomOf="@+id/sbSongProgress" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/tvTotalTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            app:layout_constraintBottom_toTopOf="@+id/btnSkipNext"
-            app:layout_constraintEnd_toEndOf="@+id/sbSongProgress" />
+            android:layout_marginEnd="16dp"
+            app:layout_constraintBottom_toTopOf="@+id/btnPlayPause"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <Button
+        <ImageButton
             android:id="@+id/btnSkipPrev"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
             android:layout_marginEnd="8dp"
-            android:background="@drawable/skip_prev"
+            android:adjustViewBounds="true"
+            android:background="@null"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/skip_prev"
             app:layout_constraintBottom_toBottomOf="@+id/btnPlayPause"
             app:layout_constraintEnd_toStartOf="@+id/btnPlayPause" />
 
-        <Button
+        <ImageButton
             android:id="@+id/btnPlayPause"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_marginBottom="32dp"
-            android:background="@drawable/play"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_marginBottom="16dp"
+            android:adjustViewBounds="true"
+            android:background="@null"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/play"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <Button
+        <ImageButton
             android:id="@+id/btnSkipNext"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
             android:layout_marginStart="8dp"
-            android:background="@drawable/skip_next"
+            android:adjustViewBounds="true"
+            android:background="@null"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/skip_next"
             app:layout_constraintBottom_toBottomOf="@+id/btnPlayPause"
             app:layout_constraintStart_toEndOf="@+id/btnPlayPause" />
 
-        <Button
+        <ImageButton
             android:id="@+id/btnRepeat"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:background="@drawable/repeat"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:adjustViewBounds="true"
+            android:background="@null"
+            android:padding="8dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/repeat_all"
             app:layout_constraintBottom_toBottomOf="@+id/btnSkipNext"
-            app:layout_constraintEnd_toEndOf="@+id/sbSongProgress"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/btnSkipNext"
             app:layout_constraintTop_toTopOf="@+id/btnSkipNext" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

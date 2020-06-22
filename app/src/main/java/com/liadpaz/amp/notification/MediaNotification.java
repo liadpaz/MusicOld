@@ -25,7 +25,7 @@ public final class MediaNotification {
     private static final String TAG = "MEDIA_NOTIFICATION";
     private static final String CHANNEL_ID = "music_channel";
 
-    public MediaNotification(@NonNull Context context) {
+    public static void init(@NonNull Context context) {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
 
         NotificationChannel channel = new NotificationChannel(CHANNEL_ID, context.getString(R.string.notification_name), NotificationManager.IMPORTANCE_LOW);
@@ -55,7 +55,7 @@ public final class MediaNotification {
                                                                 .setContentIntent(controller.getSessionActivity())
                                                                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                                                                 .setShowWhen(false)
-                                                                .addAction(new Notification.Action.Builder(Icon.createWithResource(context, isLooping ? R.drawable.repeat_one : R.drawable.repeat), null, repeatIntent).build())
+                                                                .addAction(new Notification.Action.Builder(Icon.createWithResource(context, isLooping ? R.drawable.repeat_one : R.drawable.repeat_all), null, repeatIntent).build())
                                                                 .addAction(new Notification.Action.Builder(Icon.createWithResource(context, R.drawable.skip_prev), null, skipToPrevIntent).build())
                                                                 .addAction(new Notification.Action.Builder(Icon.createWithResource(context, isPlaying ? R.drawable.pause : R.drawable.play), null, playPauseIntent).build())
                                                                 .addAction(new Notification.Action.Builder(Icon.createWithResource(context, R.drawable.skip_next), null, skipToNextIntent).build())

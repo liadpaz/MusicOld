@@ -65,12 +65,12 @@ public class CurrentQueueFragment extends Fragment {
         }, new ItemTouchHelperAdapter() {
             @Override
             public void onItemMove(int fromPosition, int toPosition) {
-                QueueUtil.setQueue(adapter.getQueue());
+                QueueUtil.setQueue(adapter.getCurrentList());
             }
 
             @Override
             public void onItemDismiss(int position) {
-                QueueUtil.setQueue(adapter.getQueue());
+                QueueUtil.setQueue(adapter.getCurrentList());
             }
         });
 

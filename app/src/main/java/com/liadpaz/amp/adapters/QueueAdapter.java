@@ -2,6 +2,7 @@ package com.liadpaz.amp.adapters;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
@@ -29,6 +30,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder> implements ItemTouchHelperAdapter {
+    private static final String TAG = "AmpApp.QueueAdapter";
+
     private ArrayList<Song> songs;
 
     private OnStartDragListener onStartDragListener;
@@ -98,12 +101,14 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
     public void onItemMove(final int fromPosition, final int toPosition) {
         QueueUtil.setIsChanging(true);
         Collections.swap(songs, fromPosition, toPosition);
-        if (queuePosition == fromPosition) {
+        Log.d(TAG, "onItemMove() called with: currentQueuePosition = [" + queuePosition + "], fromPosition = [" + fromPosition + "], toPosition = [" + toPosition + "]");
+        if (queuePosition == fromPosition && queuePosition != toPosition) {
+            Log.d(TAG, "onItemMove: queuePosition == fromPosition");
             QueueUtil.setPosition(toPosition);
-        } else if (queuePosition > fromPosition && queuePosition < toPosition) {
-            QueueUtil.addToPosition(1);
-        } else if (queuePosition < fromPosition && queuePosition > toPosition) {
+        } else if (queuePosition == toPosition && queuePosition > fromPosition) {
             QueueUtil.addToPosition(-1);
+        } else if (queuePosition == toPosition && queuePosition < fromPosition) {
+            QueueUtil.addToPosition(1);
         }
         itemTouchHelperAdapter.onItemMove(fromPosition, toPosition);
         notifyItemMoved(fromPosition, toPosition);
@@ -113,8 +118,6 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
     public void submitList(@Nullable List<Song> list) {
         super.submitList(songs = list != null ? new ArrayList<>(list) : null);
     }
-
-    public ArrayList<Song> getQueue() { return songs; }
 
     static class SongViewHolder extends RecyclerView.ViewHolder {
         private ItemQueueSongBinding binding;

@@ -132,12 +132,7 @@ public class LocalFiles {
                     String album = musicCursor.getString(albumColumn);
                     String albumId = musicCursor.getString(albumIdColumn);
 
-                    ArrayList<String> artists = new ArrayList<>();
-                    Matcher matcher = Pattern.compile("([^ &,]([^,&])*[^ ,&]+)").matcher(artist);
-                    while (matcher.find()) {
-                        artists.add(matcher.group());
-                    }
-                    songs.add(new Song(id, title, artists, album, albumId));
+                    songs.add(new Song(id, title, Utilities.getArtistsFromSong(title, artist), album, albumId));
                 } while (musicCursor.moveToNext());
             }
         }

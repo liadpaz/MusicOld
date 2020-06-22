@@ -1,5 +1,6 @@
 package com.liadpaz.amp.fragments;
 
+import android.content.res.ColorStateList;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
@@ -32,7 +33,7 @@ public class ControllerFragment extends Fragment {
     private MediaController controller;
     private MediaController.Callback callback;
 
-    private boolean isDark = false;
+    private boolean isBright = false;
 
     private FragmentControllerBinding binding;
 
@@ -72,10 +73,11 @@ public class ControllerFragment extends Fragment {
         setMetadata(controller.getMetadata());
 
         ColorUtil.observe(this, color -> {
-            if (isDark = Utilities.isColorBright(color)) {
+            if (isBright = Utilities.isColorBright(color)) {
                 binding.tvSongArtist.setTextColor(Color.BLACK);
                 binding.tvSongTitle.setTextColor(Color.BLACK);
-                binding.btnPlay.setBackgroundResource(controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING ? R.drawable.pause_black : R.drawable.play_black);
+                binding.btnPlay.setImageResource(controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING ? R.drawable.pause_pressed : R.drawable.play_pressed);
+                binding.btnPlay.setImageTintList(ColorStateList.valueOf(Color.BLACK));
             } else {
                 TypedValue typedValue = new TypedValue();
                 Resources.Theme theme = getActivity().getTheme();
@@ -85,7 +87,8 @@ public class ControllerFragment extends Fragment {
                 arr.recycle();
                 binding.tvSongArtist.setTextColor(primaryColor);
                 binding.tvSongTitle.setTextColor(primaryColor);
-                binding.btnPlay.setBackgroundResource(controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING ? R.drawable.pause : R.drawable.play);
+                binding.btnPlay.setImageResource(controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING ? R.drawable.pause : R.drawable.play);
+                binding.btnPlay.setImageTintList(ColorStateList.valueOf(Color.WHITE));
             }
         });
 
@@ -94,7 +97,8 @@ public class ControllerFragment extends Fragment {
 
     private void setPlayback(PlaybackState state) {
         if (state != null) {
-            binding.btnPlay.setBackgroundResource(state.getState() == PlaybackState.STATE_PLAYING ? (isDark ? R.drawable.pause_black : R.drawable.pause) : (isDark ? R.drawable.play_black : R.drawable.play));
+            binding.btnPlay.setImageResource(state.getState() == PlaybackState.STATE_PLAYING ? R.drawable.pause : R.drawable.play);
+            binding.btnPlay.setImageTintList(ColorStateList.valueOf(isBright ? Color.BLACK : Color.WHITE));
         }
     }
 

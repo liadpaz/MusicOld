@@ -1,9 +1,12 @@
 package com.liadpaz.amp.fragments;
 
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.PopupMenu;
 
 import androidx.annotation.NonNull;
@@ -27,7 +30,7 @@ public class ExtendedInfoFragment extends Fragment {
     private static final String TAG = "AmpApp.ExtendedInfoFragment";
 
     private boolean isShowingQueue = false;
-    private boolean isDark = false;
+    private boolean isBright = false;
 
     private FragmentExtendedInfoBinding binding;
 
@@ -46,7 +49,7 @@ public class ExtendedInfoFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         binding.btnQueue.setOnClickListener(v -> {
             getParentFragmentManager().beginTransaction().replace(R.id.layoutFragment, isShowingQueue ? ExtendedViewPagerFragment.newInstance() : CurrentQueueFragment.newInstance()).commit();
-            v.setBackgroundResource(isShowingQueue ? (isDark ? R.drawable.queue_music_not_shown_black : R.drawable.queue_music_not_shown) : R.drawable.queue_music_shown);
+            ((ImageButton)v).setImageTintList(isShowingQueue ? ColorStateList.valueOf(isBright ? Color.BLACK : Color.WHITE) : ColorStateList.valueOf(Color.BLUE));
             isShowingQueue = !isShowingQueue;
         });
         binding.btnMore.setOnClickListener(v -> {
@@ -76,22 +79,18 @@ public class ExtendedInfoFragment extends Fragment {
 
             popupMenu.show();
         });
-        binding.ivDrop.setOnClickListener(v -> BottomSheetBehavior.from(getBottomSheetView()).setState(BottomSheetBehavior.STATE_COLLAPSED));
+        binding.ivDrop.setOnClickListener(v -> BottomSheetBehavior.from(((MainActivity)requireActivity()).binding.extendedFragment).setState(BottomSheetBehavior.STATE_COLLAPSED));
 
         ColorUtil.observe(this, color -> {
-            if (isDark = Utilities.isColorBright(color)) {
-                binding.btnMore.setBackgroundResource(R.drawable.more_black);
-                binding.btnQueue.setBackgroundResource(isShowingQueue ? R.drawable.queue_music_shown : R.drawable.queue_music_not_shown_black);
-                binding.ivDrop.setImageResource(R.drawable.arrow_down_black);
+            if (isBright = Utilities.isColorBright(color)) {
+                binding.btnMore.setImageTintList(ColorStateList.valueOf(Color.BLACK));
+                binding.btnQueue.setImageTintList(isShowingQueue ? ColorStateList.valueOf(Color.BLUE) : ColorStateList.valueOf(Color.BLACK));
+                binding.ivDrop.setImageTintList(ColorStateList.valueOf(Color.BLACK));
             } else {
-                binding.btnMore.setBackgroundResource(R.drawable.more);
-                binding.btnQueue.setBackgroundResource(isShowingQueue ? R.drawable.queue_music_shown : R.drawable.queue_music_not_shown);
-                binding.ivDrop.setImageResource(R.drawable.arrow_down);
+                binding.btnMore.setImageTintList(ColorStateList.valueOf(Color.WHITE));
+                binding.btnQueue.setImageTintList(isShowingQueue ? ColorStateList.valueOf(Color.BLUE) : ColorStateList.valueOf(Color.WHITE));
+                binding.ivDrop.setImageTintList(ColorStateList.valueOf(Color.WHITE));
             }
         });
-    }
-
-    private View getBottomSheetView() {
-        return ((MainActivity)requireActivity()).binding.extendedFragment;
     }
 }
