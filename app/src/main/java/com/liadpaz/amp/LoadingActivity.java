@@ -11,6 +11,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.liadpaz.amp.livedatautils.QueueUtil;
+import com.liadpaz.amp.notification.MediaNotification;
+import com.liadpaz.amp.utils.LocalFiles;
 
 import java.util.concurrent.TimeUnit;
 
@@ -27,16 +29,17 @@ public class LoadingActivity extends AppCompatActivity {
         if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_PERMISSION);
         } else {
-            new Handler().postDelayed(this::initializeView, TimeUnit.SECONDS.toMillis(2));
+            new Handler().postDelayed(this::initializeView, TimeUnit.SECONDS.toMillis(1));
         }
 
         QueueUtil.observeQueue(this, queue -> {
             if (queue.size() == 0) {
-                new Handler().postDelayed(this::initializeView, TimeUnit.SECONDS.toMillis(2));
-            } else {
-                initializeView();
+                new Handler().postDelayed(this::initializeView, TimeUnit.SECONDS.toMillis(1));
             }
         });
+
+        MediaNotification.init(this);
+        LocalFiles.init(this);
     }
 
     private void initializeView() {

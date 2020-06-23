@@ -16,6 +16,6 @@ public class ColorUtil {
     }
 
     public static void setColor(@ColorInt int color) {
-        ColorUtil.color.postValue(color);
+        ColorUtil.color.setValue(color);
     }
 }

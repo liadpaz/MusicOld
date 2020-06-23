@@ -38,7 +38,7 @@ public class PlaylistsUtil {
     }
 
     public static void setPlaylists(@NonNull Queue<Playlist> playlists) {
-        PlaylistsUtil.playlists.postValue(new ConcurrentLinkedDeque<>(playlists));
+        PlaylistsUtil.playlists.setValue(new ConcurrentLinkedDeque<>(playlists));
     }
 
     public static void addPlaylist(@NonNull Playlist playlist) {

@@ -77,7 +77,8 @@ public class SongsListFragment extends Fragment {
             QueueUtil.setPosition(0);
         });
         binding.rvSongs.setAdapter(adapter);
-        adapter.submitList(SongsUtil.getSongs());
+
+        SongsUtil.observe(this, adapter::submitList);
 
         binding.rvSongs.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvSongs.addItemDecoration(new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));

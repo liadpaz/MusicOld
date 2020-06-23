@@ -10,19 +10,21 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.lifecycle.LifecycleOwner;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.liadpaz.amp.livedatautils.PlaylistsUtil;
+import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.viewmodels.Playlist;
 import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -35,22 +37,36 @@ public class LocalFiles {
     private static SharedPreferences musicSharedPreferences;
     private static SharedPreferences playlistsSharedPreferences;
 
-    public static void init(@NonNull Context context, @NonNull LifecycleOwner lifecycleOwner) {
+    private static AtomicBoolean isFirstTimeQueue = new AtomicBoolean(true);
+    private static AtomicBoolean isFirstTimePosition = new AtomicBoolean(true);
+
+    public static void init(@NonNull Context context) {
         LocalFiles.musicSharedPreferences = context.getSharedPreferences("Music.Data", 0);
         LocalFiles.playlistsSharedPreferences = context.getSharedPreferences("Music.Playlists", 0);
 
-        CompletableFuture.runAsync(() -> PlaylistsUtil.setPlaylists(getPlaylists(context)));
+        CompletableFuture.runAsync(() -> PlaylistsUtil.setPlaylists(getPlaylists(context.getContentResolver())));
         CompletableFuture.runAsync(() -> SongsUtil.setSongs(listSongs(context, Media.TITLE + " COLLATE NOCASE")));
 
-        //        if (!lifecycleOwner.getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.INITIALIZED)) {
-        //            QueueUtil.queue.observe(lifecycleOwner, songs -> {
-        //                ArrayList<Long> songsIdsList = songs.stream().map(song -> song.songId).collect(Collectors.toCollection(ArrayList::new));
-        //                musicSharedPreferences.edit().putString(Constants.SHARED_PREFERENCES_QUEUE, new Gson().toJson(songsIdsList)).apply();
-        //            });
-        //            QueueUtil.queuePosition.observe(lifecycleOwner, queuePosition -> musicSharedPreferences.edit().putInt(Constants.SHARED_PREFERENCES_QUEUE, queuePosition).apply());
-        //        }
+        QueueUtil.observeQueue(songs -> {
+            if (!isFirstTimeQueue.getAndSet(false)) {
+                ArrayList<Long> songsIdsList = songs.stream().map(song -> song.songId).collect(Collectors.toCollection(ArrayList::new));
+                musicSharedPreferences.edit().putString(Constants.PREFERENCES_QUEUE, new Gson().toJson(songsIdsList)).apply();
+            }
+        });
+        QueueUtil.observePosition(queuePosition -> {
+            if (!isFirstTimePosition.getAndSet(false)) {
+                musicSharedPreferences.edit().putInt(Constants.PREFERENCES_QUEUE_POSITION, queuePosition).apply();
+            }
+        });
 
+//        loadQueue(context.getContentResolver());
         // TODO: fix queue saving
+    }
+
+    private static void loadQueue(@NonNull ContentResolver contentResolver) {
+        List<Long> songsIds = new Gson().fromJson(musicSharedPreferences.getString(Constants.PREFERENCES_QUEUE, "[]"), new TypeToken<ArrayList<Long>>() {}.getType());
+        QueueUtil.setQueue(songsIds.stream().map(id -> getSongById(contentResolver, id)).collect(Collectors.toCollection(ArrayList::new)));
+        QueueUtil.setPosition(musicSharedPreferences.getInt(Constants.PREFERENCES_QUEUE_POSITION, -1));
     }
 
     /**
@@ -85,7 +101,8 @@ public class LocalFiles {
     /**
      * This function sets the show current song screen on notification click flag.
      *
-     * @param showCurrent true to show current song screen on notification click flag, otherwise false.
+     * @param showCurrent true to show current song screen on notification click flag, otherwise
+     *                    false.
      */
     public static void setShowCurrent(final boolean showCurrent) {
         musicSharedPreferences.edit().putBoolean(Constants.PREFERENCES_SHOW_CURRENT, showCurrent).apply();
@@ -103,7 +120,8 @@ public class LocalFiles {
     /**
      * This function sets the keep screen on when the current song screen is shown flag.
      *
-     * @param screenOn true to keep screen on when the current song screen is shown, otherwise false.
+     * @param screenOn true to keep screen on when the current song screen is shown, otherwise
+     *                 false.
      */
     public static void setScreenOn(final boolean screenOn) {
         musicSharedPreferences.edit().putBoolean(Constants.PREFERENCES_SCREEN_ON, screenOn).apply();
@@ -141,11 +159,11 @@ public class LocalFiles {
     }
 
     @NonNull
-    private static Queue<Playlist> getPlaylists(@NonNull Context context) {
+    private static Queue<Playlist> getPlaylists(@NonNull ContentResolver contentResolver) {
         Queue<Playlist> playlists = new ArrayDeque<>();
         playlistsSharedPreferences.getAll().forEach((name, songsIds) -> {
             ArrayList<Long> songsIdsList = new Gson().fromJson(songsIds.toString(), new TypeToken<ArrayList<Long>>() {}.getType());
-            playlists.add(new Playlist(name, songsIdsList.stream().filter(id -> isSongExists(context, id)).map(id -> getSongById(context, id)).collect(Collectors.toCollection(ArrayList::new))));
+            playlists.add(new Playlist(name, songsIdsList.stream().filter(id -> isSongExists(contentResolver, id)).map(id -> getSongById(contentResolver, id)).collect(Collectors.toCollection(ArrayList::new))));
         });
         return playlists;
     }
@@ -160,8 +178,8 @@ public class LocalFiles {
     }
 
     @SuppressWarnings("ConstantConditions")
-    private static boolean isSongExists(@NonNull Context context, long id) {
-        try (Cursor cursor = context.getContentResolver().query(ContentUris.withAppendedId(Media.EXTERNAL_CONTENT_URI, id), null, null, null)) {
+    private static boolean isSongExists(@NonNull ContentResolver contentResolver, long id) {
+        try (Cursor cursor = contentResolver.query(ContentUris.withAppendedId(Media.EXTERNAL_CONTENT_URI, id), null, null, null)) {
             return cursor.moveToFirst();
         } catch (Exception ignored) {
             return false;
@@ -176,14 +194,14 @@ public class LocalFiles {
     /**
      * This function returns the song by its id in the {@link android.provider.MediaStore}
      *
-     * @param context context
-     * @param id      song id
+     * @param contentResolver {@link ContentResolver} to get the info
+     * @param id              song id
      * @return a song with the {@param id} as its id in the {@link android.provider.MediaStore}
      */
     @SuppressWarnings("ConstantConditions")
     @Nullable
-    public static Song getSongById(@NonNull Context context, long id) {
-        try (Cursor songCursor = context.getContentResolver().query(ContentUris.withAppendedId(Media.EXTERNAL_CONTENT_URI, id), PROJECTION, null, null, null)) {
+    public static Song getSongById(@NonNull ContentResolver contentResolver, long id) {
+        try (Cursor songCursor = contentResolver.query(ContentUris.withAppendedId(Media.EXTERNAL_CONTENT_URI, id), PROJECTION, null, null, null)) {
             if (songCursor.moveToFirst()) {
                 String title = songCursor.getString(songCursor.getColumnIndex(Media.TITLE));
                 String artist = songCursor.getString(songCursor.getColumnIndex(Media.ARTIST));

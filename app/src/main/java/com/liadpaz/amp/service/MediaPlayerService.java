@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
@@ -34,6 +35,7 @@ import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
+import com.liadpaz.amp.livedatautils.ColorUtil;
 import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.notification.MediaNotification;
 import com.liadpaz.amp.utils.Constants;
@@ -134,6 +136,7 @@ public final class MediaPlayerService extends MediaBrowserService {
 
                     case Constants.ACTION_RESET: {
                         mediaPlayer.pause();
+                        ColorUtil.setColor(Color.BLACK);
                         sendMetadata(null);
                         sendPlaybackState(0, PlaybackState.STATE_STOPPED);
                         stopForeground(true);

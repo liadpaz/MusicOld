@@ -3,15 +3,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     tools:context=".fragments.ExtendedSongFragment">
 
     <ImageView
         android:id="@+id/ivSongCover"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
+        android:adjustViewBounds="true"
         android:contentDescription="@string/description_album_cover"
         android:scaleType="fitCenter"
         android:src="@drawable/song"

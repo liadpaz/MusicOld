@@ -25,7 +25,6 @@ import com.liadpaz.amp.fragments.ExtendedFragment;
 import com.liadpaz.amp.fragments.MainViewPagerFragment;
 import com.liadpaz.amp.fragments.SearchFragment;
 import com.liadpaz.amp.livedatautils.SongsUtil;
-import com.liadpaz.amp.notification.MediaNotification;
 import com.liadpaz.amp.service.MediaPlayerService;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
@@ -60,9 +59,6 @@ public class MainActivity extends AppCompatActivity {
                 initializeView();
             }
         }, null);
-
-        MediaNotification.init(this);
-        LocalFiles.init(this, this);
 
         startService();
     }

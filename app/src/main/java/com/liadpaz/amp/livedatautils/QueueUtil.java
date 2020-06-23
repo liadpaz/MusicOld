@@ -64,7 +64,7 @@ public class QueueUtil {
     }
 
     public static void setPosition(int position) {
-        queuePosition.setValue(position);
+        queuePosition.postValue(position);
     }
 
     public static ArrayList<Song> getQueue() {
@@ -72,7 +72,7 @@ public class QueueUtil {
     }
 
     public static void setQueue(@NonNull List<Song> queue) {
-        QueueUtil.queue.setValue(new ArrayList<>(queue));
+        QueueUtil.queue.postValue(new ArrayList<>(queue));
     }
 
     @SuppressWarnings("ConstantConditions")
