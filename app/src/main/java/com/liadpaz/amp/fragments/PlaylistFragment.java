@@ -1,7 +1,6 @@
 package com.liadpaz.amp.fragments;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -89,10 +88,12 @@ public class PlaylistFragment extends Fragment {
             popupMenu.show();
         };
         View.OnClickListener onShuffleClickListener = v -> {
-            ArrayList<Song> queue = new ArrayList<>(playlist.songs);
-            Collections.shuffle(queue);
-            QueueUtil.setQueue(queue);
-            QueueUtil.setPosition(0);
+            if (playlist.songs.size() != 0) {
+                ArrayList<Song> queue = new ArrayList<>(playlist.songs);
+                Collections.shuffle(queue);
+                QueueUtil.setQueue(queue);
+                QueueUtil.setPosition(0);
+            }
         };
 
         if (playlist.name.equals(getString(R.string.playlist_recently_added))) {
@@ -118,7 +119,6 @@ public class PlaylistFragment extends Fragment {
 
                 @Override
                 public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                    Log.d(TAG, "onItemMove: from: " + viewHolder.getAdapterPosition() + " to: " + target.getAdapterPosition());
                     int toPosition = target.getAdapterPosition() == 0 ? 1 : target.getAdapterPosition();
                     ((ItemTouchHelperAdapter)adapter).onItemMove(viewHolder.getAdapterPosition(), toPosition);
                     return true;
@@ -137,7 +137,6 @@ public class PlaylistFragment extends Fragment {
             });
 
             PlaylistsUtil.observe(requireActivity(), playlists -> {
-                Log.d(TAG, "playlists is changing");
                 if (!PlaylistsUtil.getIsChanging()) {
                     for (Playlist playlist : playlists) {
                         if (playlist.name.equals(this.playlist.name)) {

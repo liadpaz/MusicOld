@@ -2,7 +2,6 @@ package com.liadpaz.amp.adapters;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -100,7 +99,6 @@ public class PlaylistAdapter extends ListAdapter<Song, PlaylistAdapter.SongViewH
     @Override
     public void onItemMove(int fromPosition, int toPosition) {
         PlaylistsUtil.setIsChanging(true);
-        Log.d(TAG, "onItemMove: from: " + fromPosition + " to: " + toPosition);
         Collections.swap(songs, fromPosition - 1, toPosition - 1);
         itemTouchHelperAdapter.onItemMove(fromPosition - 1, toPosition - 1);
         notifyItemMoved(fromPosition, toPosition);

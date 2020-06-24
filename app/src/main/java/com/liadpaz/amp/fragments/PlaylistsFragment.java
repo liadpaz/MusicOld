@@ -11,12 +11,12 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.liadpaz.amp.livedatautils.PlaylistsUtil;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.PlaylistsAdapter;
 import com.liadpaz.amp.databinding.FragmentPlaylistsBinding;
 import com.liadpaz.amp.dialogs.EditPlaylistDialog;
 import com.liadpaz.amp.dialogs.NewPlaylistDialog;
+import com.liadpaz.amp.livedatautils.PlaylistsUtil;
 import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.viewmodels.Playlist;
 import com.liadpaz.amp.viewmodels.Song;
@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PlaylistsFragment extends Fragment {
+    private static final String TAG = "AmpApp.PlaylistsFragment";
+
     private Playlist recentlyAddedPlaylist;
     private List<Playlist> playlists;
 
@@ -44,17 +46,17 @@ public class PlaylistsFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        recentlyAddedPlaylist = new Playlist(getString(R.string.playlist_recently_added), LocalFiles.listSongsByLastAdded(requireContext()));
+        recentlyAddedPlaylist = new Playlist(getString(R.string.playlist_recently_added), LocalFiles.listSongsByLastAdded(requireContext().getContentResolver()));
         playlists = new ArrayList<Playlist>() {{
             add(recentlyAddedPlaylist);
         }};
 
-        PlaylistsUtil.observe(requireActivity(), playlists -> {
-            this.playlists = new ArrayList<>(playlists);
-            this.playlists.add(0, recentlyAddedPlaylist);
-            LocalFiles.setPlaylists(playlists);
+        PlaylistsUtil.observe(requireActivity(), playlistQueue -> {
+            playlists = new ArrayList<>(playlistQueue);
+            playlists.add(0, recentlyAddedPlaylist);
+            LocalFiles.setPlaylists(playlistQueue);
             if (adapter != null) {
-                adapter.submitList(this.playlists);
+                adapter.submitList(playlists);
             }
         });
 

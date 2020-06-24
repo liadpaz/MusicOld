@@ -44,8 +44,10 @@ public class LocalFiles {
         musicSharedPreferences = context.getSharedPreferences("Music.Data", 0);
         playlistsSharedPreferences = context.getSharedPreferences("Music.Playlists", 0);
 
-        CompletableFuture.runAsync(() -> PlaylistsUtil.setPlaylists(getPlaylists(context.getContentResolver())));
-        CompletableFuture.runAsync(() -> SongsUtil.setSongs(listSongs(context, Media.TITLE + " COLLATE NOCASE")));
+        ContentResolver contentResolver = context.getContentResolver();
+
+        CompletableFuture.runAsync(() -> PlaylistsUtil.setPlaylistsInitial(getPlaylists(contentResolver)));
+        CompletableFuture.runAsync(() -> SongsUtil.setSongs(listSongs(contentResolver, Media.TITLE + " COLLATE NOCASE")));
 
         QueueUtil.observeQueue(songs -> {
             if (!isFirstTimeQueue.getAndSet(false)) {
@@ -59,7 +61,7 @@ public class LocalFiles {
             }
         });
 
-//        loadQueue(context.getContentResolver());
+        //        loadQueue(context.getContentResolver());
         // TODO: fix queue saving
     }
 
@@ -128,12 +130,11 @@ public class LocalFiles {
     }
 
     @NonNull
-    private static ArrayList<Song> listSongs(@NonNull Context context, @NonNull String sort) {
+    private static ArrayList<Song> listSongs(@NonNull ContentResolver contentResolver, @NonNull String sort) {
         long start = System.currentTimeMillis();
         ArrayList<Song> songs = new ArrayList<>();
         //retrieve song info
-        ContentResolver musicResolver = context.getContentResolver();
-        try (Cursor musicCursor = musicResolver.query(Media.EXTERNAL_CONTENT_URI, PROJECTION, "_data like ?", new String[]{"%" + getPath() + "%"}, sort)) {
+        try (Cursor musicCursor = contentResolver.query(Media.EXTERNAL_CONTENT_URI, PROJECTION, "_data like ?", new String[]{"%" + getPath() + "%"}, sort)) {
             //iterate over results if valid
             if (musicCursor != null && musicCursor.moveToFirst()) {
                 //get columns
@@ -171,8 +172,7 @@ public class LocalFiles {
     public static void setPlaylists(@NonNull Queue<Playlist> playlists) {
         SharedPreferences.Editor editor = playlistsSharedPreferences.edit().clear();
         for (Playlist playlist : playlists) {
-            ArrayList<Long> songsIdsList = playlist.songs.stream().map(song -> song.songId).collect(Collectors.toCollection(ArrayList::new));
-            editor.putString(playlist.name, new Gson().toJson(songsIdsList));
+            editor.putString(playlist.name, new Gson().toJson((Object)playlist.songs.stream().map(song -> song.songId).collect(Collectors.toCollection(ArrayList::new))));
         }
         editor.apply();
     }
@@ -187,8 +187,8 @@ public class LocalFiles {
     }
 
     @NonNull
-    public static ArrayList<Song> listSongsByLastAdded(@NonNull Context context) {
-        return listSongs(context, Media.DATE_ADDED + " DESC");
+    public static ArrayList<Song> listSongsByLastAdded(@NonNull ContentResolver contentResolver) {
+        return listSongs(contentResolver, Media.DATE_ADDED + " DESC");
     }
 
     /**
@@ -220,12 +220,4 @@ public class LocalFiles {
             return null;
         }
     }
-
-    //    @NonNull
-    //    public ArrayList<Song> getQueueFromLocal(@NonNull Context context) {
-    //        ArrayList<Long> songsIdsList = new Gson().fromJson(musicSharedPreferences.getString(Constants.SHARED_PREFERENCES_QUEUE, "[]"), new TypeToken<ArrayList<Long>>() {}.getType());
-    //        for (long id : songsIdsList) {
-    //         if ()
-    //        }
-    //    }
 }

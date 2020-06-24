@@ -19,6 +19,7 @@ public class PlaylistsUtil {
     private static final String TAG = "PlaylistsUtil";
 
     private static MutableLiveData<ConcurrentLinkedDeque<Playlist>> playlists = new MutableLiveData<>(new ConcurrentLinkedDeque<>());
+private static AtomicBoolean isInitialized = new AtomicBoolean(false);
     private static AtomicBoolean isChanging = new AtomicBoolean(false);
 
     @SuppressWarnings({"ConstantConditions", "BooleanMethodIsAlwaysInverted"})
@@ -40,7 +41,17 @@ public class PlaylistsUtil {
     }
 
     public static void setPlaylists(@NonNull Queue<Playlist> playlists) {
-        PlaylistsUtil.playlists.setValue(new ConcurrentLinkedDeque<>(playlists));
+        if (isInitialized.get()) {
+            PlaylistsUtil.playlists.postValue(new ConcurrentLinkedDeque<>(playlists));
+        }
+    }
+
+    public static void setPlaylistsInitial(@NonNull Queue<Playlist> playlists) {
+        if (isInitialized.getAndSet(true)) {
+            throw new IllegalStateException("Already initialized");
+        }
+        PlaylistsUtil.playlists.postValue(new ConcurrentLinkedDeque<>(playlists));
+
     }
 
     public static void addPlaylist(@NonNull Playlist playlist) {

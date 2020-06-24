@@ -1,15 +1,15 @@
 apply plugin: 'com.android.application'
 
 def versionMajor = 0
-def versionMinor = 3
-def versionPatch = 6
+def versionMinor = 4
+def versionPatch = 0
 
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
 
     defaultConfig {
-        applicationId 'com.liadpaz.muser'
+        applicationId 'com.liadpaz.amp'
         minSdkVersion 26
         targetSdkVersion 29
         versionCode versionMajor * 1000 + versionMinor * 100 + versionPatch
