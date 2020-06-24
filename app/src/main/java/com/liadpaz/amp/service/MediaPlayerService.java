@@ -7,12 +7,13 @@ import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
+import android.graphics.drawable.Icon;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
+import android.media.MediaDescription;
 import android.media.MediaMetadata;
 import android.media.MediaPlayer;
 import android.media.browse.MediaBrowser;
@@ -30,13 +31,11 @@ import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 import androidx.lifecycle.Observer;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.target.CustomTarget;
-import com.bumptech.glide.request.transition.Transition;
 import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.livedatautils.ColorUtil;
 import com.liadpaz.amp.livedatautils.QueueUtil;
+import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.notification.MediaNotification;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.Utilities;
@@ -44,6 +43,7 @@ import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -412,7 +412,7 @@ public final class MediaPlayerService extends MediaBrowserService {
             mediaPlayer.setDataSource(this, ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, (currentSource = song).songId));
             mediaPlayer.prepare();
             sendMetadata(currentSource);
-            Log.d(TAG, "setSource: " + song.songTitle);
+            Log.d(TAG, "setSource: " + song.songTitle + "[" + song.songId + "]");
         } catch (Exception e) {
             Log.e(TAG, "setSource: ", e);
         }
@@ -425,34 +425,19 @@ public final class MediaPlayerService extends MediaBrowserService {
     private void startNotification() {
         final boolean isPlaying = mediaPlayer.isPlaying();
 
-        try {
-            final Notification.Builder builder = MediaNotification.from(this, mediaSession);
+        final Notification.Builder builder = MediaNotification.from(this, mediaSession);
 
-            if (builder != null) {
-                Glide.with(getApplicationContext()).asBitmap().load(Utilities.getCoverUri(currentSource)).into(new CustomTarget<Bitmap>() {
-                    @Override
-                    public void onResourceReady(@NonNull Bitmap cover, @Nullable Transition<? super Bitmap> transition) {
-                        startForeground(NOTIFICATION_ID, builder.setLargeIcon(cover).build());
-                        if (!isPlaying) {
-                            stopForeground(false);
-                        }
-                    }
-
-                    @Override
-                    public void onLoadFailed(@Nullable Drawable errorDrawable) {
-                        Bitmap cover = Utilities.getBitmapFromVectorDrawable(MediaPlayerService.this, R.drawable.song);
-
-                        startForeground(NOTIFICATION_ID, builder.setLargeIcon(cover).build());
-                        if (!isPlaying) {
-                            stopForeground(false);
-                        }
-                    }
-
-                    @Override
-                    public void onLoadCleared(@Nullable Drawable placeholder) {}
-                });
-            }
-        } catch (Exception ignored) {
+        if (builder != null) {
+            CompletableFuture.supplyAsync(() -> BitmapFactory.decodeStream(Utilities.getInputStream(this, currentSource))).thenAcceptAsync(cover -> {
+                if (cover != null) {
+                    startForeground(NOTIFICATION_ID, builder.setLargeIcon(cover).build());
+                } else {
+                    startForeground(NOTIFICATION_ID, builder.setLargeIcon(Icon.createWithResource(getApplicationContext(), R.drawable.song)).build());
+                }
+                if (!isPlaying) {
+                    stopForeground(false);
+                }
+            });
         }
     }
 
@@ -461,7 +446,13 @@ public final class MediaPlayerService extends MediaBrowserService {
     public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUid, @Nullable Bundle rootHints) { return new BrowserRoot(getString(R.string.app_name), null); }
 
     @Override
-    public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowser.MediaItem>> result) { result.sendResult(null); }
+    public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowser.MediaItem>> result) {
+        List<MediaBrowser.MediaItem> mediaItems = new ArrayList<>();
+        for (Song song : SongsUtil.getSongs()) {
+            mediaItems.add(new MediaBrowser.MediaItem(new MediaDescription.Builder().setIconUri(Utilities.getCoverUri(song)).setTitle(song.songTitle).setSubtitle(Utilities.joinArtists(song.songArtists)).setDescription(song.album).build(), MediaBrowser.MediaItem.FLAG_PLAYABLE));
+        }
+        result.sendResult(mediaItems);
+    }
 
     @Override
     public void onDestroy() {

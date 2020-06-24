@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">AMP</string>
+    <string name="app_name" translatable="false">Muser</string>
     <string name="menu_add_queue">Add to Queue</string>
     <string name="tab_songs">Songs</string>
     <string name="menu_settings">Settings</string>

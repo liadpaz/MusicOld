@@ -21,6 +21,7 @@ import com.liadpaz.amp.databinding.ItemSongShuffleBinding;
 import com.liadpaz.amp.interfaces.ItemTouchHelperAdapter;
 import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
 import com.liadpaz.amp.interfaces.OnStartDragListener;
+import com.liadpaz.amp.livedatautils.PlaylistsUtil;
 import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Song;
@@ -30,7 +31,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class PlaylistAdapter extends ListAdapter<Song, PlaylistAdapter.SongViewHolder> implements ItemTouchHelperAdapter {
-    private static final String TAG = "PlaylistAdapter";
+    private static final String TAG = "AmpApp.PlaylistAdapter";
     private static final int TYPE_ITEM = 1;
 
     private ArrayList<Song> songs;
@@ -98,6 +99,7 @@ public class PlaylistAdapter extends ListAdapter<Song, PlaylistAdapter.SongViewH
 
     @Override
     public void onItemMove(int fromPosition, int toPosition) {
+        PlaylistsUtil.setIsChanging(true);
         Log.d(TAG, "onItemMove: from: " + fromPosition + " to: " + toPosition);
         Collections.swap(songs, fromPosition - 1, toPosition - 1);
         itemTouchHelperAdapter.onItemMove(fromPosition - 1, toPosition - 1);

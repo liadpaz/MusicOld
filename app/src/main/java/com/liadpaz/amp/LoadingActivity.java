@@ -10,7 +10,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
-import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.notification.MediaNotification;
 import com.liadpaz.amp.utils.LocalFiles;
 
@@ -32,11 +31,11 @@ public class LoadingActivity extends AppCompatActivity {
             new Handler().postDelayed(this::initializeView, TimeUnit.SECONDS.toMillis(1));
         }
 
-        QueueUtil.observeQueue(this, queue -> {
-            if (queue.size() == 0) {
-                new Handler().postDelayed(this::initializeView, TimeUnit.SECONDS.toMillis(1));
-            }
-        });
+        //        QueueUtil.observeQueue(this, queue -> {
+        //            if (queue.size() == 0) {
+        //                new Handler().postDelayed(this::initializeView, TimeUnit.SECONDS.toMillis(1));
+        //            }
+        //        });
 
         MediaNotification.init(this);
         LocalFiles.init(this);

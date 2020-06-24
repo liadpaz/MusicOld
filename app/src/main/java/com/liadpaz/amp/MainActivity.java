@@ -1,14 +1,11 @@
 package com.liadpaz.amp;
 
-import android.app.AlertDialog;
 import android.app.SearchManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.media.browse.MediaBrowser;
 import android.media.session.MediaController;
 import android.os.Bundle;
-import android.os.PowerManager;
-import android.provider.Settings;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -70,16 +67,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @SuppressWarnings("ConstantConditions")
     private void initializeView() {
         getSupportFragmentManager().beginTransaction().replace(R.id.mainFragment, MainViewPagerFragment.newInstance()).replace(R.id.extendedFragment, ExtendedFragment.newInstance()).commitNowAllowingStateLoss();
         if (getIntent() != null) {
             if (getIntent().hasExtra(Constants.PREFERENCES_SHOW_CURRENT) && LocalFiles.getShowCurrent()) {
                 BottomSheetBehavior.from(binding.extendedFragment).setState(BottomSheetBehavior.STATE_EXPANDED);
             }
-        }
-        if (!((PowerManager)getSystemService(POWER_SERVICE)).isIgnoringBatteryOptimizations(getPackageName())) {
-            new AlertDialog.Builder(this).setTitle(R.string.battery_optimization_title).setMessage(R.string.battery_optimization_message).setPositiveButton(R.string.battery_optimization_optimize, (dialog, which) -> startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))).show();
         }
     }
 

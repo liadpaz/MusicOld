@@ -12,12 +12,14 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class PlaylistsUtil {
     private static final String TAG = "PlaylistsUtil";
 
     private static MutableLiveData<ConcurrentLinkedDeque<Playlist>> playlists = new MutableLiveData<>(new ConcurrentLinkedDeque<>());
+    private static AtomicBoolean isChanging = new AtomicBoolean(false);
 
     @SuppressWarnings({"ConstantConditions", "BooleanMethodIsAlwaysInverted"})
     public static boolean isPlaylistExists(String name) {
@@ -73,5 +75,13 @@ public class PlaylistsUtil {
     @NonNull
     public static ArrayList<String> getPlaylistsNames() {
         return getPlaylists().stream().map(playlist -> playlist.name).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    public static boolean getIsChanging() {
+        return isChanging.get();
+    }
+
+    public static void setIsChanging(boolean isChanging) {
+        PlaylistsUtil.isChanging.set(isChanging);
     }
 }

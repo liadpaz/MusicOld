@@ -10,11 +10,13 @@ import android.net.Uri;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 
 import com.liadpaz.amp.viewmodels.Song;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -69,6 +71,15 @@ public class Utilities {
         return String.format("%s:%s", minutesTime, seconds);
     }
 
+    @Nullable
+    public static InputStream getInputStream(@NonNull Context context, @NonNull Song song) {
+        try {
+            return context.getContentResolver().openInputStream(getCoverUri(song));
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
     @NonNull
     public static ArrayList<String> getArtistsFromSong(@NonNull String title, @NonNull String artistsString) {
         ArrayList<String> artists = new ArrayList<>();
@@ -77,11 +88,11 @@ public class Utilities {
             artists.add(matcher.group());
         }
 
-//        int openBracketIndex;
-//        int closeBracketIndex;
-//        if ((openBracketIndex = title.indexOf('(')) != -1 && (closeBracketIndex = title.indexOf(')')) != -1 && openBracketIndex < closeBracketIndex) {
-//
-//        }
+        //        int openBracketIndex;
+        //        int closeBracketIndex;
+        //        if ((openBracketIndex = title.indexOf('(')) != -1 && (closeBracketIndex = title.indexOf(')')) != -1 && openBracketIndex < closeBracketIndex) {
+        //
+        //        }
         return artists;
     }
 

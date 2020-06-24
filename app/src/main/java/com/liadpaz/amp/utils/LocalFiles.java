@@ -41,8 +41,8 @@ public class LocalFiles {
     private static AtomicBoolean isFirstTimePosition = new AtomicBoolean(true);
 
     public static void init(@NonNull Context context) {
-        LocalFiles.musicSharedPreferences = context.getSharedPreferences("Music.Data", 0);
-        LocalFiles.playlistsSharedPreferences = context.getSharedPreferences("Music.Playlists", 0);
+        musicSharedPreferences = context.getSharedPreferences("Music.Data", 0);
+        playlistsSharedPreferences = context.getSharedPreferences("Music.Playlists", 0);
 
         CompletableFuture.runAsync(() -> PlaylistsUtil.setPlaylists(getPlaylists(context.getContentResolver())));
         CompletableFuture.runAsync(() -> SongsUtil.setSongs(listSongs(context, Media.TITLE + " COLLATE NOCASE")));

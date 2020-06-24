@@ -32,9 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class PlaylistFragment extends Fragment {
-    private static final String TAG = "PlaylistFragment";
-
-    private boolean isChanging;
+    private static final String TAG = "AmpApp.PlaylistFragment";
 
     private ListAdapter<Song, ? extends RecyclerView.ViewHolder> adapter;
 
@@ -104,7 +102,6 @@ public class PlaylistFragment extends Fragment {
             adapter = new PlaylistAdapter(requireContext(), onMoreClicked, onShuffleClickListener, new ItemTouchHelperAdapter() {
                 @Override
                 public void onItemMove(int fromPosition, int toPosition) {
-                    isChanging = true;
                     Playlist playlist = PlaylistsUtil.removePlaylist(PlaylistFragment.this.playlist.name);
                     Collections.swap(playlist.songs, fromPosition, toPosition);
                     PlaylistsUtil.addPlaylist(playlist);
@@ -130,24 +127,26 @@ public class PlaylistFragment extends Fragment {
                 @Override
                 public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {}
             });
-            ((PlaylistAdapter)adapter).setOnStartDragListener(itemTouchHelper::startDrag);
             itemTouchHelper.attachToRecyclerView(binding.rvSongs);
+
+            ((PlaylistAdapter)adapter).setOnStartDragListener(itemTouchHelper::startDrag);
+
             binding.btnDelete.setOnClickListener(v -> {
                 PlaylistsUtil.removePlaylist(playlist.name);
                 getParentFragmentManager().popBackStack();
             });
 
             PlaylistsUtil.observe(requireActivity(), playlists -> {
-                if (!isChanging) {
+                Log.d(TAG, "playlists is changing");
+                if (!PlaylistsUtil.getIsChanging()) {
                     for (Playlist playlist : playlists) {
                         if (playlist.name.equals(this.playlist.name)) {
                             adapter.submitList(playlist.songs);
-                            adapter.notifyDataSetChanged();
                             return;
                         }
                     }
                 } else {
-                    isChanging = false;
+                    PlaylistsUtil.setIsChanging(false);
                 }
             });
         }
