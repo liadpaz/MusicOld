@@ -24,8 +24,6 @@ import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.Utilities;
 
-import java.util.ArrayList;
-
 public class ExtendedInfoFragment extends Fragment {
     private static final String TAG = "AmpApp.ExtendedInfoFragment";
 
@@ -59,7 +57,6 @@ public class ExtendedInfoFragment extends Fragment {
             popupMenu.setOnMenuItemClickListener(item -> {
                 switch (item.getItemId()) {
                     case R.id.menuQueueClear: {
-                        QueueUtil.setQueue(new ArrayList<>());
                         MainActivity.getController().sendCommand(Constants.ACTION_RESET, null, null);
                         break;
                     }

@@ -6,9 +6,12 @@ import android.content.Intent;
 import android.media.browse.MediaBrowser;
 import android.media.session.MediaController;
 import android.os.Bundle;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.SearchView;
 
 import androidx.annotation.NonNull;
@@ -36,9 +39,12 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_SETTINGS = 525;
 
+    private MenuItem searchItem;
+
     private static MediaController controller;
-    public ActivityMainBinding binding;
     private MediaBrowser mediaBrowser;
+
+    public ActivityMainBinding binding;
 
     public static MediaController getController() {return controller;}
 
@@ -81,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(@NonNull Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
 
-        ((SearchView)menu.findItem(R.id.menuSearch).getActionView()).setSearchableInfo(((SearchManager)getSystemService(SEARCH_SERVICE)).getSearchableInfo(getComponentName()));
+        ((SearchView)(searchItem = menu.findItem(R.id.menuSearch)).getActionView()).setSearchableInfo(((SearchManager)getSystemService(SEARCH_SERVICE)).getSearchableInfo(getComponentName()));
 
         return true;
     }
@@ -158,11 +164,28 @@ public class MainActivity extends AppCompatActivity {
         getSupportFragmentManager().beginTransaction().replace(R.id.mainFragment, SearchFragment.newInstance(queryString, queriedSongs)).addToBackStack(null).commitAllowingStateLoss();
     }
 
+    public void setBottomSheetHidden(boolean isHidden) {
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        BottomSheetBehavior<View> bottomSheetBehavior = BottomSheetBehavior.from(binding.extendedFragment);
+        if (isHidden) {
+            layoutParams.setMargins(0, 0, 0, 0);
+            bottomSheetBehavior.setHideable(true);
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        } else {
+            layoutParams.setMargins(0, 0, 0, (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 72, getResources().getDisplayMetrics()));
+            bottomSheetBehavior.setState(bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN ? BottomSheetBehavior.STATE_COLLAPSED : bottomSheetBehavior.getState());
+            bottomSheetBehavior.setHideable(false);
+        }
+        binding.mainFragment.setLayoutParams(layoutParams);
+    }
+
     @Override
     public void onBackPressed() {
         BottomSheetBehavior<View> bsb = BottomSheetBehavior.from(binding.extendedFragment);
         if (bsb.getState() == BottomSheetBehavior.STATE_EXPANDED) {
             bsb.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        } else if (searchItem.isActionViewExpanded()) {
+            searchItem.collapseActionView();
         } else {
             super.onBackPressed();
         }

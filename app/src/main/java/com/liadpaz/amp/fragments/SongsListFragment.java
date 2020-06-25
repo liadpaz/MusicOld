@@ -80,7 +80,9 @@ public class SongsListFragment extends Fragment {
 
         SongsUtil.observe(this, adapter::submitList);
 
-        binding.rvSongs.setLayoutManager(new LinearLayoutManager(requireContext()));
+        binding.rvSongs.setLayoutManager(new LinearLayoutManager(requireContext()) {{
+            setSmoothScrollbarEnabled(true);
+        }});
         binding.rvSongs.addItemDecoration(new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));
     }
 

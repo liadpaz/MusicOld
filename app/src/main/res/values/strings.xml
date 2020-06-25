@@ -12,7 +12,7 @@
     <string name="menu_queue_add_to_playlist">Add to Playlist</string>
     <string name="queue_removed">%s removed from the queue</string>
     <string name="menu_play_next">Play Next</string>
-    <string name="description_queue">Show Queue</string>
+    <string name="description_show_queue">Show Queue</string>
     <string name="description_more">More</string>
     <string name="description_playlist_cover">Playlist Cover</string>
     <string name="playlist_recently_added">Recently Added</string>
@@ -52,4 +52,9 @@
     <string name="battery_optimization_title">Battery Optimization</string>
     <string name="battery_optimization_message">For best user experience, you should disable battery optimizations for this app.</string>
     <string name="battery_optimization_optimize">Optimize</string>
+    <string name="description_skip_prev">Skip To Previous Song</string>
+    <string name="description_skip_next">Skip To Next Song</string>
+    <string name="description_play_pause">Play/Pause</string>
+    <string name="description_repeat">Toggle Repeat Mode</string>
+    <string name="description_queue">Queue</string>
 </resources>

@@ -12,7 +12,7 @@
     <string name="menu_queue_add_to_playlist">הוסף לפלייליסט</string>
     <string name="queue_removed">%s הוסר מהתור</string>
     <string name="menu_play_next">נגן הבא בתור</string>
-    <string name="description_queue">הצג את התור</string>
+    <string name="description_show_queue">הצג את התור</string>
     <string name="description_more">עוד</string>
     <string name="description_playlist_cover">תמונת פלייליסט</string>
     <string name="playlist_recently_added">נוספו לאחרונה</string>
@@ -52,4 +52,9 @@
     <string name="battery_optimization_title">ייעול בטריה</string>
     <string name="battery_optimization_message">לחווית משתמש הטובה ביותר, מומלץ להוריד את ייעול הבטריה לאפליקציה זו.</string>
     <string name="battery_optimization_optimize">ייעל</string>
+    <string name="description_skip_prev">דלג לשיר הקודם</string>
+    <string name="description_skip_next">דלג לשיר הבא</string>
+    <string name="description_play_pause">נגן/הפסק</string>
+    <string name="description_repeat">מצב חזרת שירים</string>
+    <string name="description_queue">תור</string>
 </resources>

@@ -10,7 +10,6 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.ExtendedViewPagerAdapter;
 import com.liadpaz.amp.databinding.FragmentExtendedViewPagerBinding;
 import com.liadpaz.amp.livedatautils.QueueUtil;
@@ -39,6 +38,7 @@ public class ExtendedViewPagerFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         adapter = new ExtendedViewPagerAdapter(this);
         binding.extendedViewPager.setAdapter(adapter);
+
         QueueUtil.observePosition(getViewLifecycleOwner(), position -> {
             if (!isCreated) {
                 isCreated = true;
@@ -47,13 +47,8 @@ public class ExtendedViewPagerFragment extends Fragment {
                 binding.extendedViewPager.setCurrentItem(position);
             }
         });
-        QueueUtil.observeQueue(getViewLifecycleOwner(), songs -> {
-            if (songs.size() == 0) {
-                getParentFragmentManager().beginTransaction().replace(R.id.layoutFragment, NoSongFragment.newInstance()).commit();
-            } else {
-                binding.extendedViewPager.setAdapter(adapter = new ExtendedViewPagerAdapter(this));
-            }
-        });
+        QueueUtil.observeQueue(getViewLifecycleOwner(), songs -> binding.extendedViewPager.setAdapter(adapter = new ExtendedViewPagerAdapter(this)));
+
         binding.extendedViewPager.registerOnPageChangeCallback(callback = new ViewPager2.OnPageChangeCallback() {
             private boolean firstTime = true;
 

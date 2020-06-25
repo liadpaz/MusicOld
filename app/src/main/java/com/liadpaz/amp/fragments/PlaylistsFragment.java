@@ -52,11 +52,13 @@ public class PlaylistsFragment extends Fragment {
         }};
 
         PlaylistsUtil.observe(requireActivity(), playlistQueue -> {
-            playlists = new ArrayList<>(playlistQueue);
-            playlists.add(0, recentlyAddedPlaylist);
-            LocalFiles.setPlaylists(playlistQueue);
-            if (adapter != null) {
-                adapter.submitList(playlists);
+            if (playlistQueue != null) {
+                playlists = new ArrayList<>(playlistQueue);
+                playlists.add(0, recentlyAddedPlaylist);
+                LocalFiles.setPlaylists(playlistQueue);
+                if (adapter != null) {
+                    adapter.submitList(playlists);
+                }
             }
         });
 

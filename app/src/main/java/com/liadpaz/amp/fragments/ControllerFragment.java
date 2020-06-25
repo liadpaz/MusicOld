@@ -24,8 +24,6 @@ import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentControllerBinding;
 import com.liadpaz.amp.livedatautils.ColorUtil;
-import com.liadpaz.amp.livedatautils.QueueUtil;
-import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.CurrentSong;
 
@@ -59,12 +57,7 @@ public class ControllerFragment extends Fragment {
         });
 
         binding.btnPlay.setOnClickListener(v -> {
-            if (QueueUtil.getQueueSize() == 0) {
-                if (SongsUtil.getSongs().size() != 0) {
-                    QueueUtil.setQueue(SongsUtil.getSongs());
-                    QueueUtil.setPosition(0);
-                }
-            } else if (controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING) {
+            if (controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING) {
                 controller.getTransportControls().pause();
             } else {
                 controller.getTransportControls().play();

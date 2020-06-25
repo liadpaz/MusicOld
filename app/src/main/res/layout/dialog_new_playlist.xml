@@ -23,7 +23,9 @@
         android:autofillHints="@null"
         android:ems="10"
         android:hint="@string/description_playlist_name"
-        android:inputType="textAutoCorrect|text" />
+        android:inputType="textAutoCorrect|text"
+        android:minWidth="48dp"
+        android:minHeight="48dp" />
 
     <LinearLayout
         android:layout_width="wrap_content"

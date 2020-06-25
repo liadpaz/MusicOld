@@ -46,7 +46,7 @@ public class LocalFiles {
 
         ContentResolver contentResolver = context.getContentResolver();
 
-        CompletableFuture.runAsync(() -> PlaylistsUtil.setPlaylistsInitial(getPlaylists(contentResolver)));
+        CompletableFuture.runAsync(() -> PlaylistsUtil.setPlaylists(getPlaylists(contentResolver)));
         CompletableFuture.runAsync(() -> SongsUtil.setSongs(listSongs(contentResolver, Media.TITLE + " COLLATE NOCASE")));
 
         QueueUtil.observeQueue(songs -> {

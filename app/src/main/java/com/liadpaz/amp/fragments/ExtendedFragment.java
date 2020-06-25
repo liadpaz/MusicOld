@@ -28,12 +28,11 @@ import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentExtendedBinding;
 import com.liadpaz.amp.livedatautils.ColorUtil;
 import com.liadpaz.amp.livedatautils.QueueUtil;
-import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.utils.Utilities;
 
-import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 public class ExtendedFragment extends Fragment {
@@ -87,12 +86,7 @@ public class ExtendedFragment extends Fragment {
 
         binding.btnSkipPrev.setOnClickListener(v -> controller.getTransportControls().skipToPrevious());
         binding.btnPlayPause.setOnClickListener(v -> {
-            if (QueueUtil.getQueueSize() == 0) {
-                if (SongsUtil.getSongs().size() != 0) {
-                    QueueUtil.setQueue(SongsUtil.getSongs());
-                    QueueUtil.setPosition(0);
-                }
-            } else if (controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING) {
+            if (controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING) {
                 controller.getTransportControls().pause();
             } else {
                 controller.getTransportControls().play();
@@ -151,6 +145,10 @@ public class ExtendedFragment extends Fragment {
                         isUp = false;
                     }
                     requireActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                } else if (newState == BottomSheetBehavior.STATE_HIDDEN) {
+                    requireActivity().getWindow().setStatusBarColor(requireActivity().getColor(R.color.colorPrimaryDark));
+                    requireActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    isUp = true;
                 }
             }
 
@@ -163,6 +161,8 @@ public class ExtendedFragment extends Fragment {
                 }
             }
         });
+
+        QueueUtil.observeQueue(getViewLifecycleOwner(), queue -> ((MainActivity)requireActivity()).setBottomSheetHidden(queue.size() == 0));
 
         getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedViewPagerFragment.newInstance()).commit();
     }
@@ -182,6 +182,12 @@ public class ExtendedFragment extends Fragment {
             binding.btnPlayPause.setImageResource(R.drawable.play);
             binding.btnRepeat.setImageResource(R.drawable.repeat_all);
         } else {
+            if (state.getState() == PlaybackState.STATE_STOPPED) {
+                ((MainActivity)requireActivity()).setBottomSheetHidden(true);
+                QueueUtil.setIsChanging(true);
+                QueueUtil.setQueue(new ArrayList<>());
+                return;
+            }
             currentPosition = state.getPosition();
             if (state.getState() == PlaybackState.STATE_PLAYING) {
                 binding.btnPlayPause.setImageResource(R.drawable.pause);
@@ -207,7 +213,7 @@ public class ExtendedFragment extends Fragment {
                 CompletableFuture.supplyAsync(() -> {
                     try {
                         return BitmapFactory.decodeStream(requireActivity().getContentResolver().openInputStream(description.getIconUri()));
-                    } catch (FileNotFoundException e) {
+                    } catch (Exception e) {
                         return null;
                     }
                 }).thenAccept(bitmap -> {
@@ -222,12 +228,11 @@ public class ExtendedFragment extends Fragment {
                             ColorUtil.setColor(defaultColor);
                         });
                     } else {
-                        int colorTop = ColorUtils.blendARGB(Color.WHITE, Color.BLACK, 0.3F);
-                        defaultColor = colorTop;
+                        defaultColor = ColorUtils.blendARGB(Color.WHITE, Color.BLACK, 0.3F);
                         if (isUp) {
                             requireActivity().getWindow().setStatusBarColor(defaultColor);
                         }
-                        GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{colorTop, Color.BLACK});
+                        GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{defaultColor, Color.BLACK});
                         binding.extendedFragment.setBackground(gradientDrawable);
                         ColorUtil.setColor(defaultColor);
                     }
@@ -252,12 +257,12 @@ public class ExtendedFragment extends Fragment {
         handler.postDelayed(runnable = () -> {
             binding.sbSongProgress.setProgress((int)((currentPosition / duration) * 1000));
             binding.tvTimeElapsed.setText(Utilities.formatTime((long)currentPosition));
-            currentPosition += 250;
+            currentPosition += 500;
             handler.removeCallbacks(runnable);
             if (controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING) {
                 updateSeekBar();
             }
-        }, 250);
+        }, 500);
     }
 
     @Override
