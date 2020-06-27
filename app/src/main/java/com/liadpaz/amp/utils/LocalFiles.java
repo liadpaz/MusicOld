@@ -1,7 +1,6 @@
 package com.liadpaz.amp.utils;
 
 import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -172,7 +171,9 @@ public class LocalFiles {
         Queue<Playlist> playlists = new ArrayDeque<>();
         playlistsSharedPreferences.getAll().forEach((name, songsIds) -> {
             ArrayList<Long> songsIdsList = new Gson().fromJson(songsIds.toString(), new TypeToken<ArrayList<Long>>() {}.getType());
-            playlists.add(new Playlist(name, listSongs(contentResolver, SORT_DEFAULT, songsIdsList)));
+            ArrayList<Song> songs = listSongs(contentResolver, SORT_DEFAULT, songsIdsList);
+            Collections.sort(songs, Comparator.comparing(song -> songsIdsList.indexOf(song.songId)));
+            playlists.add(new Playlist(name, songs));
         });
         Log.d(TAG, "getPlaylists: " + (System.currentTimeMillis() - start));
         return playlists;
@@ -189,25 +190,5 @@ public class LocalFiles {
     @NonNull
     public static ArrayList<Song> listSongsByLastAdded(@NonNull ContentResolver contentResolver) {
         return listSongs(contentResolver, Media.DATE_ADDED + " DESC");
-    }
-
-    /**
-     * This function returns the song by its id in the {@link android.provider.MediaStore}
-     *
-     * @param contentResolver {@link ContentResolver} to get the info
-     * @param id              song id
-     * @return a song with the {@param id} as its id in the {@link android.provider.MediaStore}
-     */
-    @SuppressWarnings("ConstantConditions")
-    @Nullable
-    public static Song getSongById(@NonNull ContentResolver contentResolver, long id) {
-        try (Cursor songCursor = contentResolver.query(ContentUris.withAppendedId(Media.EXTERNAL_CONTENT_URI, id), PROJECTION, null, null, null)) {
-            if (songCursor.moveToFirst()) {
-                return new Song(id, songCursor.getString(songCursor.getColumnIndex(Media.TITLE)), songCursor.getString(songCursor.getColumnIndex(Media.ARTIST)), songCursor.getString(songCursor.getColumnIndex(Media.ALBUM)), songCursor.getString(songCursor.getColumnIndex(Media.ALBUM_ID)));
-            }
-            return null;
-        } catch (Exception ignored) {
-            return null;
-        }
     }
 }

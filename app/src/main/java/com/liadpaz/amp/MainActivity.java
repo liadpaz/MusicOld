@@ -38,13 +38,10 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "AmpApp.MainActivity";
 
     private static final int REQUEST_SETTINGS = 525;
-
-    private MenuItem searchItem;
-
     private static MediaController controller;
-    private MediaBrowser mediaBrowser;
-
     public ActivityMainBinding binding;
+    private MenuItem searchItem;
+    private MediaBrowser mediaBrowser;
 
     public static MediaController getController() {return controller;}
 
@@ -63,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }, null);
 
-            startService();
+        startService();
     }
 
     private void startService() {
