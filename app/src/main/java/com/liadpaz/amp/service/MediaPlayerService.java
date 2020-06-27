@@ -96,6 +96,7 @@ public final class MediaPlayerService extends MediaBrowserService {
 
         // observe to queue and queue position changes and act accordingly
         QueueUtil.observeQueue(observerQueue = songs -> {
+            Log.d(TAG, "queue changed: " + queue.size());
             queue = songs;
             if (queue.size() > 0 && currentSource == null && queuePosition != -1) {
                 TASK_EXECUTOR.execute(() -> setSource(queue.get(queuePosition)));
@@ -107,6 +108,7 @@ public final class MediaPlayerService extends MediaBrowserService {
         });
         QueueUtil.observePosition(observerPosition = queuePosition -> {
             if (queuePosition != -1) {
+                Log.d(TAG, "queuePosition changed: " + queuePosition);
                 this.queuePosition = queuePosition;
                 if (QueueUtil.getIsChanging()) {
                     QueueUtil.setIsChanging(false);
@@ -122,8 +124,8 @@ public final class MediaPlayerService extends MediaBrowserService {
         audioAttributes = new AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).setUsage(AudioAttributes.USAGE_MEDIA).build();
 
         // initializes the media session
-        mediaSession = new MediaSession(this, LOG_TAG);
-        mediaSession.setSessionActivity(PendingIntent.getActivity(this, 10, new Intent(this, MainActivity.class).putExtra(Constants.PREFERENCES_SHOW_CURRENT, 0), PendingIntent.FLAG_UPDATE_CURRENT));
+        mediaSession = new MediaSession(getApplicationContext(), LOG_TAG);
+        mediaSession.setSessionActivity(PendingIntent.getActivity(getApplicationContext(), 10, new Intent(getApplicationContext(), MainActivity.class).putExtra(Constants.PREFERENCES_SHOW_CURRENT, 0), PendingIntent.FLAG_UPDATE_CURRENT));
         mediaSession.setCallback(new MediaSession.Callback() {
             @Override
             public void onCommand(@NonNull String command, Bundle extras, ResultReceiver cb) {
@@ -223,7 +225,7 @@ public final class MediaPlayerService extends MediaBrowserService {
         setSessionToken(mediaSession.getSessionToken());
 
         // register the becoming noisy receiver
-        becomingNoisyReceiver = new BecomingNoisyReceiver(this, mediaSession.getController());
+        becomingNoisyReceiver = new BecomingNoisyReceiver(getApplicationContext(), mediaSession.getController());
 
         // initializes the media player and set the on complete listener and audio attributes
         mediaPlayer = new MediaPlayer();
@@ -342,7 +344,7 @@ public final class MediaPlayerService extends MediaBrowserService {
      */
     private void sendMetadata(@Nullable Song song) {
         if (song != null) {
-            metadataBuilder.putText(MediaMetadata.METADATA_KEY_TITLE, song.songTitle).putText(MediaMetadata.METADATA_KEY_ARTIST, Utilities.joinArtists(song.songArtists)).putText(MediaMetadata.METADATA_KEY_ALBUM, song.album).putString(MediaMetadata.METADATA_KEY_ART_URI, Utilities.getCoverUri(song).toString()).putLong(MediaMetadata.METADATA_KEY_DURATION, mediaPlayer.getDuration());
+            metadataBuilder.putText(MediaMetadata.METADATA_KEY_TITLE, song.title).putText(MediaMetadata.METADATA_KEY_ARTIST, Utilities.joinArtists(song.artists)).putText(MediaMetadata.METADATA_KEY_ALBUM, song.album).putString(MediaMetadata.METADATA_KEY_ART_URI, Utilities.getCoverUri(song).toString()).putLong(MediaMetadata.METADATA_KEY_DURATION, mediaPlayer.getDuration());
             mediaSession.setMetadata(metadataBuilder.build());
         } else {
             mediaSession.setMetadata(null);
@@ -409,10 +411,10 @@ public final class MediaPlayerService extends MediaBrowserService {
                 audioManager.abandonAudioFocusRequest(audioFocusRequest);
             }
             mediaPlayer.reset();
-            mediaPlayer.setDataSource(this, ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, (currentSource = song).songId));
+            mediaPlayer.setDataSource(getApplicationContext(), ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, (currentSource = song).songId));
             mediaPlayer.prepare();
             sendMetadata(currentSource);
-            Log.d(TAG, "setSource: " + song.songTitle + "[" + song.songId + "]");
+            Log.d(TAG, "setSource: " + song.title + "[" + song.songId + "]");
         } catch (Exception e) {
             Log.e(TAG, "setSource: ", e);
         }
@@ -425,10 +427,10 @@ public final class MediaPlayerService extends MediaBrowserService {
     private void startNotification() {
         final boolean isPlaying = mediaPlayer.isPlaying();
 
-        final Notification.Builder builder = MediaNotification.from(this, mediaSession);
+        final Notification.Builder builder = MediaNotification.from(getApplicationContext(), mediaSession);
 
         if (builder != null) {
-            CompletableFuture.supplyAsync(() -> BitmapFactory.decodeStream(Utilities.getInputStream(this, currentSource))).thenAcceptAsync(cover -> {
+            CompletableFuture.supplyAsync(() -> BitmapFactory.decodeStream(Utilities.getInputStream(getApplicationContext(), currentSource))).thenAcceptAsync(cover -> {
                 if (cover != null) {
                     startForeground(NOTIFICATION_ID, builder.setLargeIcon(cover).build());
                 } else {
@@ -449,7 +451,7 @@ public final class MediaPlayerService extends MediaBrowserService {
     public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowser.MediaItem>> result) {
         List<MediaBrowser.MediaItem> mediaItems = new ArrayList<>();
         for (Song song : SongsUtil.getSongs()) {
-            mediaItems.add(new MediaBrowser.MediaItem(new MediaDescription.Builder().setIconUri(Utilities.getCoverUri(song)).setTitle(song.songTitle).setSubtitle(Utilities.joinArtists(song.songArtists)).setDescription(song.album).build(), MediaBrowser.MediaItem.FLAG_PLAYABLE));
+            mediaItems.add(new MediaBrowser.MediaItem(new MediaDescription.Builder().setIconUri(Utilities.getCoverUri(song)).setTitle(song.title).setSubtitle(Utilities.joinArtists(song.artists)).setDescription(song.album).build(), MediaBrowser.MediaItem.FLAG_PLAYABLE));
         }
         result.sendResult(mediaItems);
     }

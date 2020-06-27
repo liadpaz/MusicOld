@@ -68,8 +68,8 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
 
             ItemSongBinding binding = (ItemSongBinding)holder.binding;
 
-            binding.tvSongName.setText(song.songTitle);
-            binding.tvSongArtist.setText(Utilities.joinArtists(song.songArtists));
+            binding.tvSongName.setText(song.title);
+            binding.tvSongArtist.setText(Utilities.joinArtists(song.artists));
 
             Glide.with(context).load(Utilities.getCoverUri(song)).into(binding.ivSongCover);
         }

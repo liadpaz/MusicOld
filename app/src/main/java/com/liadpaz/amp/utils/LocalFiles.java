@@ -21,12 +21,12 @@ import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class LocalFiles {
@@ -36,6 +36,8 @@ public class LocalFiles {
 
     private static SharedPreferences musicSharedPreferences;
     private static SharedPreferences playlistsSharedPreferences;
+
+    private static String SORT_DEFAULT = Media.TITLE + " COLLATE NOCASE";
 
     private static AtomicBoolean isFirstTimeQueue = new AtomicBoolean(true);
     private static AtomicBoolean isFirstTimePosition = new AtomicBoolean(true);
@@ -47,7 +49,7 @@ public class LocalFiles {
         ContentResolver contentResolver = context.getContentResolver();
 
         CompletableFuture.runAsync(() -> PlaylistsUtil.setPlaylists(getPlaylists(contentResolver)));
-        CompletableFuture.runAsync(() -> SongsUtil.setSongs(listSongs(contentResolver, Media.TITLE + " COLLATE NOCASE")));
+        CompletableFuture.runAsync(() -> SongsUtil.setSongs(listSongs(contentResolver, SORT_DEFAULT)));
 
         QueueUtil.observeQueue(songs -> {
             if (!isFirstTimeQueue.getAndSet(false)) {
@@ -67,7 +69,9 @@ public class LocalFiles {
 
     private static void loadQueue(@NonNull ContentResolver contentResolver) {
         List<Long> songsIds = new Gson().fromJson(musicSharedPreferences.getString(Constants.PREFERENCES_QUEUE, "[]"), new TypeToken<ArrayList<Long>>() {}.getType());
-        QueueUtil.setQueue(songsIds.stream().map(id -> getSongById(contentResolver, id)).collect(Collectors.toCollection(ArrayList::new)));
+        List<Song> songs = listSongs(contentResolver, SORT_DEFAULT, songsIds);
+        Collections.sort(songs, Comparator.comparing(song -> songsIds.indexOf(song.songId)));
+        QueueUtil.setQueue(songs);
         QueueUtil.setPosition(musicSharedPreferences.getInt(Constants.PREFERENCES_QUEUE_POSITION, -1));
     }
 
@@ -131,10 +135,15 @@ public class LocalFiles {
 
     @NonNull
     private static ArrayList<Song> listSongs(@NonNull ContentResolver contentResolver, @NonNull String sort) {
+        return listSongs(contentResolver, sort, null);
+    }
+
+    @NonNull
+    private static ArrayList<Song> listSongs(@NonNull ContentResolver contentResolver, @NonNull String sort, @Nullable List<Long> songsIds) {
         long start = System.currentTimeMillis();
         ArrayList<Song> songs = new ArrayList<>();
         //retrieve song info
-        try (Cursor musicCursor = contentResolver.query(Media.EXTERNAL_CONTENT_URI, PROJECTION, "_data like ?", new String[]{"%" + getPath() + "%"}, sort)) {
+        try (Cursor musicCursor = contentResolver.query(Media.EXTERNAL_CONTENT_URI, PROJECTION,  Media.DATA + " like ? ", new String[]{"%" + getPath() + "%"}, sort)) {
             //iterate over results if valid
             if (musicCursor != null && musicCursor.moveToFirst()) {
                 //get columns
@@ -146,12 +155,10 @@ public class LocalFiles {
                 //add songs to list
                 do {
                     long id = musicCursor.getLong(idColumn);
-                    String title = musicCursor.getString(titleColumn);
-                    String artist = musicCursor.getString(artistColumn);
-                    String album = musicCursor.getString(albumColumn);
-                    String albumId = musicCursor.getString(albumIdColumn);
 
-                    songs.add(new Song(id, title, Utilities.getArtistsFromSong(title, artist), album, albumId));
+                    if (songsIds == null || songsIds.contains(id)) {
+                        songs.add(new Song(id, musicCursor.getString(titleColumn), musicCursor.getString(artistColumn), musicCursor.getString(albumColumn), musicCursor.getString(albumIdColumn)));
+                    }
                 } while (musicCursor.moveToNext());
             }
         }
@@ -161,11 +168,13 @@ public class LocalFiles {
 
     @NonNull
     private static Queue<Playlist> getPlaylists(@NonNull ContentResolver contentResolver) {
+        long start = System.currentTimeMillis();
         Queue<Playlist> playlists = new ArrayDeque<>();
         playlistsSharedPreferences.getAll().forEach((name, songsIds) -> {
             ArrayList<Long> songsIdsList = new Gson().fromJson(songsIds.toString(), new TypeToken<ArrayList<Long>>() {}.getType());
-            playlists.add(new Playlist(name, songsIdsList.stream().filter(id -> isSongExists(contentResolver, id)).map(id -> getSongById(contentResolver, id)).collect(Collectors.toCollection(ArrayList::new))));
+            playlists.add(new Playlist(name, listSongs(contentResolver, SORT_DEFAULT, songsIdsList)));
         });
+        Log.d(TAG, "getPlaylists: " + (System.currentTimeMillis() - start));
         return playlists;
     }
 
@@ -175,15 +184,6 @@ public class LocalFiles {
             editor.putString(playlist.name, new Gson().toJson((Object)playlist.songs.stream().map(song -> song.songId).collect(Collectors.toCollection(ArrayList::new))));
         }
         editor.apply();
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    private static boolean isSongExists(@NonNull ContentResolver contentResolver, long id) {
-        try (Cursor cursor = contentResolver.query(ContentUris.withAppendedId(Media.EXTERNAL_CONTENT_URI, id), null, null, null)) {
-            return cursor.moveToFirst();
-        } catch (Exception ignored) {
-            return false;
-        }
     }
 
     @NonNull
@@ -203,17 +203,7 @@ public class LocalFiles {
     public static Song getSongById(@NonNull ContentResolver contentResolver, long id) {
         try (Cursor songCursor = contentResolver.query(ContentUris.withAppendedId(Media.EXTERNAL_CONTENT_URI, id), PROJECTION, null, null, null)) {
             if (songCursor.moveToFirst()) {
-                String title = songCursor.getString(songCursor.getColumnIndex(Media.TITLE));
-                String artist = songCursor.getString(songCursor.getColumnIndex(Media.ARTIST));
-                String album = songCursor.getString(songCursor.getColumnIndex(Media.ALBUM));
-                String albumId = songCursor.getString(songCursor.getColumnIndex(Media.ALBUM_ID));
-
-                ArrayList<String> artists = new ArrayList<>();
-                Matcher matcher = Pattern.compile("([^ &,]([^,&])*[^ ,&]+)").matcher(artist);
-                while (matcher.find()) {
-                    artists.add(matcher.group());
-                }
-                return new Song(id, title, artists, album, albumId);
+                return new Song(id, songCursor.getString(songCursor.getColumnIndex(Media.TITLE)), songCursor.getString(songCursor.getColumnIndex(Media.ARTIST)), songCursor.getString(songCursor.getColumnIndex(Media.ALBUM)), songCursor.getString(songCursor.getColumnIndex(Media.ALBUM_ID)));
             }
             return null;
         } catch (Exception ignored) {

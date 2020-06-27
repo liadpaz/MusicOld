@@ -6,6 +6,8 @@ import android.os.Parcelable;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.liadpaz.amp.utils.Utilities;
+
 import java.util.ArrayList;
 
 public class Song implements Parcelable {
@@ -24,23 +26,23 @@ public class Song implements Parcelable {
     };
 
     public final long songId;
-    public final String songTitle;
-    public final ArrayList<String> songArtists;
+    public final String title;
+    public final ArrayList<String> artists;
     public final String album;
     public final String albumId;
 
-    public Song(long songId, @NonNull String songTitle,@NonNull ArrayList<String> songArtists,@NonNull String album,@NonNull String albumId) {
+    public Song(long songId, @NonNull String title, @NonNull String artists, @NonNull String album, @NonNull String albumId) {
         this.songId = songId;
-        this.songTitle = songTitle;
-        this.songArtists = songArtists;
+        this.title = title;
+        this.artists = Utilities.getArtistsFromSong(title, artists);
         this.album = album;
         this.albumId = albumId;
     }
 
     private Song(@NonNull Parcel in) {
-        songTitle = in.readString();
-        songArtists = new ArrayList<>();
-        in.readStringList(songArtists);
+        title = in.readString();
+        artists = new ArrayList<>();
+        in.readStringList(artists);
         songId = in.readLong();
         album = in.readString();
         albumId = in.readString();
@@ -52,7 +54,7 @@ public class Song implements Parcelable {
             return false;
         }
         Song other = (Song)obj;
-        return album.equals(other.album) && albumId.equals(other.albumId) && songArtists.equals(other.songArtists) && songId == other.songId && songTitle.equals(other.songTitle);
+        return album.equals(other.album) && albumId.equals(other.albumId) && artists.equals(other.artists) && songId == other.songId && title.equals(other.title);
     }
 
     @Override
@@ -62,8 +64,8 @@ public class Song implements Parcelable {
 
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
-        dest.writeString(songTitle);
-        dest.writeStringList(songArtists);
+        dest.writeString(title);
+        dest.writeStringList(artists);
         dest.writeLong(songId);
         dest.writeString(album);
         dest.writeString(albumId);
@@ -72,6 +74,6 @@ public class Song implements Parcelable {
     @NonNull
     @Override
     public String toString() {
-        return String.format("title: %s\nalbum: %s", songTitle, album);
+        return String.format("title: %s\nalbum: %s", title, album);
     }
 }

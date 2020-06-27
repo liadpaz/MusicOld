@@ -36,7 +36,7 @@ public class PlaylistsDialog extends DialogFragment {
         DialogPlaylistsBinding binding = DialogPlaylistsBinding.inflate(inflater, container, false);
 
         if (song != null) {
-            binding.tvAddToPlaylist.setText(song.songTitle);
+            binding.tvAddToPlaylist.setText(song.title);
         }
         binding.spinnerPlaylists.setAdapter(new ArrayAdapter<>(getContext(), R.layout.support_simple_spinner_dropdown_item, PlaylistsUtil.getPlaylistsNames()));
         binding.btnNewPlaylist.setOnClickListener(v -> {

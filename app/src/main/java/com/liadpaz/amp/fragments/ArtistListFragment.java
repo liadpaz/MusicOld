@@ -51,7 +51,7 @@ public class ArtistListFragment extends Fragment {
             artists.clear();
             HashMap<String, ArrayList<Song>> artistsMap = new HashMap<>();
             for (final Song song : songs) {
-                for (String artist : song.songArtists) {
+                for (String artist : song.artists) {
                     if (artistsMap.containsKey(artist)) {
                         artistsMap.get(artist).add(song);
                     } else {

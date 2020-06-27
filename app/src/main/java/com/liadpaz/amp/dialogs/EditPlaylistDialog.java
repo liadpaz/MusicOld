@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.DialogEditPlaylistBinding;
 import com.liadpaz.amp.livedatautils.PlaylistsUtil;
@@ -41,10 +42,10 @@ public class EditPlaylistDialog extends DialogFragment {
                 }
             }
         });
-        binding.btnDelete.setOnClickListener(v -> {
+        binding.btnDelete.setOnClickListener(v -> new MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.dialog_delete_playlist_title).setMessage(R.string.dialog_delete_playlist_content).setPositiveButton(R.string.dialog_yes, ((dialog, which) -> {
             PlaylistsUtil.removePlaylist(playlist.name);
             dismiss();
-        });
+        })).setNegativeButton(R.string.dialog_no, null).show());
         binding.btnCancel.setOnClickListener(v -> dismiss());
 
         setCancelable(true);

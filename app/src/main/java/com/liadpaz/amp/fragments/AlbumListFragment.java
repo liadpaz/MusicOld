@@ -60,7 +60,7 @@ public class AlbumListFragment extends Fragment {
                     }});
                 }
             }
-            albumsMap.forEach((name, albumSongs) -> albums.add(new Album(name, albumSongs.get(0).songArtists.get(0), albumSongs)));
+            albumsMap.forEach((name, albumSongs) -> albums.add(new Album(name, albumSongs.get(0).artists.get(0), albumSongs)));
             albums.sort((album1, album2) -> album1.name.toLowerCase().compareTo(album2.name.toLowerCase()));
             adapter.submitList(albums);
         });

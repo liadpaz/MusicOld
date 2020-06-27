@@ -7,29 +7,34 @@
     android:orientation="vertical"
     tools:context=".fragments.PlaylistFragment">
 
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="?android:colorBackground"
+        android:orientation="horizontal">
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/tvPlaylistName"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:layout_marginVertical="8dp"
-            android:layout_marginStart="32dp"
-            android:layout_marginEnd="40dp"
+            android:layout_marginStart="56dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
             android:textAlignment="center"
             android:textSize="24sp" />
 
         <ImageButton
             android:id="@+id/btnDelete"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_gravity="center_vertical|end"
-            android:layout_marginEnd="8dp"
             android:background="@null"
+            android:contentDescription="@string/dialog_delete"
+            android:padding="8dp"
             android:src="@drawable/delete" />
-    </FrameLayout>
+    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvSongs"

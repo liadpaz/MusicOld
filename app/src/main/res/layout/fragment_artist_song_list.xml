@@ -14,19 +14,24 @@
         android:background="@android:drawable/screen_background_dark"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tvArtistTitle"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginVertical="8dp"
-            android:gravity="center"
-            android:lines="1"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:text="@{artist.name}"
-            android:textAlignment="center"
-            android:textSize="24sp" />
+            android:background="?android:colorBackground"
+            android:orientation="vertical"
+            android:padding="8dp">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/tvArtistTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginVertical="8dp"
+                android:gravity="center"
+                android:text="@{artist.name}"
+                android:textAlignment="center"
+                android:textSize="24sp" />
+        </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvSongs"
@@ -34,10 +39,5 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:scrollbars="vertical" />
-
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/controllerFragment"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
     </LinearLayout>
 </layout>

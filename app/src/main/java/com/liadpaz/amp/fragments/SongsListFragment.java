@@ -58,7 +58,7 @@ public class SongsListFragment extends Fragment {
                     }
 
                     case R.id.menuAddQueue: {
-                        QueueUtil.addToEnd(adapter.getCurrentList().get(position));
+                        QueueUtil.add(adapter.getCurrentList().get(position));
                         break;
                     }
 

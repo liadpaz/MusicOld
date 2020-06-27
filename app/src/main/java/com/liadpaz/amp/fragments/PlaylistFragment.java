@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.PlaylistAdapter;
 import com.liadpaz.amp.adapters.SongsListAdapter;
@@ -52,11 +53,10 @@ public class PlaylistFragment extends Fragment {
     @SuppressWarnings("ConstantConditions")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        OnRecyclerItemClickListener onMoreClicked = (v, position) -> {
-            PopupMenu popupMenu = new PopupMenu(requireContext(), v);
-            popupMenu.inflate(playlist.name.equals(getString(R.string.playlist_recently_added)) ? R.menu.menu_playlist_recently : R.menu.menu_playlist);
+        OnRecyclerItemClickListener onMoreClicked = (v, position) -> new PopupMenu(requireContext(), v) {{
+            inflate(playlist.name.equals(getString(R.string.playlist_recently_added)) ? R.menu.menu_playlist_recently : R.menu.menu_playlist);
 
-            popupMenu.setOnMenuItemClickListener(item -> {
+            setOnMenuItemClickListener(item -> {
                 switch (item.getItemId()) {
                     case R.id.menuPlayNext: {
                         QueueUtil.addToNext(adapter.getCurrentList().get(position));
@@ -64,7 +64,7 @@ public class PlaylistFragment extends Fragment {
                     }
 
                     case R.id.menuAddQueue: {
-                        QueueUtil.addToEnd(adapter.getCurrentList().get(position));
+                        QueueUtil.add(adapter.getCurrentList().get(position));
                         break;
                     }
 
@@ -77,16 +77,14 @@ public class PlaylistFragment extends Fragment {
                         Playlist playlist = PlaylistsUtil.removePlaylist(PlaylistFragment.this.playlist.name);
                         playlist.songs.remove(position);
                         adapter.submitList(playlist.songs);
-                        adapter.notifyDataSetChanged();
+                        adapter.notifyItemRemoved(position);
                         PlaylistsUtil.addPlaylist(playlist);
                         break;
                     }
                 }
                 return true;
             });
-
-            popupMenu.show();
-        };
+        }}.show();
         View.OnClickListener onShuffleClickListener = v -> {
             if (playlist.songs.size() != 0) {
                 ArrayList<Song> queue = new ArrayList<>(playlist.songs);
@@ -131,10 +129,10 @@ public class PlaylistFragment extends Fragment {
 
             ((PlaylistAdapter)adapter).setOnStartDragListener(itemTouchHelper::startDrag);
 
-            binding.btnDelete.setOnClickListener(v -> {
+            binding.btnDelete.setOnClickListener(v -> new MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.dialog_delete_playlist_title).setMessage(R.string.dialog_delete_playlist_content).setPositiveButton(R.string.dialog_yes, ((dialog, which) -> {
                 PlaylistsUtil.removePlaylist(playlist.name);
                 getParentFragmentManager().popBackStack();
-            });
+            })).setNegativeButton(R.string.dialog_no, null).show());
 
             PlaylistsUtil.observe(requireActivity(), playlists -> {
                 if (!PlaylistsUtil.getIsChanging()) {

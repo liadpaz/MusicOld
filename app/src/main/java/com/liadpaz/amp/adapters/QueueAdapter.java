@@ -74,8 +74,8 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
 
         ItemQueueSongBinding binding = holder.binding;
 
-        binding.tvSongTitle.setText(song.songTitle);
-        binding.tvSongArtist.setText(Utilities.joinArtists(song.songArtists));
+        binding.tvSongTitle.setText(song.title);
+        binding.tvSongArtist.setText(Utilities.joinArtists(song.artists));
         Glide.with(context).load(Utilities.getCoverUri(song)).placeholder(R.drawable.song).into(binding.ivSongCover);
 
         binding.btnDrag.setOnTouchListener((v, event) -> {
@@ -87,7 +87,7 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
     }
 
     public void onItemDismiss(int position) {
-        Toast.makeText(context, context.getString(R.string.queue_removed, getItem(position).songTitle), Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, context.getString(R.string.queue_removed, getItem(position).title), Toast.LENGTH_SHORT).show();
         songs.remove(position);
         if (queuePosition > position) {
             QueueUtil.setIsChanging(true);

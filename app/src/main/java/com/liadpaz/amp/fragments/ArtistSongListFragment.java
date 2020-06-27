@@ -32,6 +32,7 @@ public class ArtistSongListFragment extends Fragment {
 
     private ArtistSongListFragment(Artist artist) { this.artist = artist; }
 
+    @NonNull
     public static ArtistSongListFragment newInstance(Artist artist) { return new ArtistSongListFragment(artist); }
 
     @Override
@@ -55,7 +56,7 @@ public class ArtistSongListFragment extends Fragment {
                     }
 
                     case R.id.menuAddQueue: {
-                        QueueUtil.addToEnd(adapter.getCurrentList().get(position));
+                        QueueUtil.add(adapter.getCurrentList().get(position));
                         break;
                     }
 

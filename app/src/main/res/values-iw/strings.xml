@@ -49,12 +49,13 @@
     <string name="search_hint">חפש שירים</string>
     <string name="search_result">מראה תוצאות ל: %s</string>
     <string name="list_no_song_query">לא נמצאו שירים התואמים את החיפוש שלך.\nחפש שוב עם מילות חיפוש אחרות.</string>
-    <string name="battery_optimization_title">ייעול בטריה</string>
-    <string name="battery_optimization_message">לחווית משתמש הטובה ביותר, מומלץ להוריד את ייעול הבטריה לאפליקציה זו.</string>
-    <string name="battery_optimization_optimize">ייעל</string>
     <string name="description_skip_prev">דלג לשיר הקודם</string>
     <string name="description_skip_next">דלג לשיר הבא</string>
     <string name="description_play_pause">נגן/הפסק</string>
     <string name="description_repeat">מצב חזרת שירים</string>
     <string name="description_queue">תור</string>
+    <string name="dialog_delete_playlist_content">אתה בטוח שאתה רוצה למחוק את הפלייליסט הזה?</string>
+    <string name="dialog_delete_playlist_title">מחיקת פלייליסט</string>
+    <string name="dialog_no">לא</string>
+    <string name="dialog_yes">כן</string>
 </resources>

@@ -24,7 +24,7 @@
 
     </androidx.fragment.app.FragmentContainerView>
 
-    <TextView
+    <com.google.android.material.textview.MaterialTextView
         android:id="@+id/tvSongTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -36,7 +36,7 @@
         android:textSize="22sp"
         android:textStyle="bold" />
 
-    <TextView
+    <com.google.android.material.textview.MaterialTextView
         android:id="@+id/tvSongArtist"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -50,7 +50,7 @@
         app:layout_constraintEnd_toEndOf="@+id/sbSongProgress"
         app:layout_constraintStart_toStartOf="@+id/sbSongProgress" />
 
-    <SeekBar
+    <androidx.appcompat.widget.AppCompatSeekBar
         android:id="@+id/sbSongProgress"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -63,7 +63,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/tvTimeElapsed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -72,7 +72,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/tvTotalTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -138,7 +138,5 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/btnSkipNext"
             app:layout_constraintTop_toTopOf="@+id/btnSkipNext" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 </LinearLayout>

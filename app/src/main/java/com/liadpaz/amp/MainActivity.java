@@ -55,19 +55,19 @@ public class MainActivity extends AppCompatActivity {
         setContentView((binding = ActivityMainBinding.inflate(getLayoutInflater())).getRoot());
         setSupportActionBar(binding.toolBarMain);
 
-        mediaBrowser = new MediaBrowser(this, new ComponentName(this, MediaPlayerService.class), new MediaBrowser.ConnectionCallback() {
+        mediaBrowser = new MediaBrowser(getApplicationContext(), new ComponentName(getApplicationContext(), MediaPlayerService.class), new MediaBrowser.ConnectionCallback() {
             @Override
             public void onConnected() {
-                controller = new MediaController(MainActivity.this, mediaBrowser.getSessionToken());
+                controller = new MediaController(getApplicationContext(), mediaBrowser.getSessionToken());
                 initializeView();
             }
         }, null);
 
-        startService();
+            startService();
     }
 
     private void startService() {
-        startService(new Intent(this, MediaPlayerService.class));
+        startService(new Intent(getApplicationContext(), MediaPlayerService.class));
         if (!mediaBrowser.isConnected()) {
             mediaBrowser.connect();
         }
@@ -96,12 +96,12 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menuItemSettings: {
-                startActivityForResult(new Intent(this, SettingsActivity.class), REQUEST_SETTINGS);
+                startActivityForResult(new Intent(getApplicationContext(), SettingsActivity.class), REQUEST_SETTINGS);
                 return true;
             }
 
             case R.id.menuItemAbout: {
-                startActivity(new Intent(this, AboutActivity.class));
+                startActivity(new Intent(getApplicationContext(), AboutActivity.class));
                 return true;
             }
         }
@@ -157,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void query(@NonNull String queryString) {
         String loweredQueryString = queryString.toLowerCase();
-        List<Song> queriedSongs = SongsUtil.getSongs().parallelStream().filter(song -> song.songTitle.toLowerCase().contains(loweredQueryString) || song.songArtists.stream().anyMatch(artist -> artist.toLowerCase().contains(loweredQueryString)) || song.album.toLowerCase().contains(loweredQueryString)).collect(Collectors.toCollection(ArrayList::new));
+        List<Song> queriedSongs = SongsUtil.getSongs().parallelStream().filter(song -> song.title.toLowerCase().contains(loweredQueryString) || song.artists.stream().anyMatch(artist -> artist.toLowerCase().contains(loweredQueryString)) || song.album.toLowerCase().contains(loweredQueryString)).collect(Collectors.toCollection(ArrayList::new));
         if (queriedSongs.size() == 0) {
             queriedSongs.add(null);
         }
