@@ -3,12 +3,13 @@ package com.liadpaz.amp.fragments;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
-import android.media.MediaDescription;
 import android.media.MediaMetadata;
-import android.media.session.MediaController;
-import android.media.session.PlaybackState;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.media.MediaDescriptionCompat;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,12 +28,10 @@ import com.liadpaz.amp.MainActivity;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentExtendedBinding;
 import com.liadpaz.amp.livedatautils.ColorUtil;
-import com.liadpaz.amp.livedatautils.QueueUtil;
-import com.liadpaz.amp.utils.Constants;
+import com.liadpaz.amp.service.ServiceConnector;
 import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.utils.Utilities;
 
-import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 public class ExtendedFragment extends Fragment {
@@ -42,8 +41,9 @@ public class ExtendedFragment extends Fragment {
     private Runnable runnable;
     private boolean shouldSeek = false;
 
-    private MediaController controller;
-    private MediaController.Callback callback;
+    private boolean isPlaying = false;
+    private boolean isRepeating = false;
+    private MediaControllerCompat.TransportControls transportControls;
 
     private long duration = 0;
     private double currentPosition = 0;
@@ -63,45 +63,31 @@ public class ExtendedFragment extends Fragment {
         return (binding = FragmentExtendedBinding.inflate(inflater, container, false)).getRoot();
     }
 
-    @SuppressWarnings("ConstantConditions")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         defaultColor = requireContext().getColor(R.color.colorPrimaryDark);
 
         handler = new Handler();
 
-        (controller = MainActivity.getController()).registerCallback(callback = new MediaController.Callback() {
-            @Override
-            public void onPlaybackStateChanged(PlaybackState state) { setPlayback(state); }
-
-            @Override
-            public void onMetadataChanged(MediaMetadata metadata) { setMetadata(metadata); }
-        });
+        ServiceConnector serviceConnector = ServiceConnector.getInstance();
+        serviceConnector.playbackState.observe(getViewLifecycleOwner(), this::setPlayback);
+        serviceConnector.nowPlaying.observe(getViewLifecycleOwner(), this::setMetadata);
+        serviceConnector.repeatMode.observe(getViewLifecycleOwner(), repeatMode -> isRepeating = repeatMode == PlaybackStateCompat.REPEAT_MODE_ONE);
+        transportControls = serviceConnector.transportControls;
 
         binding.tvSongTitle.setSelected(true);
         binding.tvSongArtist.setSelected(true);
 
-        setPlayback(controller.getPlaybackState());
-        setMetadata(controller.getMetadata());
-
-        binding.btnSkipPrev.setOnClickListener(v -> controller.getTransportControls().skipToPrevious());
+        binding.btnSkipPrev.setOnClickListener(v -> transportControls.skipToPrevious());
         binding.btnPlayPause.setOnClickListener(v -> {
-            if (controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING) {
-                controller.getTransportControls().pause();
+            if (isPlaying) {
+                transportControls.pause();
             } else {
-                controller.getTransportControls().play();
+                transportControls.play();
             }
         });
-        binding.btnSkipNext.setOnClickListener(v -> controller.getTransportControls().skipToNext());
-        binding.btnRepeat.setOnClickListener(v -> {
-            if (controller.getPlaybackState().getExtras().containsKey(Constants.LOOP_EXTRA)) {
-                if (controller.getPlaybackState().getExtras().containsKey(Constants.LOOP_EXTRA)) {
-                    Bundle bundle = new Bundle();
-                    bundle.putBoolean(Constants.LOOP_EXTRA, !controller.getPlaybackState().getExtras().getBoolean(Constants.LOOP_EXTRA));
-                    controller.sendCommand(Constants.LOOP_EXTRA, bundle, null);
-                }
-            }
-        });
+        binding.btnSkipNext.setOnClickListener(v -> transportControls.skipToNext());
+        binding.btnRepeat.setOnClickListener(v -> transportControls.setRepeatMode(isRepeating ? PlaybackStateCompat.REPEAT_MODE_ALL : PlaybackStateCompat.REPEAT_MODE_ONE));
 
         binding.sbSongProgress.setMax(1000);
         binding.sbSongProgress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -113,14 +99,11 @@ public class ExtendedFragment extends Fragment {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                controller.getTransportControls().seekTo((long)((double)seekBar.getProgress() * duration / 1000));
+                transportControls.seekTo((long)((double)seekBar.getProgress() * duration / 1000));
             }
         });
         binding.tvTimeElapsed.setText(Utilities.formatTime(0));
         binding.tvTotalTime.setText(Utilities.formatTime(0));
-
-        setMetadata(controller.getMetadata());
-        setPlayback(controller.getPlaybackState());
 
         BottomSheetBehavior.from(((MainActivity)requireActivity()).binding.extendedFragment).addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
             @Override
@@ -128,7 +111,9 @@ public class ExtendedFragment extends Fragment {
                 if (newState == BottomSheetBehavior.STATE_EXPANDED) {
                     if (!isUp) {
                         // show the info fragment
-                        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ExtendedInfoFragment.newInstance()).commitNowAllowingStateLoss();
+                        getChildFragmentManager().beginTransaction()
+                                                 .replace(R.id.infoFragment, ExtendedInfoFragment.newInstance())
+                                                 .commitNowAllowingStateLoss();
                         requireActivity().getWindow().setStatusBarColor(defaultColor);
                         binding.infoFragment.setAlpha(1);
                         isUp = true;
@@ -139,7 +124,10 @@ public class ExtendedFragment extends Fragment {
                 } else if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
                     if (isUp) {
                         // show the controller fragment
-                        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedViewPagerFragment.newInstance()).commitNowAllowingStateLoss();
+                        getChildFragmentManager().beginTransaction()
+                                                 .replace(R.id.infoFragment, ControllerFragment.newInstance())
+                                                 .replace(R.id.layoutFragment, ExtendedViewPagerFragment.newInstance())
+                                                 .commitNow();
                         requireActivity().getWindow().setStatusBarColor(requireActivity().getColor(R.color.colorPrimaryDark));
                         binding.infoFragment.setAlpha(1);
                         isUp = false;
@@ -162,49 +150,43 @@ public class ExtendedFragment extends Fragment {
             }
         });
 
-        QueueUtil.observeQueue(getViewLifecycleOwner(), queue -> ((MainActivity)requireActivity()).setBottomSheetHidden(queue.size() == 0));
-
-        getChildFragmentManager().beginTransaction().replace(R.id.infoFragment, ControllerFragment.newInstance()).replace(R.id.layoutFragment, ExtendedViewPagerFragment.newInstance()).commit();
+        getChildFragmentManager().beginTransaction()
+                                 .replace(R.id.infoFragment, ControllerFragment.newInstance())
+                                 .replace(R.id.layoutFragment, ExtendedViewPagerFragment.newInstance())
+                                 .commit();
     }
 
     @Override
     public void onResume() {
         super.onResume();
         if (shouldSeek) {
-            setPlayback(controller.getPlaybackState());
             handler.post(runnable);
         }
     }
 
-    @SuppressWarnings("ConstantConditions")
-    private void setPlayback(PlaybackState state) {
-        if (state == null) {
-            binding.btnPlayPause.setImageResource(R.drawable.play);
-            binding.btnRepeat.setImageResource(R.drawable.repeat_all);
-        } else {
-            if (state.getState() == PlaybackState.STATE_STOPPED) {
-                ((MainActivity)requireActivity()).setBottomSheetHidden(true);
-                QueueUtil.setIsChanging(true);
-                QueueUtil.setQueue(new ArrayList<>());
-                return;
-            }
-            currentPosition = state.getPosition();
-            if (state.getState() == PlaybackState.STATE_PLAYING) {
-                binding.btnPlayPause.setImageResource(R.drawable.pause);
-                updateSeekBar();
-                shouldSeek = true;
-            } else {
-                binding.btnPlayPause.setImageResource(R.drawable.play);
-                shouldSeek = false;
-            }
-            binding.btnRepeat.setImageResource(state.getExtras().getBoolean(Constants.LOOP_EXTRA) ? R.drawable.repeat_one : R.drawable.repeat_all);
+    private void setPlayback(@NonNull PlaybackStateCompat state) {
+        isPlaying = state.getState() == PlaybackStateCompat.STATE_PLAYING;
+        if (state.getState() == PlaybackStateCompat.STATE_STOPPED || state.getState() == PlaybackStateCompat.STATE_NONE) {
+            ((MainActivity)requireActivity()).setBottomSheetHidden(true);
+            return;
         }
+        ((MainActivity)requireActivity()).setBottomSheetHidden(false);
+        currentPosition = state.getPosition();
+        if (isPlaying) {
+            binding.btnPlayPause.setImageResource(R.drawable.pause);
+            updateSeekBar();
+            shouldSeek = true;
+        } else {
+            binding.btnPlayPause.setImageResource(R.drawable.play);
+            shouldSeek = false;
+        }
+        binding.btnRepeat.setImageResource(isRepeating ? R.drawable.repeat_one : R.drawable.repeat_all);
     }
 
     @SuppressWarnings("ConstantConditions")
-    private void setMetadata(@Nullable MediaMetadata metadata) {
+    private void setMetadata(@Nullable MediaMetadataCompat metadata) {
         if (metadata != null) {
-            MediaDescription description = metadata.getDescription();
+            MediaDescriptionCompat description = metadata.getDescription();
             if (description != null) {
                 binding.tvSongTitle.setText(description.getTitle());
                 binding.tvSongArtist.setText(description.getSubtitle());
@@ -223,8 +205,7 @@ public class ExtendedFragment extends Fragment {
                             if (isUp) {
                                 requireActivity().getWindow().setStatusBarColor(defaultColor);
                             }
-                            GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{defaultColor, Color.BLACK});
-                            binding.extendedFragment.setBackground(gradientDrawable);
+                            binding.extendedFragment.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{defaultColor, Color.BLACK}));
                             ColorUtil.setColor(defaultColor);
                         });
                     } else {
@@ -232,8 +213,7 @@ public class ExtendedFragment extends Fragment {
                         if (isUp) {
                             requireActivity().getWindow().setStatusBarColor(defaultColor);
                         }
-                        GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{defaultColor, Color.BLACK});
-                        binding.extendedFragment.setBackground(gradientDrawable);
+                        binding.extendedFragment.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{defaultColor, Color.BLACK}));
                         ColorUtil.setColor(defaultColor);
                     }
                 });
@@ -252,14 +232,13 @@ public class ExtendedFragment extends Fragment {
     /**
      * This function updates the progress bar and the elapsed time text.
      */
-    @SuppressWarnings("ConstantConditions")
     private void updateSeekBar() {
         handler.postDelayed(runnable = () -> {
             binding.sbSongProgress.setProgress((int)((currentPosition / duration) * 1000));
             binding.tvTimeElapsed.setText(Utilities.formatTime((long)currentPosition));
             currentPosition += 500;
             handler.removeCallbacks(runnable);
-            if (controller.getPlaybackState().getState() == PlaybackState.STATE_PLAYING) {
+            if (isPlaying) {
                 updateSeekBar();
             }
         }, 500);
@@ -269,13 +248,5 @@ public class ExtendedFragment extends Fragment {
     public void onPause() {
         super.onPause();
         handler.removeCallbacks(runnable);
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        if (callback != null) {
-            controller.unregisterCallback(callback);
-        }
     }
 }

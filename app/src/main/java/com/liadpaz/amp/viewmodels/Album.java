@@ -9,11 +9,13 @@ import java.util.ArrayList;
 
 public class Album implements Parcelable {
     public static final Creator<Album> CREATOR = new Creator<Album>() {
+        @NonNull
         @Override
-        public Album createFromParcel(Parcel in) {
+        public Album createFromParcel(@NonNull Parcel in) {
             return new Album(in);
         }
 
+        @NonNull
         @Override
         public Album[] newArray(int size) {
             return new Album[size];

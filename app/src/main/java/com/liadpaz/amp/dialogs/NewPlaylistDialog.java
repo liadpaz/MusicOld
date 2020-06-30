@@ -31,6 +31,7 @@ public class NewPlaylistDialog extends DialogFragment {
         this.songs = songs;
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         DialogNewPlaylistBinding binding = DialogNewPlaylistBinding.inflate(inflater, container, false);

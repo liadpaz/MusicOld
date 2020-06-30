@@ -64,7 +64,7 @@ public class SearchSongListAdapter extends ListAdapter<Song, SearchSongListAdapt
             binding.tvSongName.setText(song.title);
             binding.tvSongArtist.setText(Utilities.joinArtists(song.artists));
 
-            Glide.with(context).load(Utilities.getCoverUri(song)).into(binding.ivSongCover);
+            Glide.with(context).load(song.getCoverUri()).into(binding.ivSongCover);
         }
     }
 

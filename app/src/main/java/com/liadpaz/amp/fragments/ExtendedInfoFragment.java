@@ -21,7 +21,6 @@ import com.liadpaz.amp.dialogs.NewPlaylistDialog;
 import com.liadpaz.amp.dialogs.PlaylistsDialog;
 import com.liadpaz.amp.livedatautils.ColorUtil;
 import com.liadpaz.amp.livedatautils.QueueUtil;
-import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.Utilities;
 
 public class ExtendedInfoFragment extends Fragment {
@@ -57,7 +56,8 @@ public class ExtendedInfoFragment extends Fragment {
             popupMenu.setOnMenuItemClickListener(item -> {
                 switch (item.getItemId()) {
                     case R.id.menuQueueClear: {
-                        MainActivity.getController().sendCommand(Constants.ACTION_RESET, null, null);
+//                        MainActivity.getController().sendCommand(Constants.ACTION_RESET, null, null);
+                        // TODO: make clear queue
                         break;
                     }
 

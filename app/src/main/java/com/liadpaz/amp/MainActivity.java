@@ -1,10 +1,7 @@
 package com.liadpaz.amp;
 
 import android.app.SearchManager;
-import android.content.ComponentName;
 import android.content.Intent;
-import android.media.browse.MediaBrowser;
-import android.media.session.MediaController;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.Menu;
@@ -25,7 +22,6 @@ import com.liadpaz.amp.fragments.ExtendedFragment;
 import com.liadpaz.amp.fragments.MainViewPagerFragment;
 import com.liadpaz.amp.fragments.SearchFragment;
 import com.liadpaz.amp.livedatautils.SongsUtil;
-import com.liadpaz.amp.service.MediaPlayerService;
 import com.liadpaz.amp.utils.Constants;
 import com.liadpaz.amp.utils.LocalFiles;
 import com.liadpaz.amp.viewmodels.Song;
@@ -38,12 +34,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "AmpApp.MainActivity";
 
     private static final int REQUEST_SETTINGS = 525;
-    private static MediaController controller;
     public ActivityMainBinding binding;
     private MenuItem searchItem;
-    private MediaBrowser mediaBrowser;
-
-    public static MediaController getController() {return controller;}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,25 +44,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView((binding = ActivityMainBinding.inflate(getLayoutInflater())).getRoot());
         setSupportActionBar(binding.toolBarMain);
 
-        mediaBrowser = new MediaBrowser(getApplicationContext(), new ComponentName(getApplicationContext(), MediaPlayerService.class), new MediaBrowser.ConnectionCallback() {
-            @Override
-            public void onConnected() {
-                controller = new MediaController(getApplicationContext(), mediaBrowser.getSessionToken());
-                initializeView();
-            }
-        }, null);
-
-        startService();
-    }
-
-    private void startService() {
-        startService(new Intent(getApplicationContext(), MediaPlayerService.class));
-        if (!mediaBrowser.isConnected()) {
-            mediaBrowser.connect();
-        }
-    }
-
-    private void initializeView() {
         getSupportFragmentManager().beginTransaction().replace(R.id.mainFragment, MainViewPagerFragment.newInstance()).replace(R.id.extendedFragment, ExtendedFragment.newInstance()).commitNowAllowingStateLoss();
         if (getIntent() != null) {
             if (getIntent().hasExtra(Constants.PREFERENCES_SHOW_CURRENT) && LocalFiles.getShowCurrent()) {
@@ -154,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void query(@NonNull String queryString) {
         String loweredQueryString = queryString.toLowerCase();
-        List<Song> queriedSongs = SongsUtil.getSongs().parallelStream().filter(song -> song.title.toLowerCase().contains(loweredQueryString) || song.artists.stream().anyMatch(artist -> artist.toLowerCase().contains(loweredQueryString)) || song.album.toLowerCase().contains(loweredQueryString)).collect(Collectors.toCollection(ArrayList::new));
+        List<Song> queriedSongs = SongsUtil.getSongs().parallelStream().filter(song -> song.isMatchingQuery(loweredQueryString)).collect(Collectors.toCollection(ArrayList::new));
         if (queriedSongs.size() == 0) {
             queriedSongs.add(null);
         }
@@ -186,11 +159,5 @@ public class MainActivity extends AppCompatActivity {
         } else {
             super.onBackPressed();
         }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mediaBrowser.disconnect();
     }
 }

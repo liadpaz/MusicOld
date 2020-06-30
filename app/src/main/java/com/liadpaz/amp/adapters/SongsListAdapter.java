@@ -18,6 +18,7 @@ import com.liadpaz.amp.databinding.ItemSongBinding;
 import com.liadpaz.amp.databinding.ItemSongShuffleBinding;
 import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
 import com.liadpaz.amp.livedatautils.QueueUtil;
+import com.liadpaz.amp.service.ServiceConnector;
 import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Song;
 
@@ -56,6 +57,7 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
             return new SongViewHolder(ItemSongBinding.inflate(LayoutInflater.from(context), parent, false), onShuffleClickListener, onMoreClickListener, (v, position) -> {
                 QueueUtil.setQueue(new ArrayList<>(getCurrentList()));
                 QueueUtil.setPosition(position);
+                ServiceConnector.playFromQueue();
             });
         }
         return new SongViewHolder(ItemSongShuffleBinding.inflate(LayoutInflater.from(context), parent, false), onShuffleClickListener, onMoreClickListener, (v, position) -> {});
@@ -71,7 +73,7 @@ public class SongsListAdapter extends ListAdapter<Song, SongsListAdapter.SongVie
             binding.tvSongName.setText(song.title);
             binding.tvSongArtist.setText(Utilities.joinArtists(song.artists));
 
-            Glide.with(context).load(Utilities.getCoverUri(song)).into(binding.ivSongCover);
+            Glide.with(context).load(song.getCoverUri()).into(binding.ivSongCover);
         }
     }
 

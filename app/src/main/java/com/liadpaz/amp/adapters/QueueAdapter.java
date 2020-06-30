@@ -2,7 +2,6 @@ package com.liadpaz.amp.adapters;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
@@ -16,12 +15,14 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.ItemQueueSongBinding;
 import com.liadpaz.amp.interfaces.ItemTouchHelperAdapter;
 import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
 import com.liadpaz.amp.interfaces.OnStartDragListener;
 import com.liadpaz.amp.livedatautils.QueueUtil;
+import com.liadpaz.amp.service.ServiceConnector;
 import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Song;
 
@@ -32,15 +33,15 @@ import java.util.List;
 public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder> implements ItemTouchHelperAdapter {
     private static final String TAG = "AmpApp.QueueAdapter";
 
-    private ArrayList<Song> songs;
-
     private OnStartDragListener onStartDragListener;
     private OnRecyclerItemClickListener onMoreClickListener;
     private ItemTouchHelperAdapter itemTouchHelperAdapter;
 
-    private Context context;
+    private ConcatenatingMediaSource mediaSource;
 
-    private int queuePosition;
+    private List<Song> songs = new ArrayList<>();
+
+    private Context context;
 
     public QueueAdapter(@NonNull Fragment fragment, @NonNull OnRecyclerItemClickListener onMoreClickListener, @NonNull ItemTouchHelperAdapter itemTouchHelperAdapter) {
         super(new DiffUtil.ItemCallback<Song>() {
@@ -54,7 +55,7 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
         this.onMoreClickListener = onMoreClickListener;
         this.itemTouchHelperAdapter = itemTouchHelperAdapter;
 
-        QueueUtil.observePosition(fragment, queuePosition -> this.queuePosition = queuePosition);
+        ServiceConnector.getInstance().mediaSource.observeForever(mediaSource -> this.mediaSource = mediaSource);
     }
 
     public void setOnStartDragListener(@NonNull OnStartDragListener onStartDragListener) {
@@ -64,7 +65,7 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
     @NonNull
     @Override
     public SongViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new QueueAdapter.SongViewHolder(ItemQueueSongBinding.inflate(LayoutInflater.from(context), parent, false), (v, position) -> QueueUtil.setPosition(position), (v, position) -> onMoreClickListener.onItemClick(v, position));
+        return new QueueAdapter.SongViewHolder(ItemQueueSongBinding.inflate(LayoutInflater.from(context), parent, false), (v, position) -> ServiceConnector.getInstance().transportControls.skipToQueueItem(position), (v, position) -> onMoreClickListener.onItemClick(v, position));
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -76,7 +77,8 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
 
         binding.tvSongTitle.setText(song.title);
         binding.tvSongArtist.setText(Utilities.joinArtists(song.artists));
-        Glide.with(context).load(Utilities.getCoverUri(song)).placeholder(R.drawable.song).into(binding.ivSongCover);
+
+        Glide.with(context).load(song.getCoverUri()).placeholder(R.drawable.song).into(binding.ivSongCover);
 
         binding.btnDrag.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
@@ -87,29 +89,21 @@ public class QueueAdapter extends ListAdapter<Song, QueueAdapter.SongViewHolder>
     }
 
     public void onItemDismiss(int position) {
-        Toast.makeText(context, context.getString(R.string.queue_removed, getItem(position).title), Toast.LENGTH_SHORT).show();
         songs.remove(position);
-        if (queuePosition > position) {
-            QueueUtil.setIsChanging(true);
-            QueueUtil.addToPosition(-1);
-        }
+        QueueUtil.setIsChanging(true);
+        QueueUtil.setQueue(songs);
+        mediaSource.removeMediaSource(position);
         itemTouchHelperAdapter.onItemDismiss(position);
         notifyItemRemoved(position);
+        Toast.makeText(context, context.getString(R.string.queue_removed, getItem(position).title), Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onItemMove(final int fromPosition, final int toPosition) {
-        QueueUtil.setIsChanging(true);
         Collections.swap(songs, fromPosition, toPosition);
-        Log.d(TAG, "onItemMove() called with: currentQueuePosition = [" + queuePosition + "], fromPosition = [" + fromPosition + "], toPosition = [" + toPosition + "]");
-        if (queuePosition == fromPosition && queuePosition != toPosition) {
-            Log.d(TAG, "onItemMove: queuePosition == fromPosition");
-            QueueUtil.setPosition(toPosition);
-        } else if (queuePosition == toPosition && queuePosition > fromPosition) {
-            QueueUtil.addToPosition(-1);
-        } else if (queuePosition == toPosition && queuePosition < fromPosition) {
-            QueueUtil.addToPosition(1);
-        }
+        QueueUtil.setIsChanging(true);
+        QueueUtil.setQueue(songs);
+        mediaSource.moveMediaSource(fromPosition, toPosition);
         itemTouchHelperAdapter.onItemMove(fromPosition, toPosition);
         notifyItemMoved(fromPosition, toPosition);
     }

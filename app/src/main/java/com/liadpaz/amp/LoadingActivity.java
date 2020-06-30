@@ -1,16 +1,20 @@
 package com.liadpaz.amp;
 
 import android.Manifest;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.StrictMode;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
-import com.liadpaz.amp.notification.MediaNotification;
+import com.liadpaz.amp.service.MediaPlayerService;
+import com.liadpaz.amp.service.ServiceConnector;
 import com.liadpaz.amp.utils.LocalFiles;
 
 import java.util.concurrent.TimeUnit;
@@ -22,6 +26,7 @@ public class LoadingActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().build());
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_loading);
 
@@ -31,18 +36,15 @@ public class LoadingActivity extends AppCompatActivity {
             new Handler().postDelayed(this::initializeView, TimeUnit.SECONDS.toMillis(1));
         }
 
-        //        QueueUtil.observeQueue(this, queue -> {
-        //            if (queue.size() == 0) {
-        //                new Handler().postDelayed(this::initializeView, TimeUnit.SECONDS.toMillis(1));
-        //            }
-        //        });
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
-        MediaNotification.init(this);
+        ServiceConnector.getInstance(getApplicationContext(), new ComponentName(getApplicationContext(), MediaPlayerService.class));
+
         LocalFiles.init(this);
     }
 
     private void initializeView() {
-        startActivity(new Intent(this, MainActivity.class));
+        startActivity(new Intent(getApplicationContext(), MainActivity.class));
         overridePendingTransition(0, 0);
         finish();
         overridePendingTransition(0, 0);

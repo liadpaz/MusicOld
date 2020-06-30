@@ -9,10 +9,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.ArtistsListAdapter;
 import com.liadpaz.amp.databinding.FragmentArtistListBinding;
+import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.viewmodels.Artist;
 import com.liadpaz.amp.viewmodels.Song;
 

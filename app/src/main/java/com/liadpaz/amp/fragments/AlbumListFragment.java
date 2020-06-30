@@ -11,10 +11,10 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.AlbumsListAdapter;
 import com.liadpaz.amp.databinding.FragmentAlbumListBinding;
+import com.liadpaz.amp.livedatautils.SongsUtil;
 import com.liadpaz.amp.viewmodels.Album;
 import com.liadpaz.amp.viewmodels.Song;
 

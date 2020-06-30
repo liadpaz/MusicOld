@@ -11,11 +11,13 @@ import java.util.Arrays;
 
 public class Playlist implements Parcelable {
     public static final Creator<Playlist> CREATOR = new Creator<Playlist>() {
+        @NonNull
         @Override
-        public Playlist createFromParcel(Parcel in) {
+        public Playlist createFromParcel(@NonNull Parcel in) {
             return new Playlist(in);
         }
 
+        @NonNull
         @Override
         public Playlist[] newArray(int size) {
             return new Playlist[size];

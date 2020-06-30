@@ -17,7 +17,6 @@ import com.liadpaz.amp.R;
 import com.liadpaz.amp.adapters.SearchSongListAdapter;
 import com.liadpaz.amp.databinding.FragmentSearchBinding;
 import com.liadpaz.amp.dialogs.PlaylistsDialog;
-import com.liadpaz.amp.livedatautils.QueueUtil;
 import com.liadpaz.amp.viewmodels.Song;
 
 import java.util.List;
@@ -54,12 +53,12 @@ public class SearchFragment extends Fragment {
             popupMenu.setOnMenuItemClickListener(item -> {
                 switch (item.getItemId()) {
                     case R.id.menuPlayNext: {
-                        QueueUtil.addToNext(adapter.getCurrentList().get(position));
+//                        QueueUtil.addToNext(adapter.getCurrentList().get(position));
                         break;
                     }
 
                     case R.id.menuAddQueue: {
-                        QueueUtil.add(adapter.getCurrentList().get(position));
+//                        QueueUtil.add(adapter.getCurrentList().get(position));
                         break;
                     }
 

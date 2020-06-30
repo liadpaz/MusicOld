@@ -52,7 +52,7 @@ public class LocalFiles {
 
         QueueUtil.observeQueue(songs -> {
             if (!isFirstTimeQueue.getAndSet(false)) {
-                ArrayList<Long> songsIdsList = songs.stream().map(song -> song.songId).collect(Collectors.toCollection(ArrayList::new));
+                ArrayList<Long> songsIdsList = songs.stream().map(song -> song.id).collect(Collectors.toCollection(ArrayList::new));
                 musicSharedPreferences.edit().putString(Constants.PREFERENCES_QUEUE, new Gson().toJson(songsIdsList)).apply();
             }
         });
@@ -69,7 +69,7 @@ public class LocalFiles {
     private static void loadQueue(@NonNull ContentResolver contentResolver) {
         List<Long> songsIds = new Gson().fromJson(musicSharedPreferences.getString(Constants.PREFERENCES_QUEUE, "[]"), new TypeToken<ArrayList<Long>>() {}.getType());
         List<Song> songs = listSongs(contentResolver, SORT_DEFAULT, songsIds);
-        Collections.sort(songs, Comparator.comparing(song -> songsIds.indexOf(song.songId)));
+        Collections.sort(songs, Comparator.comparing(song -> songsIds.indexOf(song.id)));
         QueueUtil.setQueue(songs);
         QueueUtil.setPosition(musicSharedPreferences.getInt(Constants.PREFERENCES_QUEUE_POSITION, -1));
     }
@@ -154,7 +154,6 @@ public class LocalFiles {
                 //add songs to list
                 do {
                     long id = musicCursor.getLong(idColumn);
-
                     if (songsIds == null || songsIds.contains(id)) {
                         songs.add(new Song(id, musicCursor.getString(titleColumn), musicCursor.getString(artistColumn), musicCursor.getString(albumColumn), musicCursor.getString(albumIdColumn)));
                     }
@@ -172,7 +171,7 @@ public class LocalFiles {
         playlistsSharedPreferences.getAll().forEach((name, songsIds) -> {
             ArrayList<Long> songsIdsList = new Gson().fromJson(songsIds.toString(), new TypeToken<ArrayList<Long>>() {}.getType());
             ArrayList<Song> songs = listSongs(contentResolver, SORT_DEFAULT, songsIdsList);
-            Collections.sort(songs, Comparator.comparing(song -> songsIdsList.indexOf(song.songId)));
+            Collections.sort(songs, Comparator.comparing(song -> songsIdsList.indexOf(song.id)));
             playlists.add(new Playlist(name, songs));
         });
         Log.d(TAG, "getPlaylists: " + (System.currentTimeMillis() - start));
@@ -182,7 +181,7 @@ public class LocalFiles {
     public static void setPlaylists(@NonNull Queue<Playlist> playlists) {
         SharedPreferences.Editor editor = playlistsSharedPreferences.edit().clear();
         for (Playlist playlist : playlists) {
-            editor.putString(playlist.name, new Gson().toJson((Object)playlist.songs.stream().map(song -> song.songId).collect(Collectors.toCollection(ArrayList::new))));
+            editor.putString(playlist.name, new Gson().toJson((Object)playlist.songs.stream().map(song -> song.id).collect(Collectors.toCollection(ArrayList::new))));
         }
         editor.apply();
     }

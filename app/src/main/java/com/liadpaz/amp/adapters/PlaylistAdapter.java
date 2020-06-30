@@ -22,6 +22,7 @@ import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
 import com.liadpaz.amp.interfaces.OnStartDragListener;
 import com.liadpaz.amp.livedatautils.PlaylistsUtil;
 import com.liadpaz.amp.livedatautils.QueueUtil;
+import com.liadpaz.amp.service.ServiceConnector;
 import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Song;
 
@@ -68,6 +69,7 @@ public class PlaylistAdapter extends ListAdapter<Song, PlaylistAdapter.SongViewH
             return new SongViewHolder(ItemPlaylistSongBinding.inflate(LayoutInflater.from(context), parent, false), (v, position) -> {
                 QueueUtil.setQueue(new ArrayList<>(songs));
                 QueueUtil.setPosition(position - 1);
+                ServiceConnector.playFromQueue();
             }, onShuffleClickListener);
         }
         return new SongViewHolder(ItemSongShuffleBinding.inflate(LayoutInflater.from(context), parent, false), (v, position) -> {}, onShuffleClickListener);
@@ -84,7 +86,7 @@ public class PlaylistAdapter extends ListAdapter<Song, PlaylistAdapter.SongViewH
             binding.tvSongName.setText(song.title);
             binding.tvSongArtist.setText(Utilities.joinArtists(song.artists));
 
-            Glide.with(context).load(Utilities.getCoverUri(song)).into(binding.ivSongCover);
+            Glide.with(context).load(song.getCoverUri()).into(binding.ivSongCover);
 
             binding.btnMore.setOnClickListener(v -> onMoreClickListener.onItemClick(v, position - 1));
             binding.btnDrag.setOnTouchListener((v, event) -> {

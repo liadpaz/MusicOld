@@ -13,7 +13,6 @@ import com.bumptech.glide.Glide;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.ItemPlaylistBinding;
 import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
-import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Playlist;
 
 import java.util.function.Function;
@@ -53,7 +52,7 @@ public class PlaylistsAdapter extends ListAdapter<Playlist, PlaylistsAdapter.Pla
 
         holder.binding.tvPlaylistName.setText(playlist.name);
         if (playlist.songs.size() != 0) {
-            Glide.with(context).load(Utilities.getCoverUri(playlist.songs.get(0))).placeholder(R.drawable.song).into(holder.binding.ivPlaylistCover);
+            Glide.with(context).load(playlist.songs.get(0).getCoverUri()).placeholder(R.drawable.song).into(holder.binding.ivPlaylistCover);
         }
     }
 

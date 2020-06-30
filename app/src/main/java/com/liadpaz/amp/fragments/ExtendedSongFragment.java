@@ -13,7 +13,6 @@ import com.bumptech.glide.Glide;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.FragmentExtendedSongBinding;
 import com.liadpaz.amp.livedatautils.QueueUtil;
-import com.liadpaz.amp.utils.Utilities;
 
 public class ExtendedSongFragment extends Fragment {
     private static final String TAG = "AmpApp.ExtendedSongFragment";
@@ -34,6 +33,6 @@ public class ExtendedSongFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        Glide.with(this).load(Utilities.getCoverUri(QueueUtil.getQueue().get(position))).placeholder(R.drawable.song).into(binding.ivSongCover);
+        Glide.with(this).load(QueueUtil.getQueue().get(position).getCoverUri()).placeholder(R.drawable.song).into(binding.ivSongCover);
     }
 }

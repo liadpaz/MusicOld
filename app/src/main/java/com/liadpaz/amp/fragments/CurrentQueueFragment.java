@@ -22,7 +22,7 @@ import com.liadpaz.amp.interfaces.ItemTouchHelperAdapter;
 import com.liadpaz.amp.livedatautils.QueueUtil;
 
 public class CurrentQueueFragment extends Fragment {
-    private static final String TAG = "QUEUE_FRAGMENT";
+    private static final String TAG = "AmpApp.CurrentQueueFragment";
 
     private boolean isChanging = false;
 
@@ -42,27 +42,27 @@ public class CurrentQueueFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        adapter = new QueueAdapter(this, (v, position) -> {
-            PopupMenu popupMenu = new PopupMenu(requireContext(), v);
-            popupMenu.inflate(R.menu.menu_queue_song);
-            popupMenu.setOnMenuItemClickListener(item -> {
-                switch (item.getItemId()) {
-                    case R.id.menuQueueRemove: {
-                        if (position != QueueUtil.getPosition()) {
-                            adapter.onItemDismiss(position);
+        adapter = new QueueAdapter(this, (v, position) -> new PopupMenu(requireContext(), v) {
+            {
+                inflate(R.menu.menu_queue_song);
+                setOnMenuItemClickListener(item -> {
+                    switch (item.getItemId()) {
+                        case R.id.menuQueueRemove: {
+                            if (position != QueueUtil.getPosition()) {
+                                adapter.onItemDismiss(position);
+                            }
+                            break;
                         }
-                        break;
-                    }
 
-                    case R.id.menuQueueAddPlaylist: {
-                        new PlaylistsDialog(adapter.getCurrentList().get(position)).show(getChildFragmentManager(), null);
-                        break;
+                        case R.id.menuQueueAddPlaylist: {
+                            new PlaylistsDialog(adapter.getCurrentList().get(position)).show(getChildFragmentManager(), null);
+                            break;
+                        }
                     }
-                }
-                return true;
-            });
-            popupMenu.show();
-        }, new ItemTouchHelperAdapter() {
+                    return true;
+                });
+            }
+        }.show(), new ItemTouchHelperAdapter() {
             @Override
             public void onItemMove(int fromPosition, int toPosition) {
                 QueueUtil.setQueue(adapter.getCurrentList());
@@ -72,9 +72,11 @@ public class CurrentQueueFragment extends Fragment {
             public void onItemDismiss(int position) {
                 QueueUtil.setQueue(adapter.getCurrentList());
             }
-        });
+        }) {{
+            binding.rvQueue.setAdapter(this);
+        }};
 
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.DOWN | ItemTouchHelper.UP, ItemTouchHelper.START | ItemTouchHelper.END) {
+        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.DOWN | ItemTouchHelper.UP, ItemTouchHelper.START | ItemTouchHelper.END) {
             @Override
             public int getSwipeDirs(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
                 return viewHolder.getAdapterPosition() == QueueUtil.getPosition() ? 0 : (ItemTouchHelper.START | ItemTouchHelper.END);
@@ -90,13 +92,12 @@ public class CurrentQueueFragment extends Fragment {
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 adapter.onItemDismiss(viewHolder.getAdapterPosition());
             }
-        });
+        }) {{
+            attachToRecyclerView(binding.rvQueue);
+            adapter.setOnStartDragListener(this::startDrag);
+        }};
         binding.rvQueue.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvQueue.addItemDecoration(new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));
-        binding.rvQueue.setAdapter(adapter);
-        itemTouchHelper.attachToRecyclerView(binding.rvQueue);
-
-        adapter.setOnStartDragListener(itemTouchHelper::startDrag);
 
         binding.rvQueue.scrollToPosition(QueueUtil.getPosition());
 
@@ -107,7 +108,5 @@ public class CurrentQueueFragment extends Fragment {
                 isChanging = false;
             }
         });
-
-        registerForContextMenu(binding.rvQueue);
     }
 }

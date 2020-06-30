@@ -1,5 +1,6 @@
 package com.liadpaz.amp.fragments;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,6 +26,8 @@ import com.liadpaz.amp.interfaces.ItemTouchHelperAdapter;
 import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
 import com.liadpaz.amp.livedatautils.PlaylistsUtil;
 import com.liadpaz.amp.livedatautils.QueueUtil;
+import com.liadpaz.amp.service.ServiceConnector;
+import com.liadpaz.amp.utils.AmpPlaybackPreparer;
 import com.liadpaz.amp.viewmodels.Playlist;
 import com.liadpaz.amp.viewmodels.Song;
 
@@ -55,16 +58,15 @@ public class PlaylistFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         OnRecyclerItemClickListener onMoreClicked = (v, position) -> new PopupMenu(requireContext(), v) {{
             inflate(playlist.name.equals(getString(R.string.playlist_recently_added)) ? R.menu.menu_playlist_recently : R.menu.menu_playlist);
-
             setOnMenuItemClickListener(item -> {
                 switch (item.getItemId()) {
                     case R.id.menuPlayNext: {
-                        QueueUtil.addToNext(adapter.getCurrentList().get(position));
+                        AmpPlaybackPreparer.addToQueueNext(adapter.getCurrentList().get(position));
                         break;
                     }
 
                     case R.id.menuAddQueue: {
-                        QueueUtil.add(adapter.getCurrentList().get(position));
+                        AmpPlaybackPreparer.addToQueue(adapter.getCurrentList().get(position));
                         break;
                     }
 
@@ -91,6 +93,7 @@ public class PlaylistFragment extends Fragment {
                 Collections.shuffle(queue);
                 QueueUtil.setQueue(queue);
                 QueueUtil.setPosition(0);
+                ServiceConnector.playFromQueue();
             }
         };
 
@@ -109,7 +112,8 @@ public class PlaylistFragment extends Fragment {
                 @Override
                 public void onItemDismiss(int position) {}
             });
-            ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.Callback() {
+
+            new ItemTouchHelper(new ItemTouchHelper.Callback() {
                 @Override
                 public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
                     return makeMovementFlags(viewHolder.getAdapterPosition() == 0 ? 0 : ItemTouchHelper.DOWN | ItemTouchHelper.UP, 0);
@@ -124,10 +128,22 @@ public class PlaylistFragment extends Fragment {
 
                 @Override
                 public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {}
-            });
-            itemTouchHelper.attachToRecyclerView(binding.rvSongs);
 
-            ((PlaylistAdapter)adapter).setOnStartDragListener(itemTouchHelper::startDrag);
+                @Override
+                public void onSelectedChanged(@Nullable RecyclerView.ViewHolder viewHolder, int actionState) {
+                    if (actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
+                        viewHolder.itemView.setBackgroundColor(Color.BLACK);
+                    }
+                }
+
+                @Override
+                public void clearView(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
+                    viewHolder.itemView.setBackground(null);
+                }
+            }) {{
+                attachToRecyclerView(binding.rvSongs);
+                ((PlaylistAdapter)adapter).setOnStartDragListener(this::startDrag);
+            }};
 
             binding.btnDelete.setOnClickListener(v -> new MaterialAlertDialogBuilder(requireContext()).setTitle(R.string.dialog_delete_playlist_title).setMessage(R.string.dialog_delete_playlist_content).setPositiveButton(R.string.dialog_yes, ((dialog, which) -> {
                 PlaylistsUtil.removePlaylist(playlist.name);

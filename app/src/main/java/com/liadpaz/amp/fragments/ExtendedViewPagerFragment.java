@@ -1,5 +1,6 @@
 package com.liadpaz.amp.fragments;
 
+import android.content.ComponentName;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,8 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.liadpaz.amp.adapters.ExtendedViewPagerAdapter;
 import com.liadpaz.amp.databinding.FragmentExtendedViewPagerBinding;
 import com.liadpaz.amp.livedatautils.QueueUtil;
+import com.liadpaz.amp.service.MediaPlayerService;
+import com.liadpaz.amp.service.ServiceConnector;
 
 public class ExtendedViewPagerFragment extends Fragment {
     private static final String TAG = "AmpApp.ExtendedViewPagerFragment";
@@ -57,7 +60,7 @@ public class ExtendedViewPagerFragment extends Fragment {
                 if (firstTime) {
                     firstTime = false;
                 } else if (binding.extendedViewPager.getCurrentItem() != QueueUtil.getPosition()) {
-                    QueueUtil.setPosition(position);
+                    ServiceConnector.getInstance(requireContext(), new ComponentName(requireContext(), MediaPlayerService.class)).transportControls.skipToQueueItem(position);
                 }
             }
         });

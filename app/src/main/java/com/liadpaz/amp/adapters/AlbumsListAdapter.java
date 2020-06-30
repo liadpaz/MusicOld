@@ -13,7 +13,6 @@ import com.bumptech.glide.Glide;
 import com.liadpaz.amp.R;
 import com.liadpaz.amp.databinding.ItemAlbumBinding;
 import com.liadpaz.amp.interfaces.OnRecyclerItemClickListener;
-import com.liadpaz.amp.utils.Utilities;
 import com.liadpaz.amp.viewmodels.Album;
 
 public class AlbumsListAdapter extends ListAdapter<Album, AlbumsListAdapter.AlbumViewHolder> {
@@ -43,7 +42,6 @@ public class AlbumsListAdapter extends ListAdapter<Album, AlbumsListAdapter.Albu
         return new AlbumViewHolder(ItemAlbumBinding.inflate(LayoutInflater.from(context), parent, false), onItemClickListener);
     }
 
-    @SuppressWarnings("ConstantConditions")
     @Override
     public void onBindViewHolder(@NonNull AlbumViewHolder holder, int position) {
         Album album = getItem(position);
@@ -51,7 +49,7 @@ public class AlbumsListAdapter extends ListAdapter<Album, AlbumsListAdapter.Albu
         holder.binding.tvAlbumArtist.setText(album.artist);
         holder.binding.tvAlbumName.setText(album.name);
 
-        Glide.with(context).load(Utilities.getCoverUri(album.songs.get(0))).placeholder(R.drawable.song).into(holder.binding.ivAlbumCover);
+        Glide.with(context).load(album.songs.get(0).getCoverUri()).placeholder(R.drawable.song).into(holder.binding.ivAlbumCover);
     }
 
 

@@ -10,6 +10,7 @@ import com.liadpaz.amp.fragments.AlbumListFragment;
 import com.liadpaz.amp.fragments.ArtistListFragment;
 import com.liadpaz.amp.fragments.PlaylistsFragment;
 import com.liadpaz.amp.fragments.SongsListFragment;
+import com.liadpaz.amp.livedatautils.SongsUtil;
 
 public class MainViewPagerAdapter extends FragmentStateAdapter {
 
@@ -22,7 +23,7 @@ public class MainViewPagerAdapter extends FragmentStateAdapter {
     public Fragment createFragment(int position) {
         switch (position) {
             case 0: {
-                return SongsListFragment.newInstance();
+                return SongsListFragment.newInstance(SongsUtil.getSongs());
             }
 
             case 1: {

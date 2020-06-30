@@ -74,40 +74,4 @@ public class QueueUtil {
     public static void setQueue(@NonNull List<Song> queue) {
         QueueUtil.queue.postValue(new ArrayList<>(queue));
     }
-
-    @SuppressWarnings("ConstantConditions")
-    public static void add(@NonNull Song song) {
-        ArrayList<Song> songs = queue.getValue();
-        songs.add(song);
-        queue.postValue(songs);
-        if (songs.size() == 1) {
-            queuePosition.postValue(0);
-        }
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    public static void add(@NonNull Song song, int index) {
-        ArrayList<Song> songs = new ArrayList<>(queue.getValue());
-        songs.add(index, song);
-        Log.d(TAG, "add: " + songs.size());
-        queue.postValue(songs);
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    public static void addToNext(@NonNull Song song) {
-        Log.d(TAG, "addToNext: ");
-        if (queue.getValue().size() == 0) {
-            queue.postValue(new ArrayList<Song>() {{
-                add(song);
-            }});
-            queuePosition.postValue(0);
-        } else {
-            add(song, queuePosition.getValue() + 1);
-        }
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    public static void addToPosition(int add) {
-        queuePosition.postValue(queuePosition.getValue() + add);
-    }
 }

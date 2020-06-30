@@ -1,7 +1,6 @@
 package com.liadpaz.amp.utils;
 
 import android.annotation.SuppressLint;
-import android.content.ContentUris;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -10,14 +9,11 @@ import android.net.Uri;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 
-import com.liadpaz.amp.viewmodels.Song;
-
-import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,10 +22,8 @@ public class Utilities {
     @SuppressWarnings("unused")
     private static final String TAG = "UTILITIES";
 
-    private static final Uri albumsUri = Uri.parse("content://media/external/audio/albumart");
-
     @NonNull
-    public static String joinArtists(@NonNull ArrayList<String> artists) {
+    public static String joinArtists(@NonNull List<String> artists) {
         StringBuilder joinedArtists = new StringBuilder(artists.get(0));
         for (int i = 1; i < artists.size(); i++) {
             joinedArtists.append(", ").append(artists.get(i));
@@ -48,11 +42,6 @@ public class Utilities {
         return ColorUtils.calculateLuminance(color) > 0.5;
     }
 
-    @NonNull
-    public static Uri getCoverUri(@NonNull Song song) {
-        return ContentUris.withAppendedId(albumsUri, Long.parseLong(song.albumId));
-    }
-
     /**
      * This function returns the time in a formatted string, eg. 0 millis to 0:00.
      *
@@ -69,15 +58,6 @@ public class Utilities {
             seconds.insert(0, "0");
         }
         return String.format("%s:%s", minutesTime, seconds);
-    }
-
-    @Nullable
-    public static InputStream getInputStream(@NonNull Context context, @NonNull Song song) {
-        try {
-            return context.getContentResolver().openInputStream(getCoverUri(song));
-        } catch (Exception ignored) {
-            return null;
-        }
     }
 
     @NonNull

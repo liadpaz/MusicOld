@@ -1,6 +1,7 @@
 package com.liadpaz.amp.dialogs;
 
 import android.os.Bundle;
+import android.support.v4.media.MediaMetadataCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;

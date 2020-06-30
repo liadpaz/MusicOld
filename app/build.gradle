@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 def versionMajor = 0
 def versionMinor = 4
-def versionPatch = 1
+def versionPatch = 2
 
 android {
     compileSdkVersion 29
@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId 'com.liadpaz.amp'
-        minSdkVersion 26
+        minSdkVersion 24
         targetSdkVersion 29
         versionCode versionMajor * 1000 + versionMinor * 100 + versionPatch
         versionName "${versionMajor}.${versionMinor}.${versionPatch}"
@@ -50,6 +50,10 @@ dependencies {
     implementation 'androidx.palette:palette:1.0.0'
     implementation 'com.github.bumptech.glide:glide:4.11.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.10.0'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.10.0'
+    implementation 'com.google.android.exoplayer:extension-mediasession:2.10.0'
 
     annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
 }
