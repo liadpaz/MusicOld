@@ -52,18 +52,20 @@ public final class AmpNotificationManager {
             e.printStackTrace();
         }
 
-        notificationManager = new PlayerNotificationManager(context, CHANNEL_ID, NOTIFICATION_ID, new DescriptionAdapter(mediaController), notificationListener) {{
-            setMediaSessionToken(sessionToken);
-            setSmallIcon(R.drawable.ic_launcher_foreground);
-            setBadgeIconType(NotificationCompat.BADGE_ICON_LARGE);
+        notificationManager = new PlayerNotificationManager(context, CHANNEL_ID, NOTIFICATION_ID, new DescriptionAdapter(mediaController), notificationListener) {
+            {
+                setMediaSessionToken(sessionToken);
+                setSmallIcon(R.drawable.ic_launcher_foreground);
+                setBadgeIconType(NotificationCompat.BADGE_ICON_LARGE);
 
-            setUseChronometer(false);
+                setUseChronometer(false);
 
-            setUseNavigationActionsInCompactView(true);
+                setUseNavigationActionsInCompactView(true);
 
-            setRewindIncrementMs(0);
-            setFastForwardIncrementMs(0);
-        }};
+                setRewindIncrementMs(0);
+                setFastForwardIncrementMs(0);
+            }
+        };
     }
 
     public void showNotification() {
