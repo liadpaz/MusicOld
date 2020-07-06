@@ -58,4 +58,7 @@
     <string name="dialog_delete_playlist_title">מחיקת פלייליסט</string>
     <string name="dialog_no">לא</string>
     <string name="dialog_yes">כן</string>
+    <string name="preference_stop_task_title">עצור בגרירה</string>
+    <string name="preference_stop_task_summary">עצור את האפליקציה בגרירה למעלה\\למטה של האפליקציה</string>
+    <string name="preference_general_group">הגדרות כלליות</string>
 </resources>

@@ -4,17 +4,21 @@
     android:layout_width="match_parent"
     android:layout_height="64dp"
     android:descendantFocusability="blocksDescendants"
-    android:foreground="?android:attr/selectableItemBackground">
+    android:background="?android:attr/selectableItemBackground">
 
     <ImageButton
         android:id="@+id/btnDrag"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
+        android:adjustViewBounds="true"
         android:background="@null"
         android:importantForAccessibility="no"
+        android:minWidth="42dp"
+        android:minHeight="42dp"
+        android:padding="8dp"
         android:src="@drawable/drag"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -61,11 +65,15 @@
 
     <ImageButton
         android:id="@+id/btnMore"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
+        android:adjustViewBounds="true"
         android:background="@null"
         android:contentDescription="@string/description_more"
+        android:minWidth="42dp"
+        android:minHeight="42dp"
+        android:padding="8dp"
         android:src="@drawable/more"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

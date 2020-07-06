@@ -3,33 +3,34 @@ package com.liadpaz.amp.livedatautils
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import com.liadpaz.amp.viewmodels.Song
+import com.liadpaz.amp.ui.viewmodels.Song
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.*
-import java.util.concurrent.CompletableFuture
 
 object SongsUtil {
     private val songs = MutableLiveData(ArrayList<Song>())
-    private val albums = MutableLiveData(HashMap<String, ArrayList<Song>>())
-    private val artists = MutableLiveData(HashMap<String, ArrayList<Song>>())
+    private val albumsLiveData = MutableLiveData(HashMap<String, ArrayList<Song>>())
+    private val artistsLiveData = MutableLiveData(HashMap<String, ArrayList<Song>>())
+
     fun observeSongs(lifecycleOwner: LifecycleOwner, observer: Observer<ArrayList<Song>>) {
         songs.observe(lifecycleOwner, observer)
     }
 
     fun observeAlbums(lifecycleOwner: LifecycleOwner, observer: Observer<HashMap<String, ArrayList<Song>>>) {
-        albums.observe(lifecycleOwner, observer)
+        albumsLiveData.observe(lifecycleOwner, observer)
     }
 
     fun observeArtists(lifecycleOwner: LifecycleOwner, observer: Observer<HashMap<String, ArrayList<Song>>>) {
-        artists.observe(lifecycleOwner, observer)
+        artistsLiveData.observe(lifecycleOwner, observer)
     }
 
-    fun getAlbums(): HashMap<String, ArrayList<Song>> {
-        return albums.value!!
-    }
+    val albums: HashMap<String, ArrayList<Song>>
+        get() = albumsLiveData.value!!
 
-    fun getArtists(): HashMap<String, ArrayList<Song>> {
-        return artists.value!!
-    }
+    val artists: HashMap<String, ArrayList<Song>>
+        get() = artistsLiveData.value!!
 
     @JvmStatic
     fun getSongs(): ArrayList<Song> {
@@ -39,7 +40,7 @@ object SongsUtil {
     @JvmStatic
     fun setSongs(songs: ArrayList<Song>) {
         SongsUtil.songs.postValue(songs)
-        CompletableFuture.runAsync {
+        CoroutineScope(Dispatchers.IO).launch {
             val albumsMap = HashMap<String, ArrayList<Song>>()
             for (song in songs) {
                 if (albumsMap.containsKey(song.album)) {
@@ -50,9 +51,7 @@ object SongsUtil {
                     }
                 }
             }
-            albums.postValue(albumsMap)
-        }
-        CompletableFuture.runAsync {
+            albumsLiveData.postValue(albumsMap)
             val artistsMap = HashMap<String, ArrayList<Song>>()
             for (song in songs) {
                 for (artist in song.artists) {
@@ -65,7 +64,7 @@ object SongsUtil {
                     }
                 }
             }
-            artists.postValue(artistsMap)
+            artistsLiveData.postValue(artistsMap)
         }
     }
 }

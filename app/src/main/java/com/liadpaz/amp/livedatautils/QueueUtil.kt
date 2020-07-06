@@ -1,7 +1,7 @@
 package com.liadpaz.amp.livedatautils
 
 import androidx.lifecycle.MutableLiveData
-import com.liadpaz.amp.viewmodels.Song
+import com.liadpaz.amp.ui.viewmodels.Song
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 

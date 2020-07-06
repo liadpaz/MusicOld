@@ -3,17 +3,13 @@ package com.liadpaz.amp.livedatautils
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import com.liadpaz.amp.viewmodels.Playlist
+import com.liadpaz.amp.ui.viewmodels.Playlist
 import java.util.*
-import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.stream.Collectors
-import kotlin.collections.ArrayDeque
-import kotlin.collections.ArrayList
 
 object PlaylistsUtil {
     private const val TAG = "PlaylistsUtil"
-    private val playlists = MutableLiveData<java.util.ArrayDeque<Playlist>>()
+    private val playlists = MutableLiveData<ArrayDeque<Playlist>>()
     private val isChanging = AtomicBoolean(false)
 
     fun isPlaylistExists(name: String): Boolean {
@@ -35,7 +31,7 @@ object PlaylistsUtil {
 
     @JvmStatic
     fun setPlaylists(playlists: Queue<Playlist>) {
-        PlaylistsUtil.playlists.postValue(java.util.ArrayDeque(playlists))
+        PlaylistsUtil.playlists.postValue(ArrayDeque(playlists))
     }
 
     fun addPlaylist(playlist: Playlist) {
@@ -45,15 +41,16 @@ object PlaylistsUtil {
     }
 
     fun removePlaylist(name: String): Playlist? {
-        val playlists: Queue<Playlist> = getPlaylists()
-        for (playlist in playlists) {
-            if (playlist.name == name) {
-                playlists.remove(playlist)
-                setPlaylists(playlists)
-                return playlist
+        getPlaylists().also {
+            for (playlist in it) {
+                if (playlist.name == name) {
+                    it.remove(playlist)
+                    setPlaylists(it)
+                    return playlist
+                }
             }
+            return null
         }
-        return null
     }
 
     fun getPlaylistByName(name: String): Playlist? {

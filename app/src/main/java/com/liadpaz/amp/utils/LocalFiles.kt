@@ -1,21 +1,25 @@
 package com.liadpaz.amp.utils
 
 import android.content.ContentResolver
+import android.content.ContentUris
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.Uri
 import android.provider.MediaStore.Audio
 import android.util.Log
+import androidx.preference.PreferenceManager
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.liadpaz.amp.livedatautils.PlaylistsUtil
 import com.liadpaz.amp.livedatautils.QueueUtil
 import com.liadpaz.amp.livedatautils.SongsUtil.setSongs
-import com.liadpaz.amp.viewmodels.Playlist
-import com.liadpaz.amp.viewmodels.Song
+import com.liadpaz.amp.ui.viewmodels.Playlist
+import com.liadpaz.amp.ui.viewmodels.Song
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import java.util.*
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.stream.Collectors
 import kotlin.collections.ArrayList
 
 object LocalFiles {
@@ -24,24 +28,29 @@ object LocalFiles {
     private val PROJECTION = arrayOf(Audio.Media.TITLE, Audio.Media._ID, Audio.Media.ARTIST, Audio.Media.ALBUM, Audio.Media.ALBUM_ID)
     private const val SORT_DEFAULT = Audio.Media.TITLE + " COLLATE NOCASE"
 
+    private val ART_URI = Uri.parse("content://media/external/audio/albumart")
+
     private lateinit var musicSharedPreferences: SharedPreferences
     private lateinit var playlistsSharedPreferences: SharedPreferences
 
     private val isFirstTimeQueue = AtomicBoolean(true)
     private val isFirstTimePosition = AtomicBoolean(true)
 
+    @Suppress("DeferredResultUnused")
     @JvmStatic
     fun init(context: Context) {
-        musicSharedPreferences = context.getSharedPreferences("Music.Data", 0)
-        playlistsSharedPreferences = context.getSharedPreferences("Music.Playlists", 0)
+        musicSharedPreferences = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
+        playlistsSharedPreferences = context.applicationContext.getSharedPreferences("Music.Playlists", 0)
 
         val contentResolver = context.contentResolver
-        CompletableFuture.runAsync { PlaylistsUtil.setPlaylists(getPlaylists(contentResolver)) }
-        CompletableFuture.runAsync { setSongs(listSongs(contentResolver, SORT_DEFAULT)) }
+        CoroutineScope(Dispatchers.IO).async {
+            PlaylistsUtil.setPlaylists(getPlaylists(contentResolver))
+            setSongs(listSongs(contentResolver, SORT_DEFAULT))
+        }
 
         QueueUtil.queue.observeForever { songs ->
             if (!isFirstTimeQueue.getAndSet(false)) {
-                val songsIdsList = songs.map { song -> song.id }
+                val songsIdsList = songs.map { song -> song.mediaId }
                 musicSharedPreferences.edit().putString(Constants.PREFERENCES_QUEUE, Gson().toJson(songsIdsList)).apply()
             }
         }
@@ -55,38 +64,36 @@ object LocalFiles {
         // TODO: fix queue saving
     }
 
-    private fun loadQueue(contentResolver: ContentResolver) {
-        val songsIds = Gson().fromJson<List<Long>>(musicSharedPreferences.getString(Constants.PREFERENCES_QUEUE, "[]"), object : TypeToken<java.util.ArrayList<Long?>?>() {}.type)
+    private suspend fun loadQueue(contentResolver: ContentResolver) {
+        val songsIds = Gson().fromJson<List<Long>>(musicSharedPreferences.getString(Constants.PREFERENCES_QUEUE, "[]"), object : TypeToken<java.util.ArrayList<String>>() {}.type)
         val songs: List<Song> = listSongs(contentResolver, SORT_DEFAULT, songsIds)
-        songs.sortedBy { song: Song -> songsIds.indexOf(song.id) }.also {
+        songs.sortedBy { song: Song -> songsIds.indexOf(song.mediaId) }.also {
             QueueUtil.queue.postValue(ArrayList(it))
             QueueUtil.queuePosition.postValue(musicSharedPreferences.getInt(Constants.PREFERENCES_QUEUE_POSITION, -1))
         }
     }
 
     @JvmStatic
-    var path: String
+    val path: String
         get() = musicSharedPreferences.getString(Constants.PREFERENCES_PATH, Constants.DEFAULT_PATH)!!
-        set(path) = musicSharedPreferences.edit().putString(Constants.PREFERENCES_PATH, path).apply()
 
     @JvmStatic
-    var showCurrent: Boolean
+    val showCurrent: Boolean
         get() = musicSharedPreferences.getBoolean(Constants.PREFERENCES_SHOW_CURRENT, true)
-        set(showCurrent) {
-            musicSharedPreferences.edit().putBoolean(Constants.PREFERENCES_SHOW_CURRENT, showCurrent).apply()
-        }
 
     @JvmStatic
-    var screenOn: Boolean
+    val screenOn: Boolean
         get() = musicSharedPreferences.getBoolean(Constants.PREFERENCES_SCREEN_ON, false)
-        set(screenOn) {
-            musicSharedPreferences.edit().putBoolean(Constants.PREFERENCES_SCREEN_ON, screenOn).apply()
-        }
 
-    private fun listSongs(contentResolver: ContentResolver, sort: String, songsIds: List<Long>? = null): java.util.ArrayList<Song> {
-        val start = System.currentTimeMillis()
-        val songs = java.util.ArrayList<Song>()
-        contentResolver.query(Audio.Media.EXTERNAL_CONTENT_URI, PROJECTION, Audio.Media.DATA + " like ? ", arrayOf("%$path%"), sort).use { musicCursor ->
+    @JvmStatic
+    val stopOnTask: Boolean
+        get() = musicSharedPreferences.getBoolean(Constants.PREFERENCES_STOP_ON_TASK, false)
+
+    @JvmStatic
+    fun listSongs(contentResolver: ContentResolver?, sortBy: String? = null, songsIds: List<Long>? = null): ArrayList<Song> {
+        val sort = sortBy ?: SORT_DEFAULT
+        contentResolver?.query(Audio.Media.EXTERNAL_CONTENT_URI, PROJECTION, "_data like ? ", arrayOf("%$path%"), sort).use { musicCursor ->
+            val songs = arrayListOf<Song>()
             //iterate over results if valid
             if (musicCursor != null && musicCursor.moveToFirst()) {
                 //get columns
@@ -99,21 +106,21 @@ object LocalFiles {
                 do {
                     val id = musicCursor.getLong(idColumn)
                     if (songsIds == null || songsIds.contains(id)) {
-                        songs.add(Song(id, musicCursor.getString(titleColumn), musicCursor.getString(artistColumn), musicCursor.getString(albumColumn), musicCursor.getString(albumIdColumn)))
+                        val title = musicCursor.getString(titleColumn)
+                        songs.add(Song(id, title, Utilities.getArtistsFromSong(title, musicCursor.getString(artistColumn)), musicCursor.getString(albumColumn), ContentUris.withAppendedId(ART_URI, musicCursor.getString(albumIdColumn).toLong())))
                     }
                 } while (musicCursor.moveToNext())
             }
+            return songs
         }
-        Log.d(TAG, "listSongs: " + (System.currentTimeMillis() - start))
-        return songs
     }
 
     private fun getPlaylists(contentResolver: ContentResolver): Queue<Playlist> {
         val start = System.currentTimeMillis()
         val playlists: Queue<Playlist> = ArrayDeque()
         playlistsSharedPreferences.all.forEach { entry: Map.Entry<String?, Any?> ->
-            val songsIdsList = Gson().fromJson<ArrayList<Long>>(entry.value.toString(), object : TypeToken<java.util.ArrayList<Long?>?>() {}.type)
-            listSongs(contentResolver, SORT_DEFAULT, songsIdsList).sortedBy { song -> songsIdsList.indexOf(song.id) }.also {
+            val songsIdsList = Gson().fromJson<ArrayList<Long>>(entry.value.toString(), object : TypeToken<ArrayList<Long>>() {}.type)
+            listSongs(contentResolver, SORT_DEFAULT, songsIdsList).sortedBy { song -> songsIdsList.indexOf(song.mediaId) }.also {
                 playlists.add(Playlist(entry.key!!, ArrayList(it)))
             }
         }
@@ -124,7 +131,7 @@ object LocalFiles {
     fun setPlaylists(playlists: Queue<Playlist>) {
         val editor = playlistsSharedPreferences.edit().clear()
         for ((name, songs) in playlists) {
-            editor.putString(name, Gson().toJson(songs.map { song: Song -> song.id }))
+            editor.putString(name, Gson().toJson(songs.map { song: Song -> song.mediaId }))
         }
         editor.apply()
     }

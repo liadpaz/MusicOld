@@ -8,7 +8,7 @@
 
         <variable
             name="album"
-            type="com.liadpaz.amp.viewmodels.Album" />
+            type="com.liadpaz.amp.ui.viewmodels.Album" />
     </data>
 
     <LinearLayout

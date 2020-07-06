@@ -11,7 +11,7 @@
         android:layout_weight="1"
         android:drawableStart="@drawable/shuffle"
         android:drawablePadding="16dp"
-        android:foreground="?attr/selectableItemBackground"
+        android:background="?attr/selectableItemBackground"
         android:gravity="center_vertical"
         android:padding="16dp"
         android:text="@string/queue_shuffle"

@@ -8,7 +8,7 @@
     android:layout_height="match_parent"
     android:background="#555555"
     android:orientation="vertical"
-    tools:context=".fragments.ExtendedFragment">
+    tools:context=".ui.fragments.ExtendedFragment">
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/infoFragment"

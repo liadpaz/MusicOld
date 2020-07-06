@@ -12,16 +12,24 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/preference_notification_group">
-        <SwitchPreference
+        <SwitchPreferenceCompat
             android:key="notification"
             android:summary="@string/preference_notification_open_summary"
             android:title="@string/preference_notification_open_title" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/preference_display_group">
-        <SwitchPreference
+        <SwitchPreferenceCompat
             android:key="screen_on"
             android:summary="@string/preference_screen_on_summary"
             android:title="@string/preference_screen_on_title" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/preference_general_group">
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="stop"
+            android:summary="@string/preference_stop_task_summary"
+            android:title="@string/preference_stop_task_title" />
     </PreferenceCategory>
 </PreferenceScreen>
