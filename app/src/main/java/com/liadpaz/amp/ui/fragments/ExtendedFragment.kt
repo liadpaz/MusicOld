@@ -2,8 +2,8 @@ package com.liadpaz.amp.ui.fragments
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
-import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.support.v4.media.MediaMetadataCompat
@@ -17,12 +17,15 @@ import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.annotation.ColorInt
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.palette.graphics.Palette
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import com.liadpaz.amp.R
@@ -35,7 +38,6 @@ import com.liadpaz.amp.utils.Utilities
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 
 class ExtendedFragment : Fragment() {
 
@@ -198,9 +200,11 @@ class ExtendedFragment : Fragment() {
             binding.tvSongArtist.text = description.subtitle
             binding.tvTimeElapsed.text = Utilities.formatTime(0)
             binding.tvTotalTime.text = Utilities.formatTime(metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION).also { duration = it })
-            serviceScope.launch {
-                getCover(description.iconUri)?.let {
-                    Palette.from(it).generate { palette: Palette? ->
+            Glide.with(requireContext()).asBitmap().placeholder(R.drawable.song).load(description.iconUri).into(object : CustomTarget<Bitmap>() {
+                override fun onLoadCleared(placeholder: Drawable?) = Unit
+
+                override fun onLoadFailed(errorDrawable: Drawable?) {
+                    Palette.from(errorDrawable!!.toBitmap()).generate { palette: Palette? ->
                         defaultColor = palette!!.getDominantColor(Color.WHITE)
                         if (isUp) {
                             requireActivity().window.statusBarColor = defaultColor
@@ -209,7 +213,18 @@ class ExtendedFragment : Fragment() {
                         ColorUtil.setColor(defaultColor)
                     }
                 }
-            }
+
+                override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
+                    Palette.from(resource).generate { palette: Palette? ->
+                        defaultColor = palette!!.getDominantColor(Color.WHITE)
+                        if (isUp) {
+                            requireActivity().window.statusBarColor = defaultColor
+                        }
+                        binding.extendedFragment.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(defaultColor, Color.BLACK))
+                        ColorUtil.setColor(defaultColor)
+                    }
+                }
+            })
         } else {
             binding.tvSongTitle.text = null
             binding.tvSongArtist.text = null
@@ -221,9 +236,6 @@ class ExtendedFragment : Fragment() {
         }
     }
 
-    private fun getCover(uri: Uri?): Bitmap? =
-            uri?.let { Glide.with(requireContext()).applyDefaultRequestOptions(glideOptions).asBitmap().load(uri).submit().get() }
-
     /**
      * This function updates the progress bar and the elapsed time text.
      */
@@ -233,7 +245,7 @@ class ExtendedFragment : Fragment() {
                 binding.tvTimeElapsed.text = Utilities.formatTime(currentPosition.toLong())
                 currentPosition += 500
                 if (runnable != null) {
-                    handler!!.removeCallbacks(runnable!!)
+                    handler?.removeCallbacks(runnable!!)
                 }
                 if (isPlaying) {
                     updateSeekBar()
@@ -260,5 +272,5 @@ class ExtendedFragment : Fragment() {
 private val glideOptions = RequestOptions()
         .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
         .placeholder(R.drawable.song)
-        .fallback(R.drawable.song)
-        .error(R.drawable.song)
+//        .fallback(R.drawable.song)
+//        .error(R.drawable.song)

@@ -51,7 +51,7 @@ class PlaylistAdapter(private val context: Context, private val onMoreClick: OnR
                 val binding = holder.binding as ItemPlaylistSongBinding
                 binding.tvSongName.text = title
                 binding.tvSongArtist.text = Utilities.joinArtists(artists)
-                Glide.with(context).applyDefaultRequestOptions(glideOptions).load(artUri).into(binding.ivSongCover)
+                Glide.with(context).setDefaultRequestOptions(glideOptions).load(artUri).into(binding.ivSongCover)
             }
         }
     }
@@ -100,5 +100,5 @@ class PlaylistAdapter(private val context: Context, private val onMoreClick: OnR
 private val glideOptions = RequestOptions()
         .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
         .placeholder(R.drawable.song)
-        .fallback(R.drawable.song)
-        .error(R.drawable.song)
+//        .fallback(R.drawable.song)
+//        .error(R.drawable.song)
