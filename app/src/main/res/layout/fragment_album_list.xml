@@ -3,9 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.fragments.AlbumListFragment">
+    tools:context=".view.fragments.AlbumListFragment">
 
-    <androidx.recyclerview.widget.RecyclerView
+    <com.liadpaz.amp.view.views.CustomRecyclerView
         android:id="@+id/rvAlbums"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

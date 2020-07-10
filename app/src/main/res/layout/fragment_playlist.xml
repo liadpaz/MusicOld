@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@android:drawable/screen_background_dark"
     android:orientation="vertical"
-    tools:context=".ui.fragments.PlaylistFragment">
+    tools:context=".view.fragments.PlaylistFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -36,7 +36,7 @@
             android:src="@drawable/delete" />
     </LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
+    <com.liadpaz.amp.view.views.CustomRecyclerView
         android:id="@+id/rvSongs"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

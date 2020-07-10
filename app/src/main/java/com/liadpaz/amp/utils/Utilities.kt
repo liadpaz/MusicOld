@@ -1,21 +1,17 @@
 package com.liadpaz.amp.utils
 
-import android.annotation.SuppressLint
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.net.Uri
 import androidx.annotation.ColorInt
-import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import java.util.*
 import java.util.concurrent.TimeUnit
+import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 object Utilities {
     private const val TAG = "UTILITIES"
-    fun joinArtists(artists: List<String?>): String {
-        val joinedArtists = StringBuilder(artists[0]!!)
+    fun joinArtists(artists: List<String>): String {
+        val joinedArtists = StringBuilder(artists[0])
         for (i in 1 until artists.size) {
             joinedArtists.append(", ").append(artists[i])
         }
@@ -49,9 +45,9 @@ object Utilities {
 
     fun getArtistsFromSong(title: String, artistsString: String): ArrayList<String> {
         val artists = ArrayList<String>()
-        val matcher = Pattern.compile("([^ &,]([^,&])*[^ ,&]+)").matcher(artistsString)
-        while (matcher.find()) {
-            artists.add(matcher.group())
+        val artistsMatcher: Matcher = Pattern.compile("([^ &,]([^,&])*[^ ,&]+)").matcher(artistsString)
+        while (artistsMatcher.find()) {
+            artists.add(artistsMatcher.group())
         }
 
         //        int openBracketIndex;

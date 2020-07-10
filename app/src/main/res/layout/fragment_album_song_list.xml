@@ -8,7 +8,7 @@
 
         <variable
             name="album"
-            type="com.liadpaz.amp.ui.viewmodels.Album" />
+            type="com.liadpaz.amp.view.data.Album" />
     </data>
 
     <LinearLayout
@@ -44,10 +44,26 @@
         </LinearLayout>
 
         <FrameLayout
-            android:id="@+id/containerFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
+            <com.liadpaz.amp.view.views.CustomRecyclerView
+                android:id="@+id/rvSongs"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fadeScrollbars="false"
+                android:scrollbarSize="10dp"
+                android:scrollbarStyle="outsideOverlay"
+                android:scrollbars="vertical" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fabScrollUp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="16dp"
+                android:src="@drawable/arrow_up"
+                android:visibility="gone" />
         </FrameLayout>
 
     </LinearLayout>

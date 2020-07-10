@@ -7,14 +7,14 @@
 
         <variable
             name="song"
-            type="com.liadpaz.amp.ui.viewmodels.CurrentSong" />
+            type="com.liadpaz.amp.view.data.CurrentSong" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/infoLayout"
         android:layout_width="match_parent"
         android:layout_height="72dp"
-        tools:context=".ui.fragments.ControllerFragment">
+        tools:context=".view.fragments.ControllerFragment">
 
         <ImageView
             android:id="@+id/ivCurrentTrack"

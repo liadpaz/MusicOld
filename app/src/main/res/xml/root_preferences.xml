@@ -1,5 +1,13 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory android:title="@string/preference_general_group">
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="stop"
+            android:summary="@string/preference_stop_task_summary"
+            android:title="@string/preference_stop_task_title" />
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/preference_path_group">
 
         <Preference
@@ -13,6 +21,7 @@
 
     <PreferenceCategory android:title="@string/preference_notification_group">
         <SwitchPreferenceCompat
+            android:defaultValue="true"
             android:key="notification"
             android:summary="@string/preference_notification_open_summary"
             android:title="@string/preference_notification_open_title" />
@@ -20,16 +29,9 @@
 
     <PreferenceCategory android:title="@string/preference_display_group">
         <SwitchPreferenceCompat
+            android:defaultValue="false"
             android:key="screen_on"
             android:summary="@string/preference_screen_on_summary"
             android:title="@string/preference_screen_on_title" />
-    </PreferenceCategory>
-
-    <PreferenceCategory android:title="@string/preference_general_group">
-        <SwitchPreferenceCompat
-            android:defaultValue="false"
-            android:key="stop"
-            android:summary="@string/preference_stop_task_summary"
-            android:title="@string/preference_stop_task_title" />
     </PreferenceCategory>
 </PreferenceScreen>

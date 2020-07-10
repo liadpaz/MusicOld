@@ -19,7 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="UnusedAttribute">
-        <activity android:name=".ui.LoadingActivity">
+        <activity android:name="com.liadpaz.amp.view.LoadingActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -44,18 +44,18 @@
         </receiver>
 
         <activity
-            android:name=".ui.SettingsActivity"
+            android:name="com.liadpaz.amp.view.SettingsActivity"
             android:configChanges="uiMode"
             android:label="@string/menu_settings"
             android:launchMode="singleInstance"
-            android:parentActivityName=".ui.MainActivity" />
+            android:parentActivityName="com.liadpaz.amp.view.MainActivity" />
         <activity
-            android:name=".ui.AboutActivity"
+            android:name="com.liadpaz.amp.view.AboutActivity"
             android:configChanges="uiMode"
             android:launchMode="singleInstance"
-            android:parentActivityName=".ui.MainActivity" />
+            android:parentActivityName="com.liadpaz.amp.view.MainActivity" />
         <activity
-            android:name=".ui.MainActivity"
+            android:name="com.liadpaz.amp.view.MainActivity"
             android:configChanges="uiMode"
             android:label="@string/app_name"
             android:launchMode="singleInstance"
@@ -74,7 +74,7 @@
         </activity>
 
         <service
-            android:name="com.liadpaz.amp.server.service.MediaPlayerService"
+            android:name="com.liadpaz.amp.service.server.service.MediaPlayerService"
             android:enabled="true"
             android:exported="true"
             android:foregroundServiceType="mediaPlayback"

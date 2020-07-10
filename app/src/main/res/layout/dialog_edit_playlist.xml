@@ -4,7 +4,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    tools:context=".ui.dialogs.EditPlaylistDialog">
+    tools:context=".view.dialogs.EditPlaylistDialog">
 
     <com.google.android.material.textview.MaterialTextView
         android:layout_width="wrap_content"
