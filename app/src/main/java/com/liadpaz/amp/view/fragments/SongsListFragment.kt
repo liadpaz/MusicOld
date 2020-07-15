@@ -2,20 +2,21 @@ package com.liadpaz.amp.view.fragments
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.observe
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.liadpaz.amp.R
 import com.liadpaz.amp.databinding.FragmentSongsListBinding
-import com.liadpaz.amp.service.server.service.ServiceConnection
+import com.liadpaz.amp.server.utils.buildMediaId
 import com.liadpaz.amp.view.adapters.SongsListAdapter
-import com.liadpaz.amp.view.views.SongPopUpMenu
+import com.liadpaz.amp.view.dialogs.PlaylistsDialog
 import com.liadpaz.amp.viewmodels.SongListViewModel
-import com.liadpaz.amp.viewmodels.livedatautils.QueueUtil
-import java.util.*
 
 class SongsListFragment : Fragment() {
 
@@ -29,15 +30,29 @@ class SongsListFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        viewModel.songsObservable.observe(viewLifecycleOwner) { adapter.submitList(it) }
+        viewModel.getSongs().observe(viewLifecycleOwner) { adapter.submitList(it) }
 
-        adapter = SongsListAdapter(requireContext(), { v: View?, position: Int ->
-            SongPopUpMenu(this, v!!, adapter.currentList[position]).show()
-        }, View.OnClickListener {
-            QueueUtil.queue.postValue(ArrayList(adapter.currentList).apply { shuffle() })
-            QueueUtil.queuePosition.postValue(0)
-            ServiceConnection.playFromQueue()
-        }).also { adapter ->
+        adapter = SongsListAdapter({ position ->
+            viewModel.transportControls.playFromMediaId(buildMediaId("all", null, position), null)
+        }, { v: View, position: Int ->
+            PopupMenu(requireContext(), v).apply {
+                inflate(R.menu.menu_song)
+                setOnMenuItemClickListener { item: MenuItem ->
+                    when (item.itemId) {
+                        R.id.menuPlayNext -> {
+                            viewModel.addToNext(adapter.currentList[position])
+                        }
+                        R.id.menuAddQueue -> {
+                            viewModel.addToQueue(adapter.currentList[position])
+                        }
+                        R.id.menuAddToPlaylist -> {
+                            PlaylistsDialog.newInstance(adapter.currentList[position]).show(childFragmentManager, null)
+                        }
+                    }
+                    true
+                }
+            }.show()
+        }, { viewModel.playShuffle() }).also { adapter ->
             binding.rvSongs.adapter = adapter
         }
 

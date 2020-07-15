@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     tools:context=".view.fragments.CurrentQueueFragment">
 
-    <androidx.recyclerview.widget.RecyclerView
+    <com.liadpaz.amp.view.views.CustomRecyclerView
         android:id="@+id/rvQueue"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

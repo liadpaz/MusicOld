@@ -11,6 +11,7 @@ import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.MediaMetadataCompat
 import androidx.recyclerview.widget.DiffUtil
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
+import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.liadpaz.amp.R
@@ -56,6 +57,8 @@ data class Song(val mediaId: Long, val title: String, val artists: List<String>,
         mediaMetadata = parcel.readParcelable(MediaMetadataCompat::class.java.classLoader)!!
     }
 
+    override fun toString(): String = title
+
     fun isMatchingQuery(query: String): Boolean {
         return title.contains(query) || Utilities.joinArtists(artists).contains(query) || album.contains(query)
     }
@@ -75,7 +78,8 @@ data class Song(val mediaId: Long, val title: String, val artists: List<String>,
         return result
     }
 
-    fun toMediaSource(context: Context): ProgressiveMediaSource = ProgressiveMediaSource.Factory(DefaultDataSourceFactory(context.applicationContext, Util.getUserAgent(context.applicationContext, context.getString(R.string.app_name)))).setTag(mediaMetadata.description).createMediaSource(songUri)
+    fun toMediaSource(dataSourceFactory: DataSource.Factory): ProgressiveMediaSource =
+            ProgressiveMediaSource.Factory(dataSourceFactory).setTag(mediaMetadata.description).createMediaSource(songUri)
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeLong(mediaId)
@@ -91,7 +95,6 @@ data class Song(val mediaId: Long, val title: String, val artists: List<String>,
     }
 
     companion object {
-        private const val TAG = "AmpApp.Song"
 
         fun from(mediaMetadata: MediaMetadataCompat) = Song(
                 mediaMetadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID).toLong(),
@@ -140,8 +143,9 @@ data class Song(val mediaId: Long, val title: String, val artists: List<String>,
         val diffCallback = object : DiffUtil.ItemCallback<Song>() {
             override fun areItemsTheSame(oldItem: Song, newItem: Song): Boolean = oldItem.mediaId == newItem.mediaId && oldItem.title == newItem.title
 
-            override fun areContentsTheSame(oldItem: Song, newItem: Song): Boolean = areItemsTheSame(oldItem, newItem)
-
+            override fun areContentsTheSame(oldItem: Song, newItem: Song): Boolean = oldItem == newItem
         }
     }
 }
+
+private const val TAG = "AmpApp.Song"

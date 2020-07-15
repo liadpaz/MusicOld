@@ -23,7 +23,7 @@ class MainViewPagerFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val viewPager = binding.viewPagerMain
-        viewPager.adapter = MainViewPagerAdapter(childFragmentManager, lifecycle)
+        viewPager.adapter = MainViewPagerAdapter(this)
         val tabsTitle: ArrayList<String> = ArrayList<String>().apply {
             add(getString(R.string.tab_songs))
             add(getString(R.string.tab_playlists))

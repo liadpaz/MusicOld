@@ -6,35 +6,41 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.observe
 import com.liadpaz.amp.R
 import com.liadpaz.amp.databinding.DialogNewPlaylistBinding
-import com.liadpaz.amp.viewmodels.livedatautils.PlaylistsUtil
-import com.liadpaz.amp.view.data.Playlist
 import com.liadpaz.amp.view.data.Song
-import java.util.*
+import com.liadpaz.amp.viewmodels.PlaylistsViewModel
 
-class NewPlaylistDialog : DialogFragment {
+class NewPlaylistDialog : DialogFragment() {
+
     private var song: Song? = null
     private var songs: ArrayList<Song>? = null
 
-    constructor(song: Song?) {
-        this.song = song
-    }
+    private var playlists: LinkedHashMap<String, ArrayList<Song>> = LinkedHashMap()
 
-    constructor(songs: ArrayList<Song>) {
-        this.songs = songs
-    }
+    private val viewModel: PlaylistsViewModel by viewModels()
+    private lateinit var binding: DialogNewPlaylistBinding
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val binding = DialogNewPlaylistBinding.inflate(inflater, container, false)
+        song = arguments?.getParcelable("song")
+        songs = arguments?.getParcelableArrayList("songs")
+        return DialogNewPlaylistBinding.inflate(inflater, container, false).also { binding = it }.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        viewModel.playlistsObservable.observe(viewLifecycleOwner) {
+            playlists = it
+        }
+
         binding.btnCreate.setOnClickListener {
             val name = binding.etPlaylistName.text.toString()
             if (!TextUtils.isEmpty(name)) {
-                if (!PlaylistsUtil.isPlaylistExists(name)) {
-                    PlaylistsUtil.addPlaylist(Playlist(name, ArrayList<Song>().apply {
-                        song?.also { add(it) } ?: songs?.let { addAll(it) }
-                    }))
+                if (!playlists.containsKey(name)) {
+                    viewModel.addPlaylist(name, song?.let { arrayListOf(it) } ?: songs)
                     dismiss()
                 } else {
                     Toast.makeText(context, R.string.toast_playlist_exists, Toast.LENGTH_LONG).show()
@@ -43,6 +49,15 @@ class NewPlaylistDialog : DialogFragment {
         }
         binding.btnCancel.setOnClickListener { dismiss() }
         isCancelable = true
-        return binding.root
+    }
+
+    companion object {
+
+        @JvmStatic
+        fun newInstance(song: Song? = null, songs: List<Song>? = null): NewPlaylistDialog =
+                NewPlaylistDialog().apply {
+                    arguments = bundleOf(Pair("song", song), Pair("songs", songs))
+
+                }
     }
 }

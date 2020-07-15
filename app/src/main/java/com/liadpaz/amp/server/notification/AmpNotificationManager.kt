@@ -1,4 +1,4 @@
-package com.liadpaz.amp.service.server.notification
+package com.liadpaz.amp.server.notification
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -6,19 +6,18 @@ import android.app.PendingIntent
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Canvas
 import android.net.Uri
 import android.os.Build
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.ui.PlayerNotificationManager.BitmapCallback
 import com.google.android.exoplayer2.ui.PlayerNotificationManager.MediaDescriptionAdapter
 import com.liadpaz.amp.R
+import com.liadpaz.amp.utils.Utilities
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -35,7 +34,7 @@ class AmpNotificationManager(
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
     private val notificationManager: PlayerNotificationManager
 
-    private lateinit var defaultCover: Bitmap
+    private var defaultCover: Bitmap? = null
 
     init {
         if (Build.VERSION.SDK_INT >= 26) {
@@ -57,13 +56,7 @@ class AmpNotificationManager(
         }
 
         serviceScope.launch {
-            val drawable = ContextCompat.getDrawable(context, R.drawable.song)!!
-            defaultCover = Bitmap.createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888).also {
-                Canvas(it).apply {
-                    drawable.setBounds(0, 0, width, height)
-                    drawable.draw(this)
-                }
-            }
+            defaultCover = Utilities.getSongBitmap(context)
         }
     }
 
@@ -96,10 +89,9 @@ class AmpNotificationManager(
             val iconUri = controller.metadata.description.iconUri
 
             return if (currentIconUri != iconUri || currentBitmap == null) {
-
                 currentIconUri = iconUri
                 serviceScope.launch {
-                    resolveUriAsBitmap(iconUri).also {
+                    resolveUriAsBitmap(iconUri)?.also {
                         currentBitmap = it
                         callback.onBitmap(it)
                     }
@@ -117,8 +109,9 @@ class AmpNotificationManager(
     }
 
     companion object {
-        private const val TAG = "AmpApp.AmpNotificationManager"
         private const val CHANNEL_ID = "music_channel"
         private const val NOTIFICATION_ID = 273
     }
 }
+
+private const val TAG = "AmpApp.NotificationManager"

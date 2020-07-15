@@ -6,13 +6,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.observe
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
 import com.liadpaz.amp.databinding.FragmentExtendedViewPagerBinding
-import com.liadpaz.amp.viewmodels.livedatautils.QueueUtil
-import com.liadpaz.amp.service.server.service.MediaPlayerService
-import com.liadpaz.amp.service.server.service.ServiceConnection.Companion.getInstance
+import com.liadpaz.amp.server.service.MediaPlayerService
+import com.liadpaz.amp.server.service.ServiceConnection.Companion.getInstance
 import com.liadpaz.amp.view.adapters.ExtendedViewPagerAdapter
+import com.liadpaz.amp.viewmodels.QueueViewModel
 
 class ExtendedViewPagerFragment : Fragment() {
 
@@ -20,6 +21,7 @@ class ExtendedViewPagerFragment : Fragment() {
 
     private lateinit var adapter: ExtendedViewPagerAdapter
 
+    private val viewModel: QueueViewModel by viewModels()
     private lateinit var binding: FragmentExtendedViewPagerBinding
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -28,39 +30,33 @@ class ExtendedViewPagerFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         adapter = ExtendedViewPagerAdapter(this).also { binding.extendedViewPager.adapter = it }
-        QueueUtil.queuePosition.observe(viewLifecycleOwner, Observer { position: Int? ->
+        viewModel.getPosition().observe(viewLifecycleOwner) { position ->
             if (!isCreated) {
                 isCreated = true
-                binding.extendedViewPager.setCurrentItem(position!!, false)
+                binding.extendedViewPager.setCurrentItem(position, false)
             } else {
-                binding.extendedViewPager.currentItem = position!!
+                binding.extendedViewPager.currentItem = position
             }
-        })
-        QueueUtil.queue.observe(viewLifecycleOwner, Observer { binding.extendedViewPager.adapter = ExtendedViewPagerAdapter(this).also { adapter = it } })
+        }
+        viewModel.getQueue().observe(viewLifecycleOwner) { binding.extendedViewPager.adapter = ExtendedViewPagerAdapter(this).also { adapter = it } }
         binding.extendedViewPager.registerOnPageChangeCallback(object : OnPageChangeCallback() {
             private var firstTime = true
 
             override fun onPageSelected(position: Int) {
                 if (firstTime) {
                     firstTime = false
-                } else if (binding.extendedViewPager.currentItem != QueueUtil.queuePosition.value) {
+                } else if (binding.extendedViewPager.currentItem != viewModel.getPosition().value) {
                     getInstance(requireContext(), ComponentName(requireContext(), MediaPlayerService::class.java)).transportControls.skipToQueueItem(position.toLong())
                 }
             }
         })
     }
 
-//    override fun onDestroyView() {
-//        super.onDestroyView()
-//        binding.extendedViewPager.unregisterOnPageChangeCallback(callback)
-//    }
-
     companion object {
-        private const val TAG = "AmpApp.ExtendedSwipe"
-
         @JvmStatic
-        fun newInstance(): ExtendedViewPagerFragment {
-            return ExtendedViewPagerFragment()
-        }
+        fun newInstance(): ExtendedViewPagerFragment =
+                ExtendedViewPagerFragment()
     }
 }
+
+private const val TAG = "AmpApp.ExtendedSwipe"

@@ -6,15 +6,14 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.liadpaz.amp.databinding.FragmentArtistSongListBinding
-import com.liadpaz.amp.service.server.service.ServiceConnection
 import com.liadpaz.amp.view.adapters.SongsListAdapter
 import com.liadpaz.amp.view.data.Artist
 import com.liadpaz.amp.view.views.SongPopUpMenu
-import com.liadpaz.amp.viewmodels.livedatautils.QueueUtil
-import java.util.*
+import com.liadpaz.amp.viewmodels.ArtistViewModel
 
 class ArtistSongListFragment : Fragment() {
 
@@ -22,6 +21,9 @@ class ArtistSongListFragment : Fragment() {
 
     private lateinit var adapter: SongsListAdapter
 
+    private val viewModel: ArtistViewModel by viewModels {
+        ArtistViewModel.Factory(requireActivity().application, artist.name)
+    }
     private lateinit var binding: FragmentArtistSongListBinding
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -33,13 +35,11 @@ class ArtistSongListFragment : Fragment() {
 
         binding.artist = artist
 
-        adapter = SongsListAdapter(requireContext(), { v: View?, position: Int ->
-            SongPopUpMenu(this, v!!, adapter.currentList[position]).show()
-        }, View.OnClickListener {
-            QueueUtil.queue.postValue(ArrayList(adapter.currentList).apply { shuffle() })
-            QueueUtil.queuePosition.postValue(0)
-            ServiceConnection.playFromQueue()
-        }).also { adapter ->
+        adapter = SongsListAdapter({ position ->
+            viewModel.play(position)
+        }, { v: View, position: Int ->
+            SongPopUpMenu(this, v, adapter.currentList[position]).show()
+        }, { viewModel.playShuffle() }).also { adapter ->
             binding.rvSongs.adapter = adapter
             adapter.submitList(artist.songs)
         }

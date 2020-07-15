@@ -16,15 +16,14 @@ import androidx.lifecycle.observe
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.liadpaz.amp.R
 import com.liadpaz.amp.databinding.FragmentExtendedInfoBinding
-import com.liadpaz.amp.service.server.service.MediaPlayerService
-import com.liadpaz.amp.service.server.service.ServiceConnection
+import com.liadpaz.amp.server.service.MediaPlayerService
+import com.liadpaz.amp.server.service.ServiceConnection
 import com.liadpaz.amp.utils.Utilities
 import com.liadpaz.amp.view.MainActivity
 import com.liadpaz.amp.view.data.CurrentSong
 import com.liadpaz.amp.view.dialogs.NewPlaylistDialog
 import com.liadpaz.amp.view.dialogs.PlaylistsDialog
 import com.liadpaz.amp.viewmodels.PlayingViewModel
-import com.liadpaz.amp.viewmodels.livedatautils.QueueUtil
 
 class ExtendedInfoFragment : Fragment() {
 
@@ -45,7 +44,7 @@ class ExtendedInfoFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        viewModel.mediaMetadata.observe(viewLifecycleOwner) {
+        viewModel.getMediaMetadata().observe(viewLifecycleOwner) {
             if (currentSong != it) {
                 currentSong = it
                 if (Utilities.isColorBright(it.color).also { isBright -> this.isBright = isBright }) {
@@ -71,15 +70,13 @@ class ExtendedInfoFragment : Fragment() {
                 setOnMenuItemClickListener { item: MenuItem ->
                     when (item.itemId) {
                         R.id.menuQueueClear -> {
-                            QueueUtil.queue.postValue(ArrayList())
-                            QueueUtil.queuePosition.postValue(-1)
-                            ServiceConnection.getInstance().mediaSource.value?.clear()
+                            viewModel.clearQueue()
                         }
                         R.id.menuQueueSavePlaylist -> {
-                            NewPlaylistDialog(QueueUtil.queue.value!!).show(childFragmentManager, null)
+                            NewPlaylistDialog.newInstance(songs = viewModel.getQueue().value).show(childFragmentManager, null)
                         }
                         R.id.menuQueueAddPlaylist -> {
-                            PlaylistsDialog(QueueUtil.queue.value!!).show(childFragmentManager, null)
+                            PlaylistsDialog.newInstance(songs = viewModel.getQueue().value).show(childFragmentManager, null)
                         }
                     }
                     true

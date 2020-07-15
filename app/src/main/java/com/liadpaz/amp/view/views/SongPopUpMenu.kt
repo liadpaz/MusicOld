@@ -4,25 +4,28 @@ import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import com.liadpaz.amp.R
-import com.liadpaz.amp.service.server.service.ServiceConnection
 import com.liadpaz.amp.view.data.Song
 import com.liadpaz.amp.view.dialogs.PlaylistsDialog
-import com.liadpaz.amp.viewmodels.livedatautils.QueueUtil
+import com.liadpaz.amp.viewmodels.SongListViewModel
 
 class SongPopUpMenu(private val fragment: Fragment, view: View, private val song: Song) : PopupMenu(fragment.requireContext(), view) {
+
+    val viewModel: SongListViewModel by fragment.viewModels()
+
     init {
         inflate(R.menu.menu_song)
         setOnMenuItemClickListener { item: MenuItem ->
             when (item.itemId) {
                 R.id.menuPlayNext -> {
-                    ServiceConnection.getInstance().mediaSource.value?.addMediaSource(QueueUtil.queuePosition.value!! + 1, song.toMediaSource(fragment.requireContext()))
+                    viewModel
                 }
                 R.id.menuAddQueue -> {
-                    ServiceConnection.getInstance().mediaSource.value?.addMediaSource(song.toMediaSource(fragment.requireContext()))
+                    viewModel
                 }
                 R.id.menuAddToPlaylist -> {
-                    PlaylistsDialog(song).show(fragment.childFragmentManager, null)
+                    PlaylistsDialog.newInstance(song).show(fragment.childFragmentManager, null)
                 }
             }
             true

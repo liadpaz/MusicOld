@@ -3,7 +3,7 @@ package com.liadpaz.amp.view.data
 import android.graphics.Bitmap
 import com.liadpaz.amp.utils.Utilities
 
-data class CurrentSong(val title: String, val artists: String, val album: String, val duration: Long, val art: Bitmap, val color: Int) {
+data class CurrentSong(val title: String, val artists: List<String>, val album: String, val duration: Long, val art: Bitmap, val color: Int) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (this.javaClass != other?.javaClass) return false

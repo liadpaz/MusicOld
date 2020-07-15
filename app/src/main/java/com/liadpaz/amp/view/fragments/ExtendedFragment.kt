@@ -7,6 +7,7 @@ import android.graphics.drawable.TransitionDrawable
 import android.os.Bundle
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,8 +22,8 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import com.liadpaz.amp.R
 import com.liadpaz.amp.databinding.FragmentExtendedBinding
-import com.liadpaz.amp.service.server.service.MediaPlayerService
-import com.liadpaz.amp.service.server.service.ServiceConnection
+import com.liadpaz.amp.server.service.MediaPlayerService
+import com.liadpaz.amp.server.service.ServiceConnection
 import com.liadpaz.amp.utils.Utilities
 import com.liadpaz.amp.view.MainActivity
 import com.liadpaz.amp.view.data.CurrentSong
@@ -58,11 +59,11 @@ class ExtendedFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        viewModel.mediaMetadata.observe(viewLifecycleOwner) {
+        viewModel.getMediaMetadata().observe(viewLifecycleOwner) {
             if (currentSong != it) {
                 currentSong = it
                 binding.tvSongTitle.text = it.title
-                binding.tvSongArtist.text = it.artists
+                binding.tvSongArtist.text = Utilities.joinArtists(it.artists)
                 binding.tvTotalTime.text = Utilities.formatTime(it.duration)
                 duration = it.duration
 
@@ -76,27 +77,24 @@ class ExtendedFragment : Fragment() {
                 duration = it.duration
             }
         }
-        viewModel.playbackState.observe(viewLifecycleOwner) {
+        viewModel.getPlaybackState().observe(viewLifecycleOwner) {
             isPlaying = it.state == PlaybackStateCompat.STATE_PLAYING
             if (it.state == PlaybackStateCompat.STATE_STOPPED || it.state == PlaybackStateCompat.STATE_NONE) {
                 (requireActivity() as MainActivity).setBottomSheetHidden(true)
                 return@observe
             }
             (requireActivity() as MainActivity).setBottomSheetHidden(false)
-            binding.btnPlayPause.setImageResource(if (isPlaying) {
-                R.drawable.pause
-            } else {
-                R.drawable.play
-            })
-            binding.btnRepeat.setImageResource(if (isRepeating) R.drawable.repeat_one else R.drawable.repeat_all)
+            binding.btnPlayPause.setImageResource(if (isPlaying) R.drawable.pause else R.drawable.play)
         }
-        viewModel.mediaPosition.observe(viewLifecycleOwner) {
-            binding.sbSongProgress.progress = (it!! * 1000.0 / duration).toInt()
+        viewModel.getMediaPosition().observe(viewLifecycleOwner) {
+            binding.sbSongProgress.progress = (it * 1000.0 / duration).toInt()
             binding.tvTimeElapsed.text = Utilities.formatTime(it)
         }
-        viewModel.screenOnObserver.observe(viewLifecycleOwner) {
-            screenOn = it
+        viewModel.getRepeatMode().observe(viewLifecycleOwner) {
+            isRepeating = it == PlaybackStateCompat.REPEAT_MODE_ONE
+            binding.btnRepeat.setImageResource(if (isRepeating) R.drawable.repeat_one else R.drawable.repeat_all)
         }
+        viewModel.screenOnObserver.observe(viewLifecycleOwner) { screenOn = it }
         transportControls = viewModel.transportControls
 
         binding.tvSongTitle.isSelected = true
@@ -126,6 +124,7 @@ class ExtendedFragment : Fragment() {
         BottomSheetBehavior.from((requireActivity() as MainActivity).binding.extendedFragment).apply {
             addBottomSheetCallback(object : BottomSheetCallback() {
                 override fun onStateChanged(bottomSheet: View, newState: Int) {
+                    Log.d(TAG, "onStateChanged: $newState")
                     when (newState) {
                         BottomSheetBehavior.STATE_EXPANDED -> {
                             if (!isUp) {
@@ -154,7 +153,7 @@ class ExtendedFragment : Fragment() {
                         }
                         BottomSheetBehavior.STATE_HIDDEN -> {
                             requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                            isUp = true
+                            isUp = false
                         }
                         else -> Unit
                     }
@@ -165,19 +164,19 @@ class ExtendedFragment : Fragment() {
                 }
             })
 
-            if (state == BottomSheetBehavior.STATE_EXPANDED) {
-                if (!isUp) {
-                    // show the info fragment
-                    childFragmentManager.beginTransaction()
-                            .replace(R.id.infoFragment, ExtendedInfoFragment.newInstance())
-                            .commitNow()
-                    binding.infoFragment.alpha = 1f
-                    isUp = true
-                    if (screenOn) {
-                        requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                    }
-                }
-            }
+//            if (state == BottomSheetBehavior.STATE_EXPANDED) {
+//                if (!isUp) {
+//                    // show the info fragment
+//                    childFragmentManager.beginTransaction()
+//                            .replace(R.id.infoFragment, ExtendedInfoFragment.newInstance())
+//                            .commitNow()
+//                    binding.infoFragment.alpha = 1f
+//                    isUp = true
+//                    if (screenOn) {
+//                        requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+//                    }
+//                }
+//            }
         }
         childFragmentManager.beginTransaction().apply {
             if (!isUp) {
@@ -188,10 +187,10 @@ class ExtendedFragment : Fragment() {
     }
 
     companion object {
-        private const val TAG = "AmpApp.ExtendedFragment"
-
         @JvmStatic
         fun newInstance(): ExtendedFragment =
                 ExtendedFragment()
     }
 }
+
+private const val TAG = "AmpApp.ExtendedFragment"

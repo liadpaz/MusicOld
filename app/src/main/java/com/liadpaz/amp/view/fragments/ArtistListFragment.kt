@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView.OnItemClickListener
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.observe
 import com.liadpaz.amp.R
 import com.liadpaz.amp.databinding.FragmentArtistListBinding
@@ -20,6 +20,7 @@ class ArtistListFragment : Fragment() {
 
     private lateinit var adapter: ArtistsListAdapter
 
+    private val viewModel: ArtistListViewModel by viewModels()
     private lateinit var binding: FragmentArtistListBinding
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -27,7 +28,7 @@ class ArtistListFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        ViewModelProvider(this).get(ArtistListViewModel::class.java).artistsObservable.observe(viewLifecycleOwner) {
+        viewModel.artists.observe(viewLifecycleOwner) {
             adapter.clear()
             adapter.addAll(it)
             artists = it

@@ -45,6 +45,10 @@ class SettingsActivity : AppCompatActivity() {
             viewModel.path.observe(viewLifecycleOwner) { path = it }
             path = viewModel.path.value!!
 
+            findPreference<SwitchPreferenceCompat>("stop")?.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { _, newValue ->
+                viewModel.stopOnTask.postValue(newValue as Boolean)
+                true
+            }
             val pathPreference = findPreference<Preference>("path")?.apply {
                 summary = if (TextUtils.isEmpty(path)) getString(R.string.preference_all_path) else path
                 onPreferenceClickListener = Preference.OnPreferenceClickListener {

@@ -16,8 +16,8 @@ import androidx.lifecycle.observe
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.liadpaz.amp.R
 import com.liadpaz.amp.databinding.FragmentControllerBinding
-import com.liadpaz.amp.service.server.service.MediaPlayerService
-import com.liadpaz.amp.service.server.service.ServiceConnection
+import com.liadpaz.amp.server.service.MediaPlayerService
+import com.liadpaz.amp.server.service.ServiceConnection
 import com.liadpaz.amp.utils.Utilities
 import com.liadpaz.amp.view.MainActivity
 import com.liadpaz.amp.view.data.CurrentSong
@@ -44,11 +44,13 @@ class ControllerFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        viewModel.mediaMetadata.observe(viewLifecycleOwner) {
+        binding.viewmodel = viewModel
+        binding.lifecycleOwner = this
+
+        viewModel.getMediaMetadata().observe(viewLifecycleOwner) {
             if (currentSong != it) {
                 currentSong = it
                 binding.ivCurrentTrack.setImageBitmap(it.art)
-                binding.song = it
 
                 if (Utilities.isColorBright(it.color).also { isBright -> this.isBright = isBright }) {
                     binding.tvSongArtist.setTextColor(Color.BLACK)
@@ -69,7 +71,7 @@ class ControllerFragment : Fragment() {
                 }
             }
         }
-        viewModel.playbackState.observe(viewLifecycleOwner) {
+        viewModel.getPlaybackState().observe(viewLifecycleOwner) {
             isPlaying = it.state == PlaybackStateCompat.STATE_PLAYING
             binding.btnPlay.setImageResource(if (it.state == PlaybackStateCompat.STATE_PLAYING) R.drawable.pause else R.drawable.play)
             binding.btnPlay.imageTintList = ColorStateList.valueOf(if (isBright) Color.BLACK else Color.WHITE)

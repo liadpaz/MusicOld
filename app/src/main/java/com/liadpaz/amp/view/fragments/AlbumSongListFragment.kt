@@ -6,15 +6,14 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.liadpaz.amp.databinding.FragmentAlbumSongListBinding
-import com.liadpaz.amp.service.server.service.ServiceConnection
 import com.liadpaz.amp.view.adapters.SongsListAdapter
 import com.liadpaz.amp.view.data.Album
 import com.liadpaz.amp.view.views.SongPopUpMenu
-import com.liadpaz.amp.viewmodels.livedatautils.QueueUtil
-import java.util.*
+import com.liadpaz.amp.viewmodels.AlbumViewModel
 
 class AlbumSongListFragment : Fragment() {
 
@@ -22,6 +21,9 @@ class AlbumSongListFragment : Fragment() {
 
     private lateinit var adapter: SongsListAdapter
 
+    private val viewModel: AlbumViewModel by viewModels {
+        AlbumViewModel.Factory(requireActivity().application, album.name)
+    }
     private lateinit var binding: FragmentAlbumSongListBinding
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -32,13 +34,11 @@ class AlbumSongListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.album = album
 
-        adapter = SongsListAdapter(requireContext(), { v: View?, position: Int ->
+        adapter = SongsListAdapter({ position ->
+            viewModel.play(position)
+        }, { v: View?, position: Int ->
             SongPopUpMenu(this, v!!, adapter.currentList[position]).show()
-        }, View.OnClickListener {
-            QueueUtil.queue.postValue(ArrayList(adapter.currentList).apply { shuffle() })
-            QueueUtil.queuePosition.postValue(0)
-            ServiceConnection.playFromQueue()
-        }).also { adapter ->
+        }, { viewModel.playShuffle() }).also { adapter ->
             binding.rvSongs.adapter = adapter
             adapter.submitList(album.songs)
         }

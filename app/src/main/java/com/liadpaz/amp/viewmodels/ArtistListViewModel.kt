@@ -2,9 +2,9 @@ package com.liadpaz.amp.viewmodels
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
-import com.liadpaz.amp.service.repository.Repository
+import com.liadpaz.amp.model.repositories.MainRepository
+import com.liadpaz.amp.model.repositories.SongsRepository
 
 class ArtistListViewModel(application: Application) : AndroidViewModel(application) {
-    val artistsObservable = Repository.getInstance(application).getArtists()
+    val artists = SongsRepository.getInstance(application).getArtists()
 }

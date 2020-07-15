@@ -1,19 +1,22 @@
-package com.liadpaz.amp.service.server.service
+package com.liadpaz.amp.server.service
 
 import android.content.ComponentName
 import android.content.Context
 import android.media.MediaMetadata
 import android.os.Bundle
 import android.os.Handler
-import android.os.RemoteException
 import android.os.ResultReceiver
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
-import androidx.annotation.NonNull
+import androidx.core.os.bundleOf
 import androidx.lifecycle.MutableLiveData
+import com.google.android.exoplayer2.ext.mediasession.TimelineQueueEditor
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
+import com.liadpaz.amp.server.utils.COMMAND_CLEAR_QUEUE
+import com.liadpaz.amp.server.utils.COMMAND_MOVE_QUEUE_ITEM
+import com.liadpaz.amp.view.data.Song
 
 class ServiceConnection private constructor(context: Context, componentName: ComponentName) {
 
@@ -29,19 +32,21 @@ class ServiceConnection private constructor(context: Context, componentName: Com
 
     lateinit var transportControls: MediaControllerCompat.TransportControls
 
-    private var mediaBrowserConnectionCallback: MediaBrowserConnectionCallback? = null
+    private val mediaBrowserConnectionCallback: MediaBrowserConnectionCallback
     private val mediaBrowser: MediaBrowserCompat
     private lateinit var mediaController: MediaControllerCompat
 
-    fun subscribe(parentId: String, subscriptionCallback: MediaBrowserCompat.SubscriptionCallback) {
-        mediaBrowser.subscribe(parentId, subscriptionCallback)
+    init {
+        mediaBrowser = MediaBrowserCompat(context, componentName, MediaBrowserConnectionCallback(context).also { mediaBrowserConnectionCallback = it }, null)
+        mediaBrowser.connect()
     }
 
-    fun unsubscribe(parentId: String, subscriptionCallback: MediaBrowserCompat.SubscriptionCallback) {
-        mediaBrowser.unsubscribe(parentId, subscriptionCallback)
-    }
+    fun subscribe(parentId: String, subscriptionCallback: MediaBrowserCompat.SubscriptionCallback) =
+            mediaBrowser.subscribe(parentId, subscriptionCallback)
 
-    @JvmOverloads
+    fun unsubscribe(parentId: String, subscriptionCallback: MediaBrowserCompat.SubscriptionCallback) =
+            mediaBrowser.unsubscribe(parentId, subscriptionCallback)
+
     fun sendCommand(command: String, parameters: Bundle?, resultCallback: ((Int?, Bundle?) -> Unit) = { _, _ -> }) {
         mediaController.sendCommand(command, parameters, object : ResultReceiver(Handler()) {
             override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
@@ -50,32 +55,39 @@ class ServiceConnection private constructor(context: Context, componentName: Com
         })
     }
 
+    fun addToQueue(song: Song) =
+            mediaController.addQueueItem(song.mediaDescription)
+
+    fun addToQueue(song: Song, index: Int) =
+            mediaController.addQueueItem(song.mediaDescription, index)
+
+    fun removeFromQueue(song: Song) =
+            mediaController.removeQueueItem(song.mediaDescription)
+
+    fun moveSong(from: Int, to: Int) =
+            sendCommand(COMMAND_MOVE_QUEUE_ITEM,
+                    bundleOf(Pair(TimelineQueueEditor.EXTRA_FROM_INDEX, from), Pair(TimelineQueueEditor.EXTRA_TO_INDEX, to)))
+
+    fun clearQueue() = sendCommand(COMMAND_CLEAR_QUEUE, null)
+
+
     private inner class MediaBrowserConnectionCallback internal constructor(private val context: Context) : MediaBrowserCompat.ConnectionCallback() {
-        private val TAG = "AmpApp.MediaBrowserConnectionCallback"
 
         override fun onConnected() {
-            try {
-                mediaController = MediaControllerCompat(context, mediaBrowser.sessionToken)
-                mediaController.registerCallback(MediaControllerCallback())
-                transportControls = mediaController.transportControls
-            } catch (e: RemoteException) {
-                e.printStackTrace()
-            }
+            mediaController = MediaControllerCompat(context, mediaBrowser.sessionToken)
+            mediaController.registerCallback(MediaControllerCallback())
+            transportControls = mediaController.transportControls
             isConnected.postValue(true)
         }
 
-        override fun onConnectionSuspended() {
-            isConnected.postValue(false)
-        }
+        override fun onConnectionSuspended() =
+                isConnected.postValue(false)
 
-        override fun onConnectionFailed() {
-            isConnected.postValue(false)
-        }
-
+        override fun onConnectionFailed() =
+                isConnected.postValue(false)
     }
 
     private inner class MediaControllerCallback : MediaControllerCompat.Callback() {
-        private val TAG = "AmpApp.MediaControllerCallback"
 
         override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
             playbackState.postValue(state)
@@ -90,13 +102,11 @@ class ServiceConnection private constructor(context: Context, componentName: Com
         }
 
         override fun onSessionDestroyed() {
-            mediaBrowserConnectionCallback!!.onConnectionSuspended()
+            mediaBrowserConnectionCallback.onConnectionSuspended()
         }
     }
 
     companion object {
-        private const val TAG = "AmpApp.ServiceConnector"
-
         @Volatile
         private var instance: ServiceConnection? = null
 
@@ -109,23 +119,10 @@ class ServiceConnection private constructor(context: Context, componentName: Com
             }
             return instance!!
         }
-
-        @JvmStatic
-        fun getInstance(): ServiceConnection {
-            checkNotNull(instance)
-            return instance!!
-        }
-
-        fun playFromQueue() {
-            getInstance().transportControls.playFromMediaId("queue", null)
-        }
-    }
-
-    init {
-        mediaBrowser = MediaBrowserCompat(context, componentName, MediaBrowserConnectionCallback(context).also { mediaBrowserConnectionCallback = it }, null)
-        mediaBrowser.connect()
     }
 }
+
+private const val TAG = "AmpApp.ServiceConnector"
 
 val EMPTY_PLAYBACK_STATE: PlaybackStateCompat = PlaybackStateCompat.Builder()
         .setState(PlaybackStateCompat.STATE_NONE, 0, 0f)

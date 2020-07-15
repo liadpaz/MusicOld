@@ -5,7 +5,7 @@ import android.os.Parcelable
 import androidx.recyclerview.widget.DiffUtil
 import java.util.*
 
-data class Playlist(val name: String, val songs: ArrayList<Song>) : Parcelable {
+data class Playlist(val name: String, val songs: List<Song>) : Parcelable {
 
     constructor(parcel: Parcel) : this(
             parcel.readString()!!,

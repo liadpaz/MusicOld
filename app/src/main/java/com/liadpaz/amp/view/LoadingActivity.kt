@@ -10,8 +10,8 @@ import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.liadpaz.amp.R
-import com.liadpaz.amp.service.server.service.MediaPlayerService
-import com.liadpaz.amp.service.server.service.ServiceConnection
+import com.liadpaz.amp.server.service.MediaPlayerService
+import com.liadpaz.amp.server.service.ServiceConnection
 import java.util.concurrent.TimeUnit
 
 class LoadingActivity : AppCompatActivity() {

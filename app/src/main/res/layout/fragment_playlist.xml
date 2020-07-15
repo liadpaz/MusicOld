@@ -36,10 +36,24 @@
             android:src="@drawable/delete" />
     </LinearLayout>
 
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tvShuffle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:background="?attr/selectableItemBackground"
+        android:drawableStart="@drawable/shuffle"
+        android:drawablePadding="16dp"
+        android:gravity="center_vertical"
+        android:padding="16dp"
+        android:text="@string/queue_shuffle"
+        android:textSize="18sp" />
+
     <com.liadpaz.amp.view.views.CustomRecyclerView
         android:id="@+id/rvSongs"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:scrollbars="vertical" />
 
 </LinearLayout>

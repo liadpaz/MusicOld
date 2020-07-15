@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.observe
 import com.liadpaz.amp.R
 import com.liadpaz.amp.databinding.FragmentAlbumListBinding
@@ -19,6 +19,7 @@ class AlbumListFragment : Fragment() {
 
     private lateinit var adapter: AlbumsListAdapter
 
+    private val viewModel: AlbumListViewModel by viewModels()
     private lateinit var binding: FragmentAlbumListBinding
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -26,12 +27,12 @@ class AlbumListFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        ViewModelProvider(this).get(AlbumListViewModel::class.java).albumsObservable.observe(viewLifecycleOwner) {
+        viewModel.albums.observe(viewLifecycleOwner) {
             adapter.submitList(it)
             albums = it
         }
 
-        adapter = AlbumsListAdapter(requireContext()) { _, position: Int ->
+        adapter = AlbumsListAdapter() { _, position: Int ->
             requireActivity().supportFragmentManager.beginTransaction()
                     .replace(R.id.mainFragment, AlbumSongListFragment.newInstance(albums[position]))
                     .addToBackStack(null)

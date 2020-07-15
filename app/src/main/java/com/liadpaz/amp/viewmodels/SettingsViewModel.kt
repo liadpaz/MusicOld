@@ -2,10 +2,10 @@ package com.liadpaz.amp.viewmodels
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
-import com.liadpaz.amp.service.repository.Repository
+import com.liadpaz.amp.model.repositories.MainRepository
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
-    val path = Repository.getInstance(application).getPath()
-    val screenOn = Repository.getInstance(application).getScreenOn()
+    val path = MainRepository.getInstance(application).getPath()
+    val screenOn = MainRepository.getInstance(application).getScreenOn()
+    val stopOnTask = MainRepository.getInstance(application).getStopOnTask()
 }

@@ -13,25 +13,36 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.lifecycle.*
 import androidx.palette.graphics.Palette
-import com.liadpaz.amp.R
-import com.liadpaz.amp.service.repository.Repository
-import com.liadpaz.amp.service.server.service.EMPTY_PLAYBACK_STATE
-import com.liadpaz.amp.service.server.service.NOTHING_PLAYING
-import com.liadpaz.amp.service.server.service.ServiceConnection
+import com.liadpaz.amp.model.repositories.MainRepository
+import com.liadpaz.amp.model.repositories.SongsRepository
+import com.liadpaz.amp.server.service.EMPTY_PLAYBACK_STATE
+import com.liadpaz.amp.server.service.NOTHING_PLAYING
+import com.liadpaz.amp.server.service.ServiceConnection
+import com.liadpaz.amp.server.utils.COMMAND_CLEAR_QUEUE
+import com.liadpaz.amp.utils.Utilities
 import com.liadpaz.amp.view.data.CurrentSong
+import com.liadpaz.amp.view.data.Song
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PlayingViewModel(application: Application, serviceConnection: ServiceConnection) : AndroidViewModel(application) {
 
-    val screenOnObserver = Repository.getInstance(application).getScreenOn()
+    val screenOnObserver: LiveData<Boolean> = MainRepository.getInstance(application).getScreenOn()
 
-    val playbackState: MutableLiveData<PlaybackStateCompat> = MutableLiveData(EMPTY_PLAYBACK_STATE)
-    val mediaMetadata = MutableLiveData<CurrentSong>()
-    val mediaPosition = MutableLiveData<Long>().apply {
-        postValue(0L)
-    }
+    private val repository = SongsRepository.getInstance(application)
+
+    fun getQueue(): LiveData<MutableList<Song>> = repository.getQueue()
+    fun getPlaybackState(): LiveData<PlaybackStateCompat> = _playbackState
+    fun getMediaMetadata(): LiveData<CurrentSong> = _mediaMetadata
+    fun getRepeatMode(): LiveData<Int> = _repeatMode
+    fun getMediaPosition(): LiveData<Long> = _mediaPosition
+
+    private val _playbackState = MutableLiveData<PlaybackStateCompat>().apply { postValue(EMPTY_PLAYBACK_STATE) }
+    private val _mediaMetadata = MutableLiveData<CurrentSong>()
+    private val _repeatMode = MutableLiveData<Int>().apply { postValue(PlaybackStateCompat.REPEAT_MODE_ALL) }
+    private val _mediaPosition = MutableLiveData<Long>().apply { postValue(0L) }
 
     val transportControls: MediaControllerCompat.TransportControls
 
@@ -39,26 +50,39 @@ class PlayingViewModel(application: Application, serviceConnection: ServiceConne
     private val handler = Handler(Looper.getMainLooper())
 
     private val playbackStateObserver = Observer<PlaybackStateCompat> {
-        playbackState.postValue(it ?: EMPTY_PLAYBACK_STATE)
+        _playbackState.postValue(it ?: EMPTY_PLAYBACK_STATE)
         val metadata = serviceConnection.nowPlaying.value ?: NOTHING_PLAYING
-        updateState(metadata)
+        CoroutineScope(Dispatchers.Main).launch {
+            updateState(metadata)
+        }
     }
 
     private val mediaMetadataObserver = Observer<MediaMetadataCompat> {
-        updateState(it)
+        CoroutineScope(Dispatchers.Main).launch {
+            updateState(it)
+        }
+    }
+
+    private val repeatModeObserver = Observer<Int> {
+        _repeatMode.postValue(it)
     }
 
     private val serviceConnection = serviceConnection.also {
         transportControls = it.transportControls
         it.playbackState.observeForever(playbackStateObserver)
         it.nowPlaying.observeForever(mediaMetadataObserver)
+        it.repeatMode.observeForever(repeatModeObserver)
         checkPlaybackState()
     }
 
+    fun clearQueue() {
+        transportControls.sendCustomAction(COMMAND_CLEAR_QUEUE, null)
+    }
+
     private fun checkPlaybackState(): Boolean = handler.postDelayed({
-        val currentPosition = playbackState.value?.currentPlayBackPosition
-        if (mediaPosition.value != currentPosition) {
-            mediaPosition.postValue(currentPosition)
+        val currentPosition = _playbackState.value?.currentPlayBackPosition
+        if (_mediaPosition.value != currentPosition) {
+            _mediaPosition.postValue(currentPosition)
         }
         if (updatePosition) {
             checkPlaybackState()
@@ -70,33 +94,39 @@ class PlayingViewModel(application: Application, serviceConnection: ServiceConne
 
         serviceConnection.playbackState.removeObserver(playbackStateObserver)
         serviceConnection.nowPlaying.removeObserver(mediaMetadataObserver)
+        serviceConnection.repeatMode.removeObserver(repeatModeObserver)
 
         updatePosition = false
     }
 
-    private fun updateState(mediaMetadata: MediaMetadataCompat) {
+    private suspend fun updateState(mediaMetadata: MediaMetadataCompat) {
         if (mediaMetadata.duration != 0L) {
-            CoroutineScope(Dispatchers.Default).launch {
-                val bitmap = getCover(getApplication(), mediaMetadata.artUri)
-                        ?: BitmapFactory.decodeResource(getApplication<Application>().resources, R.drawable.song)
-                val dominantColor = Palette.from(bitmap).generate().getDominantColor(Color.WHITE)
-                val currentSong = CurrentSong(mediaMetadata.title, mediaMetadata.artists, mediaMetadata.album, mediaMetadata.duration, bitmap, dominantColor)
-                if (this@PlayingViewModel.mediaMetadata.value != currentSong) {
-                    this@PlayingViewModel.mediaMetadata.postValue(currentSong)
-                }
-            }
+            val bitmap = getCover(getApplication(), mediaMetadata.artUri)
+            val dominantColor = Palette.from(bitmap).generate().getDominantColor(Color.WHITE)
+
+            val title = mediaMetadata.title
+            val artist = mediaMetadata.artist
+            val currentSong = CurrentSong(title, Utilities.getArtistsFromSong(title, artist), mediaMetadata.album, mediaMetadata.duration, bitmap, dominantColor)
+            _mediaMetadata.postValue(currentSong)
         }
     }
 
     class Factory(private val application: Application, private val serviceConnection: ServiceConnection) : ViewModelProvider.NewInstanceFactory() {
         @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-            return PlayingViewModel(application, serviceConnection) as T
-        }
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T =
+                PlayingViewModel(application, serviceConnection) as T
     }
 }
 
-private fun getCover(context: Context, artUri: Uri) = BitmapFactory.decodeStream(context.contentResolver.openInputStream(artUri))
+private suspend fun getCover(context: Context, artUri: Uri) = withContext(Dispatchers.IO) {
+    try {
+        getBitmap(context, artUri)
+    } catch (_: Exception) {
+        Utilities.getSongBitmap(context)
+    }
+}
+
+private fun getBitmap(context: Context, uri: Uri) = BitmapFactory.decodeStream(context.contentResolver.openInputStream(uri))
 
 inline val PlaybackStateCompat.currentPlayBackPosition: Long
     get() = if (state == PlaybackStateCompat.STATE_PLAYING) {
@@ -118,7 +148,7 @@ inline val MediaMetadataCompat.artUri: Uri
 inline val MediaMetadataCompat.title: String
     get() = getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE)
 
-inline val MediaMetadataCompat.artists: String
+inline val MediaMetadataCompat.artist: String
     get() = getString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE)
 
 inline val MediaMetadataCompat.album: String

@@ -6,8 +6,10 @@
     <data>
 
         <variable
-            name="song"
-            type="com.liadpaz.amp.view.data.CurrentSong" />
+            name="viewmodel"
+            type="com.liadpaz.amp.viewmodels.PlayingViewModel" />
+
+        <import type="com.liadpaz.amp.utils.Utilities" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -37,7 +39,7 @@
             android:layout_marginEnd="8dp"
             android:ellipsize="end"
             android:lines="1"
-            android:text="@{song.title}"
+            android:text="@{viewmodel.mediaMetadata.title}"
             android:textSize="18sp"
             app:layout_constraintEnd_toStartOf="@+id/btnPlay"
             app:layout_constraintStart_toEndOf="@+id/ivCurrentTrack"
@@ -51,7 +53,7 @@
             android:layout_marginEnd="8dp"
             android:ellipsize="end"
             android:lines="1"
-            android:text="@{song.artists}"
+            android:text="@{Utilities.INSTANCE.joinArtists(viewmodel.mediaMetadata.artists)}"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="@+id/ivCurrentTrack"
             app:layout_constraintEnd_toStartOf="@+id/btnPlay"

@@ -1,16 +1,11 @@
-package com.liadpaz.amp.service.server.service
+package com.liadpaz.amp.server.service
 
 import android.app.Notification
 import android.app.PendingIntent
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import android.media.AudioManager
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
-import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
@@ -20,30 +15,38 @@ import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
+import com.google.android.exoplayer2.source.ConcatenatingMediaSource
+import com.google.android.exoplayer2.source.MediaSource
+import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.liadpaz.amp.R
-import com.liadpaz.amp.service.model.LocalFiles
-import com.liadpaz.amp.service.repository.Repository
-import com.liadpaz.amp.service.server.notification.AmpNotificationManager
-import com.liadpaz.amp.service.server.utils.PlaybackPreparer
+import com.liadpaz.amp.model.repositories.MainRepository
+import com.liadpaz.amp.model.repositories.SongsRepository
+import com.liadpaz.amp.server.notification.AmpNotificationManager
+import com.liadpaz.amp.server.utils.PlaybackPreparer
+import com.liadpaz.amp.server.utils.QueueEditor
 import com.liadpaz.amp.utils.Constants
 import com.liadpaz.amp.view.MainActivity
-import com.liadpaz.amp.viewmodels.livedatautils.QueueUtil
+import com.liadpaz.amp.view.data.Song
 import java.util.*
 
 class MediaPlayerService : MediaBrowserServiceCompat() {
 
-    private lateinit var becomingNoisyReceiver: BecomingNoisyReceiver
     private lateinit var notificationManager: AmpNotificationManager
 
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var mediaSessionConnector: MediaSessionConnector
 
-    private val localFiles by lazy {
-        LocalFiles.getInstance(applicationContext)
+    private val songsRepository by lazy {
+        SongsRepository.getInstance(application)
     }
+    private val mainRepository by lazy {
+        MainRepository.getInstance(application)
+    }
+
+    private val mediaSource = ConcatenatingMediaSource()
 
     private var lastWindowIndex = -1
 
@@ -56,7 +59,8 @@ class MediaPlayerService : MediaBrowserServiceCompat() {
     private val playerEventListener = PlayerEventListener()
 
     private val exoPlayer: ExoPlayer by lazy {
-        ExoPlayerFactory.newSimpleInstance(this).apply {
+        SimpleExoPlayer.Builder(this).build().apply {
+            setHandleAudioBecomingNoisy(true)
             setAudioAttributes(ampAudioAttributes, true)
             addListener(playerEventListener)
         }
@@ -75,14 +79,35 @@ class MediaPlayerService : MediaBrowserServiceCompat() {
 
         notificationManager = AmpNotificationManager(applicationContext, exoPlayer, sessionToken!!, PlayerNotificationListener())
 
-        becomingNoisyReceiver = BecomingNoisyReceiver(applicationContext, mediaSession.controller)
-
         mediaSessionConnector = MediaSessionConnector(mediaSession).also { connector ->
-            val playbackPreparer: MediaSessionConnector.PlaybackPreparer = PlaybackPreparer(exoPlayer, DefaultDataSourceFactory(applicationContext, Util.getUserAgent(applicationContext, getString(R.string.app_name))))
+            val dataSourceFactory = DefaultDataSourceFactory(applicationContext, Util.getUserAgent(applicationContext, getString(R.string.app_name)))
+            val playbackPreparer: MediaSessionConnector.PlaybackPreparer = PlaybackPreparer(exoPlayer, mediaSource, dataSourceFactory, songsRepository)
 
             connector.setPlayer(exoPlayer)
             connector.setPlaybackPreparer(playbackPreparer)
             connector.setQueueNavigator(QueueNavigator(mediaSession))
+            val queueDataAdapter = object : QueueEditor.QueueDataAdapter {
+                override fun add(position: Int, mediaSource: MediaSource) {
+                    songsRepository.addSongToQueue(position, Song.from(mediaSource.tag as MediaDescriptionCompat))
+                }
+
+                override fun remove(position: Int) {
+                    songsRepository.removeSongFromQueue(position)
+                }
+
+                override fun move(from: Int, to: Int) {
+                    songsRepository.moveSongInQueue(from, to)
+                }
+
+                override fun clear() {
+                    songsRepository.clearQueue()
+                }
+            }
+            val mediaSourceFactory = object : QueueEditor.MediaSourceFactory {
+                override fun createMediaSource(description: MediaDescriptionCompat): MediaSource? =
+                        ProgressiveMediaSource.Factory(dataSourceFactory).setTag(description).createMediaSource(description.mediaUri)
+            }
+            connector.setQueueEditor(QueueEditor(mediaSession.controller, mediaSource, queueDataAdapter, mediaSourceFactory))
         }
 
         mediaSession.controller.transportControls.setRepeatMode(PlaybackStateCompat.REPEAT_MODE_ALL)
@@ -91,7 +116,7 @@ class MediaPlayerService : MediaBrowserServiceCompat() {
     override fun onTaskRemoved(rootIntent: Intent) {
         super.onTaskRemoved(rootIntent)
 
-        if (localFiles.stopOnTask) {
+        if (mainRepository.getStopOnTask().value!!) {
             exoPlayer.stop(true)
         }
     }
@@ -107,17 +132,17 @@ class MediaPlayerService : MediaBrowserServiceCompat() {
 
     override fun onLoadChildren(parentId: String, result: Result<List<MediaBrowserCompat.MediaItem>>) {
         val mediaItems: ArrayList<MediaBrowserCompat.MediaItem> = arrayListOf()
-        Repository.getInstance(applicationContext).getSongs().observeForever { songs ->
+        songsRepository.getSongs().value?.let { songs ->
             for (song in songs) {
                 mediaItems.add(song.mediaItem)
             }
             result.sendResult(mediaItems)
-        }
+        } ?: result.sendError(null)
     }
 
     override fun onSearch(query: String, extras: Bundle, result: Result<List<MediaBrowserCompat.MediaItem>>) {
-        val queryString = query.toLowerCase(Locale.US)
-//        result.sendResult(SongsUtil.getSongs().filter { song -> song.isMatchingQuery(queryString) }.map { song: Song -> song.mediaItem })
+        val queryString = query.toLowerCase(Locale.ROOT)
+        result.sendResult(SongsRepository.getInstance(application).getSongs().value?.filter { song -> song.isMatchingQuery(queryString) }?.map { song: Song -> song.mediaItem })
     }
 
     private inner class PlayerNotificationListener : PlayerNotificationManager.NotificationListener {
@@ -142,7 +167,6 @@ class MediaPlayerService : MediaBrowserServiceCompat() {
         override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
             if (playbackState == Player.STATE_READY || playbackState == Player.STATE_BUFFERING) {
                 notificationManager.showNotification()
-                becomingNoisyReceiver.register()
                 if (playbackState == Player.STATE_READY) {
                     if (!playWhenReady) {
                         stopForeground(false)
@@ -150,7 +174,6 @@ class MediaPlayerService : MediaBrowserServiceCompat() {
                 }
             } else {
                 notificationManager.hideNotification()
-                becomingNoisyReceiver.unregister()
             }
         }
 
@@ -158,72 +181,27 @@ class MediaPlayerService : MediaBrowserServiceCompat() {
             if (lastWindowIndex != exoPlayer.currentWindowIndex) {
                 lastWindowIndex = exoPlayer.currentWindowIndex
                 exoPlayer.playWhenReady = true
-                QueueUtil.queuePosition.postValue(exoPlayer.currentWindowIndex)
-//                val timeline = exoPlayer.currentTimeline
-//                val queue = arrayListOf<Song>()
-//                for (i in 0 until timeline.windowCount) {
-//                    queue.add(Song.from(timeline.getWindow(i, Timeline.Window(), true).tag as MediaDescriptionCompat))
-//                }
-//                QueueUtil.queue.postValue(queue)
-                Log.d(TAG, "onPositionDiscontinuity: ${/*queue.size*/null} $lastWindowIndex")
+                songsRepository.getPosition().postValue(exoPlayer.currentWindowIndex)
+//                Log.d(TAG, "onPositionDiscontinuity: ${exoPlayer.currentTimeline.windowCount} $lastWindowIndex")
             }
         }
-    }
 
-    companion object {
-        private const val TAG = "AmpApp.MediaService"
-        private const val LOG_TAG = "AmpApp2.MediaSessionLog"
+        override fun onPlayerError(error: ExoPlaybackException) {
+            Log.e(TAG, "onPlayerError: $error")
+        }
     }
 
     private class QueueNavigator(mediaSession: MediaSessionCompat) : TimelineQueueNavigator(mediaSession) {
         private val window = Timeline.Window()
 
-        override fun getMediaDescription(player: Player, windowIndex: Int): MediaDescriptionCompat? = player.currentTimeline.getWindow(windowIndex, window, true).tag as MediaDescriptionCompat?
+        override fun getMediaDescription(player: Player, windowIndex: Int): MediaDescriptionCompat =
+                player.currentTimeline.getWindow(windowIndex, window).tag as MediaDescriptionCompat
 
         companion object {
             private const val TAG = "AmpApp.AmpQueueNavigator"
         }
     }
-
-    /**
-     * This class is for the *Becoming Noisy* broadcast, eg. when the user hears music with
-     * earphones and the earphones disconnects.
-     *
-     * It's stopping the playback when it receives that broadcast.
-     */
-    private class BecomingNoisyReceiver(private val context: Context, private val controller: MediaControllerCompat) : BroadcastReceiver() {
-
-        private val noisyFilter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
-        private var registered = false
-
-        override fun onReceive(context: Context, intent: Intent) {
-            if (AudioManager.ACTION_AUDIO_BECOMING_NOISY == intent.action) {
-                controller.transportControls.pause()
-            }
-        }
-
-        /**
-         * This function registers the broadcast receiver.
-         */
-        fun register() {
-            if (!registered) {
-                context.registerReceiver(this, noisyFilter)
-                registered = true
-            }
-        }
-
-        /**
-         * This function unregisters the broadcast receiver.
-         */
-        fun unregister() {
-            if (registered) {
-                context.unregisterReceiver(this)
-                registered = false
-            }
-        }
-
-        companion object {
-            private const val TAG = "AmpApp.BecomingNoisyReceiver"
-        }
-    }
 }
+
+private const val TAG = "AmpApp.MediaService"
+private const val LOG_TAG = "AmpApp2.MediaSessionLog"

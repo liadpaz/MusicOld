@@ -17,8 +17,10 @@ import androidx.appcompat.app.AppCompatDelegate
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.liadpaz.amp.R
 import com.liadpaz.amp.databinding.ActivityMainBinding
-import com.liadpaz.amp.service.model.LocalFiles
+import com.liadpaz.amp.model.utils.LocalFiles
 import com.liadpaz.amp.utils.Constants
+import com.liadpaz.amp.view.fragments.SearchFragment
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -90,13 +92,14 @@ class MainActivity : AppCompatActivity() {
      * @param queryString The query string.
      */
     private fun query(queryString: String) {
-//        val finalQuery = queryString.toLowerCase(Locale.US)
-//        val queriedSongs = arrayListOf(getSongs().filter { song -> song.isMatchingQuery(finalQuery) })
-//        supportFragmentManager.beginTransaction().replace(R.id.mainFragment, newInstance(queryString, queriedSongs)).addToBackStack(null).commitNow()
+        supportFragmentManager.beginTransaction()
+                .replace(R.id.mainFragment, SearchFragment.newInstance(queryString.toLowerCase(Locale.ROOT)))
+                .addToBackStack(null)
+                .commit()
     }
 
     fun setBottomSheetHidden(isHidden: Boolean) {
-        val layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        val layoutParams = binding.mainFragment.layoutParams as LinearLayout.LayoutParams
         val bottomSheetBehavior = BottomSheetBehavior.from<View>(binding.extendedFragment)
         if (isHidden) {
             layoutParams.setMargins(0, 0, 0, 0)
@@ -125,7 +128,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val TAG = "AmpApp.MainActivity"
         private const val REQUEST_SETTINGS = 525
     }
 }
+
+private const val TAG = "AmpApp.MainActivity"

@@ -1,49 +1,35 @@
 package com.liadpaz.amp.view.adapters
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
-import com.liadpaz.amp.R
 import com.liadpaz.amp.databinding.ItemQueueSongBinding
+import com.liadpaz.amp.utils.GlideApp
+import com.liadpaz.amp.utils.Utilities
+import com.liadpaz.amp.view.data.Song
 import com.liadpaz.amp.view.interfaces.ItemTouchHelperAdapter
 import com.liadpaz.amp.view.interfaces.OnRecyclerItemClickListener
 import com.liadpaz.amp.view.interfaces.OnStartDragListener
-import com.liadpaz.amp.viewmodels.livedatautils.QueueUtil
-import com.liadpaz.amp.service.server.service.ServiceConnection
-import com.liadpaz.amp.utils.GlideApp
-import com.liadpaz.amp.view.data.Song
-import com.liadpaz.amp.utils.Utilities
-import java.util.*
-import kotlin.collections.ArrayList
 
-class QueueAdapter(fragment: Fragment, private val onMoreClickListener: OnRecyclerItemClickListener, private val itemTouchHelperAdapter: ItemTouchHelperAdapter) : ListAdapter<Song, QueueAdapter.SongViewHolder>(Song.diffCallback), ItemTouchHelperAdapter {
+class QueueAdapter(private val onItemClick: (Int) -> Unit, private val onMoreClickListener: OnRecyclerItemClickListener, private val itemTouchHelperAdapter: ItemTouchHelperAdapter) : ListAdapter<Song, QueueAdapter.SongViewHolder>(Song.diffCallback) {
 
     private lateinit var onStartDragListener: OnStartDragListener
     private lateinit var mediaSource: ConcatenatingMediaSource
 
     private var songs: ArrayList<Song> = ArrayList()
 
-    private val context: Context = fragment.requireContext()
-
-    init {
-        ServiceConnection.getInstance().mediaSource.observeForever { mediaSource: ConcatenatingMediaSource? -> this.mediaSource = mediaSource!! }
-    }
-
     fun setOnStartDragListener(onStartDragListener: OnStartDragListener) {
         this.onStartDragListener = onStartDragListener
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder = SongViewHolder(ItemQueueSongBinding.inflate(LayoutInflater.from(context), parent, false), { _, position: Int ->
-        ServiceConnection.getInstance().transportControls.skipToQueueItem(position.toLong())
-    }, onMoreClickListener)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder {
+        return SongViewHolder(ItemQueueSongBinding.inflate(LayoutInflater.from(parent.context), parent, false), onItemClick, onMoreClickListener)
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onBindViewHolder(holder: SongViewHolder, position: Int) {
@@ -51,7 +37,7 @@ class QueueAdapter(fragment: Fragment, private val onMoreClickListener: OnRecycl
         val binding = holder.binding
         binding.tvSongTitle.text = song!!.title
         binding.tvSongArtist.text = Utilities.joinArtists(song.artists)
-        GlideApp.with(context).load(song.artUri).into(binding.ivSongCover)
+        GlideApp.with(holder.itemView).load(song.artUri).into(binding.ivSongCover)
         binding.btnDrag.setOnTouchListener { _, event: MotionEvent ->
             if (event.action == MotionEvent.ACTION_DOWN) {
                 onStartDragListener(holder)
@@ -60,38 +46,36 @@ class QueueAdapter(fragment: Fragment, private val onMoreClickListener: OnRecycl
         }
     }
 
-    override fun onItemDismiss(position: Int) {
-        Toast.makeText(context, context.getString(R.string.queue_removed, getItem(position).title), Toast.LENGTH_SHORT).show()
-        songs.removeAt(position)
-        QueueUtil.isChanging = true
-        QueueUtil.queue.postValue(songs)
-        mediaSource.removeMediaSource(position)
-        itemTouchHelperAdapter.onItemDismiss(position)
-        notifyItemRemoved(position)
-    }
+//    override fun onItemDismiss(position: Int) {
+//        Toast.makeText(context, context.getString(R.string.queue_removed, getItem(position).title), Toast.LENGTH_SHORT).show()
+//        songs.removeAt(position)
+//        QueueUtil.isChanging = true
+//        QueueUtil.queue.postValue(songs)
+//        mediaSource.removeMediaSource(position)
+//        itemTouchHelperAdapter.onItemDismiss(position)
+//        notifyItemRemoved(position)
+//    }
 
-    override fun onItemMove(fromPosition: Int, toPosition: Int) {
-        Collections.swap(songs, fromPosition, toPosition)
-        QueueUtil.isChanging = true
-        QueueUtil.queue.postValue(songs)
-        mediaSource.moveMediaSource(fromPosition, toPosition)
-        itemTouchHelperAdapter.onItemMove(fromPosition, toPosition)
-        notifyItemMoved(fromPosition, toPosition)
-    }
+//    override fun onItemMove(fromPosition: Int, toPosition: Int) {
+//        Collections.swap(songs, fromPosition, toPosition)
+//        QueueUtil.isChanging = true
+//        QueueUtil.queue.postValue(songs)
+//        mediaSource.moveMediaSource(fromPosition, toPosition)
+//        itemTouchHelperAdapter.onItemMove(fromPosition, toPosition)
+//        notifyItemMoved(fromPosition, toPosition)
+//    }
 
     override fun submitList(list: List<Song>?) {
         super.submitList(list?.let { ArrayList(it) }.also { songs = it!! })
     }
 
-    class SongViewHolder(val binding: ItemQueueSongBinding, onItemClickListener: OnRecyclerItemClickListener, onMoreClickListener: OnRecyclerItemClickListener) : RecyclerView.ViewHolder(binding.root) {
+    class SongViewHolder(val binding: ItemQueueSongBinding, onItemClickListener: (Int) -> Unit, onMoreClickListener: OnRecyclerItemClickListener) : RecyclerView.ViewHolder(binding.root) {
 
         init {
-            itemView.setOnClickListener { v: View -> onItemClickListener(v, adapterPosition) }
+            itemView.setOnClickListener { onItemClickListener(adapterPosition) }
             binding.btnMore.setOnClickListener { v: View -> onMoreClickListener(v, adapterPosition) }
         }
     }
-
-    companion object {
-        private const val TAG = "AmpApp.QueueAdapter"
-    }
 }
+
+private const val TAG = "AmpApp.QueueAdapter"

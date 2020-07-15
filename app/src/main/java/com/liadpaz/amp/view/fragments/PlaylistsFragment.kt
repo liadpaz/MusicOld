@@ -15,6 +15,7 @@ import com.liadpaz.amp.view.data.Song
 import com.liadpaz.amp.view.dialogs.EditPlaylistDialog
 import com.liadpaz.amp.view.dialogs.NewPlaylistDialog
 import com.liadpaz.amp.viewmodels.PlaylistsViewModel
+import java.util.ArrayList
 
 class PlaylistsFragment : Fragment() {
 
@@ -26,8 +27,9 @@ class PlaylistsFragment : Fragment() {
     private val viewModel: PlaylistsViewModel by viewModels()
     private lateinit var binding: FragmentPlaylistsBinding
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
-            FragmentPlaylistsBinding.inflate(inflater, container, false).also { binding = it }.root
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        return FragmentPlaylistsBinding.inflate(inflater, container, false).also { binding = it }.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         recentlyAddedPlaylist = Playlist(getString(R.string.playlist_recently_added), arrayListOf())
@@ -36,32 +38,31 @@ class PlaylistsFragment : Fragment() {
             adapter.submitList(arrayListOf(recentlyAddedPlaylist) + playlists)
         }
         viewModel.playlistsObservable.observe(viewLifecycleOwner) {
-            playlists = ArrayList(it)
+            playlists = ArrayList(it.map { entry: Map.Entry<String, ArrayList<Song>> -> Playlist(entry.key, entry.value) })
             adapter.submitList(arrayListOf(recentlyAddedPlaylist) + playlists)
         }
-        adapter = PlaylistsAdapter(requireContext(), { _, position: Int ->
+        adapter = PlaylistsAdapter({ position: Int ->
             requireActivity().supportFragmentManager.beginTransaction()
                     .replace(R.id.mainFragment, PlaylistFragment.newInstance(if (position == 0) recentlyAddedPlaylist else playlists[position - 1]))
                     .addToBackStack(null)
                     .commit()
         }, { position: Int ->
             if (position != 0) {
-                EditPlaylistDialog(playlists[position]).show(childFragmentManager, null)
+                EditPlaylistDialog.newInstance(playlists[position - 1]).show(childFragmentManager, null)
             }
             true
         }).also {
             binding.rvPlaylists.adapter = it
         }
 
-        binding.fabNewPlaylist.setOnClickListener { NewPlaylistDialog(null as Song?).show(childFragmentManager, null) }
+        binding.fabNewPlaylist.setOnClickListener { NewPlaylistDialog.newInstance().show(childFragmentManager, null) }
     }
 
     companion object {
         private const val TAG = "AmpApp.PlaylistsFragment"
 
         @JvmStatic
-        fun newInstance(): PlaylistsFragment {
-            return PlaylistsFragment()
-        }
+        fun newInstance(): PlaylistsFragment =
+                PlaylistsFragment()
     }
 }
